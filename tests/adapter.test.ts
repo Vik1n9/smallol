@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { adapt, parseClock } from '../src/data/streamcv/adapter.ts';
 import { TOWER_SITES } from '../src/model/types.ts';
+import { knownChampion } from '../src/data/champions.ts';
 import sample from '../fixtures/streamcv/state_finished_game.json' with { type: 'json' };
 
 const downSites = (s: ReturnType<typeof adapt>, t: 'B' | 'R') => TOWER_SITES.filter((x) => s.teams[t].towers[x].down);
@@ -115,9 +116,36 @@ describe('Stream CV adapter, damaged input', () => {
   });
 });
 
-describe('Stream CV adapter, series and draft (proposed fields, docs/CONTRACT_PROPOSAL.md)', () => {
-  it('v0 has neither: both stay null', () => {
+describe('Stream CV adapter, series and draft (contract v0.1)', () => {
+  it('real sample: Bo5 game 3, MVK blue vs FUR red, wins unknown, with the note why', () => {
     const s = adapt(sample);
+    expect(s.series).toMatchObject({ bestOf: 5, game: 3, matchId: '115660588583040710', teams: { B: { code: 'MVK', wins: null }, R: { code: 'FUR', wins: null } } });
+    expect(s.series!.winsNote).toBeTruthy();
+  });
+
+  it('real sample: picks by role, bans and turn not supported yet', () => {
+    const d = adapt(sample).draft!;
+    expect(d).toMatchObject({ picksOrder: 'role', bansSupported: false, turnSupported: false });
+    expect(d.current!.sides.B).toMatchObject({ team: 'MVK', picks: ['Zaahen', 'JarvanIV', 'KogMaw', 'Jhin', 'Camille'] });
+    expect(d.current!.sides.R.picks).toEqual(['KSante', 'Naafiri', 'Ryze', 'Kaisa', 'Leona']);
+    expect(d.current!.turn).toBeNull();
+    expect(d.earlier.map((g) => g.game)).toEqual([1, 2]);
+    // Every champion id the service sends is one the name table knows (Data Dragon 16.20.1).
+    const ids = [d.current!, ...d.earlier].flatMap((g) => [...g.sides.B.picks, ...g.sides.R.picks]);
+    expect(ids).toHaveLength(30);
+    expect(ids.filter((id) => !id || !knownChampion(id))).toEqual([]);
+  });
+
+  it('real sample: fearless holds, nothing picked twice in the series', () => {
+    const d = adapt(sample).draft!;
+    const ids = [d.current!, ...d.earlier].flatMap((g) => [...g.sides.B.picks, ...g.sides.R.picks]);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('an old v0 file has neither: both stay null', () => {
+    const { series, draft, ...v0 } = sample as Record<string, unknown>;
+    expect(series && draft).toBeTruthy();
+    const s = adapt(v0);
     expect(s.series).toBeNull();
     expect(s.draft).toBeNull();
   });
@@ -131,7 +159,9 @@ describe('Stream CV adapter, series and draft (proposed fields, docs/CONTRACT_PR
         earlier: [{ game: 2, B: { team: 'GEN', picks: ['Vi'] }, R: { team: 'T1', picks: ['Jax'] } }, { game: 1, B: { team: 'T1' }, R: { team: 'GEN' } }, { game: 4, B: { team: 'T1' }, R: { team: 'GEN' } }],
       },
     });
-    expect(s.series).toEqual({ bestOf: 5, game: 3, teams: { B: { code: 'T1', wins: 1 }, R: { code: 'GEN', wins: 1 } } });
+    expect(s.series).toEqual({ bestOf: 5, game: 3, matchId: null, teams: { B: { code: 'T1', wins: 1 }, R: { code: 'GEN', wins: 1 } }, winsNote: null });
+    // Without the v0.1 flags: the proposal's reading.
+    expect(s.draft).toMatchObject({ picksOrder: 'draft', bansSupported: true, turnSupported: true });
     expect(s.draft!.current!.sides.B.bans).toEqual(['Azir', null, null, null, null]);
     expect(s.draft!.current!.sides.R.picks).toEqual(['Rell', null, null, null, null]);
     expect(s.draft!.current!.turn).toEqual({ side: 'B', kind: 'pick', slot: 0 });

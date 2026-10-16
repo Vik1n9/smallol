@@ -1,7 +1,7 @@
 // UI strings, Traditional Chinese (Taiwan) and English. Same shape as Basesmall's: one typed
 // record per language, so a key missing in either language fails the type check.
 
-import type { Element, GameStatus, Team } from '../model/types.ts';
+import type { Element, GameStatus, Role, Team } from '../model/types.ts';
 import type { Feature, ViewName } from '../settings/schema.ts';
 import type { Connection } from '../data/streamcv/source.ts';
 
@@ -24,12 +24,15 @@ export interface Strings {
   /** One character (or two letters) inside a dragon tile. */
   elementShort: Record<Element | 'elder', string>;
   feature: Record<Feature, string>;
+  /** One character (or letter) per position. */
+  role: Record<Role, string>;
   view: Record<ViewName, string>;
   ui: Record<
     | 'sample' | 'sampleShort' | 'sampleHint' | 'baron' | 'baronUp' | 'baronBuff' | 'elderBuff' | 'dragon' | 'dragonUp' | 'elderNext' | 'unknownElement'
     | 'soul' | 'inhibitor' | 'nexusTurret' | 'kills' | 'gold' | 'towersUnnamed' | 'towersUnknown'
     | 'settings' | 'done' | 'quit' | 'quitAgain' | 'noGame' | 'waiting'
-    | 'next' | 'elder' | 'noSeries' | 'bans' | 'picks' | 'fearless' | 'noDraft' | 'noEarlier' | 'mock' | 'mockShort' | 'turn',
+    | 'next' | 'elder' | 'noSeries' | 'bans' | 'picks' | 'fearless' | 'noDraft' | 'noEarlier' | 'turn'
+    | 'vs' | 'winsUnknown' | 'bansUnsupported' | 'picksAtStart',
     string
   >;
   set: Record<
@@ -55,7 +58,8 @@ const zh: Strings = {
   connection: { connecting: '連線中', ok: '已連線', retrying: '連不到服務，重試中' },
   // 用語為一般玩家的叫法，尚未對照官方中文版。
   element: { infernal: '火龍', ocean: '水龍', mountain: '土龍', cloud: '風龍', hextech: '海克斯龍', chemtech: '化學龍', elder: '遠古龍' },
-  elementShort: { infernal: '火', ocean: '水', mountain: '土', cloud: '風', hextech: '海', chemtech: '化', elder: '遠' },
+  // 海克斯龍寫「海克」：單一個「海」會被看成海龍（水龍的另一個叫法）。
+  elementShort: { infernal: '火', ocean: '水', mountain: '土', cloud: '風', hextech: '海克', chemtech: '化', elder: '遠' },
   feature: {
     clock: '遊戲時間', kills: '擊殺數', gold: '經濟差',
     towers: '防禦塔小地圖', nexusTimers: '主堡塔重生倒數', inhibitors: '水晶與重生倒數',
@@ -63,6 +67,7 @@ const zh: Strings = {
     barons: '巴龍次數', nextBaron: '巴龍重生倒數', buffs: '巴龍／遠古龍增益倒數',
     series: '上方標籤：BO 幾、第幾局',
   },
+  role: { top: '上', jungle: '野', mid: '中', bot: '下', support: '輔' },
   view: { draftGame: '本局 BP', draftSeries: '全場 BP' },
   ui: {
     sample: '樣本資料', sampleShort: '樣本', sampleHint: '連不到 Stream CV 服務，顯示的是樣本資料（開發模式）',
@@ -74,7 +79,8 @@ const zh: Strings = {
     noGame: '目前沒有進行中的比賽', waiting: '等待開局',
     next: '下一隻', elder: '遠古', noSeries: '系列賽資料未接上', bans: '禁', picks: '選',
     fearless: '無懼選角：前面局選過的英雄，雙方都不能再選', noDraft: '還沒有 BP 資料（服務合約 v0 沒有這項）',
-    noEarlier: '這是第一局，還沒有鎖住的英雄', mock: '版面示意（假資料）', mockShort: '示意', turn: '輪到',
+    noEarlier: '這是第一局，還沒有鎖住的英雄', turn: '輪到',
+    vs: 'vs', winsUnknown: '不知道本局開始前的勝場', bansUnsupported: '尚未支援（服務還讀不到禁用）', picksAtStart: '開局後才會有',
   },
   set: {
     title: '設定', language: '語言', auto: '跟隨系統', background: '背景', solid: '不透明', semi: '半透明', clear: '透明',
@@ -89,7 +95,7 @@ const zh: Strings = {
   seriesGame: (bo, g) => `BO${bo} 第 ${g} 局`,
   gameNo: (g) => `第 ${g} 局`,
   locked: (n) => `已鎖 ${n} 隻`,
-  whose: (team, what) => `${team}${what}`,
+  whose: (team, what) => `${team} ${what}`,
 };
 
 const en: Strings = {
@@ -107,6 +113,7 @@ const en: Strings = {
     barons: 'Baron count', nextBaron: 'Baron timer', buffs: 'Baron / Elder buff timers',
     series: 'Top tab: best of, game number',
   },
+  role: { top: 'T', jungle: 'J', mid: 'M', bot: 'B', support: 'S' },
   view: { draftGame: 'Draft', draftSeries: 'Series draft' },
   ui: {
     sample: 'Sample data', sampleShort: 'Sample', sampleHint: "Can't reach the Stream CV service; showing sample data (dev mode)",
@@ -118,7 +125,8 @@ const en: Strings = {
     noGame: 'No game in progress', waiting: 'Waiting for the game',
     next: 'Next', elder: 'Elder', noSeries: 'No series data yet', bans: 'Ban', picks: 'Pick',
     fearless: 'Fearless draft: champions picked earlier in the series are locked for both teams', noDraft: 'No draft data yet (not in service contract v0)',
-    noEarlier: 'Game 1: nothing locked yet', mock: 'Layout sample (made-up data)', mockShort: 'Mock', turn: 'Now',
+    noEarlier: 'Game 1: nothing locked yet', turn: 'Now',
+    vs: 'vs', winsUnknown: 'Series score before this game is unknown', bansUnsupported: 'Not supported yet (the service cannot read bans)', picksAtStart: 'Shown once the game starts',
   },
   set: {
     title: 'Settings', language: 'Language', auto: 'System', background: 'Background', solid: 'Solid', semi: 'Translucent', clear: 'Clear',

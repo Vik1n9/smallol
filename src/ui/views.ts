@@ -3,7 +3,7 @@
 // Words before symbols: every capsule says what it counts ("小龍", "巴龍", "紅方水晶"), and colour
 // only repeats what the words say.
 
-import { TEAMS, type DraftGame, type MatchState, type Team } from '../model/types.ts';
+import { ROLES, TEAMS, type DraftGame, type MatchState, type Team } from '../model/types.ts';
 import { fmtClock, left, timersOn, towerDown } from '../model/clock.ts';
 import type { Connection } from '../data/streamcv/source.ts';
 import { championName } from '../data/champions.ts';
@@ -35,8 +35,6 @@ export interface ViewCtx {
   conn: Connection;
   /** Showing the bundled sample instead of the service (dev mode). */
   sample: boolean;
-  /** Series and draft are made up, to show the layout (dev mode). */
-  mock: boolean;
 }
 
 export const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
@@ -205,13 +203,23 @@ export function mapView(c: ViewCtx, withMap: boolean): string {
 
 // ---------- tab strip ----------
 
+/** "● MVK 1–1 FUR ●", or "● MVK vs FUR ●" when the service could not tell the wins (its note in the tooltip). */
+function seriesScore(c: ViewCtx): string {
+  const se = c.s.series!;
+  const b = se.teams.B, r = se.teams.R;
+  const known = b.wins !== null && r.wins !== null;
+  const mid = known ? ` ${b.wins}–${r.wins} ` : ` <span class="muted">${esc(c.S.ui.vs)}</span> `;
+  const title = known ? '' : ` title="${esc(se.winsNote ?? c.S.ui.winsUnknown)}"`;
+  return `<span class="score mono"${title}>${dot('B')}${esc(b.code)}${mid}${esc(r.code)}${dot('R')}</span>`;
+}
+
 /** Left: which game of the series. Right: the views under the game, settings, quit. */
 export function tabsView(c: ViewCtx, open: Record<ViewName, boolean>, canQuit: boolean, quitArmed: boolean): string {
   const se = c.s.series;
   let series = '';
   if (c.show.series) {
     series = se
-      ? `<span class="tab series"><b>${esc(c.S.seriesGame(se.bestOf, se.game))}</b><span class="score mono">${dot('B')}${esc(se.teams.B.code)} ${se.teams.B.wins}–${se.teams.R.wins} ${esc(se.teams.R.code)}${dot('R')}</span>${c.mock ? `<span class="tag" title="${esc(c.S.ui.mock)}">${esc(c.S.ui.mockShort)}</span>` : ''}</span>`
+      ? `<span class="tab series"><b>${esc(c.S.seriesGame(se.bestOf, se.game))}</b>${seriesScore(c)}</span>`
       : `<span class="tab series muted">${esc(c.S.ui.noSeries)}</span>`;
   }
   const toggle = (v: ViewName) => `<button class="vt" data-view="${v}" aria-pressed="${open[v]}">${esc(c.S.view[v])}</button>`;
@@ -222,10 +230,11 @@ export function tabsView(c: ViewCtx, open: Record<ViewName, boolean>, canQuit: b
 
 // ---------- views under the game: draft of this game, and of the whole series ----------
 
-const champ = (c: ViewCtx, id: string | null, kind: 'ban' | 'pick', side: Team, now = false) => {
-  if (!id) return `<span class="ch empty${now ? ' now' : ''}"${now ? ` title="${esc(c.S.ui.turn)}"` : ''}></span>`;
+const champ = (c: ViewCtx, id: string | null, kind: 'ban' | 'pick', side: Team, now = false, role?: string) => {
+  const mark = role ? `<i class="role">${esc(role)}</i>` : '';
+  if (!id) return `<span class="ch empty${now ? ' now' : ''}"${now ? ` title="${esc(c.S.ui.turn)}"` : ''}>${mark}</span>`;
   const name = championName(id, c.lang);
-  return `<span class="ch ${kind}" style="--t:${TEAM_COLOUR[side]}" title="${esc(name)}">${esc(name)}</span>`;
+  return `<span class="ch ${kind}" style="--t:${TEAM_COLOUR[side]}" title="${esc(name)}">${mark}${esc(name)}</span>`;
 };
 
 function noDraft(c: ViewCtx, title: string): string {
@@ -235,12 +244,18 @@ function noDraft(c: ViewCtx, title: string): string {
 export function draftGameView(c: ViewCtx): string {
   const g = c.s.draft?.current;
   if (!g) return noDraft(c, c.S.view.draftGame);
+  const d = c.s.draft!;
+  const byRole = d.picksOrder === 'role';
   const line = (t: Team, kind: 'ban' | 'pick') => {
+    const label = `<span class="k">${esc(kind === 'ban' ? c.S.ui.bans : c.S.ui.picks)}</span>`;
+    // The service cannot see bans yet: say so, rather than draw five empty slots that look like "none yet".
+    if (kind === 'ban' && !d.bansSupported) return `${label}<span class="unsupported muted">${esc(c.S.ui.bansUnsupported)}</span>`;
     const list = kind === 'ban' ? g.sides[t].bans : g.sides[t].picks;
+    if (kind === 'pick' && byRole && list.every((x) => x === null)) return `${label}<span class="unsupported muted">${esc(c.S.ui.picksAtStart)}</span>`;
     const now = (i: number) => g.turn?.side === t && g.turn.kind === kind && g.turn.slot === i;
-    return `<span class="k">${esc(kind === 'ban' ? c.S.ui.bans : c.S.ui.picks)}</span>${list.map((id, i) => champ(c, id, kind, t, now(i))).join('')}`;
+    return label + list.map((id, i) => champ(c, id, kind, t, now(i), kind === 'pick' && byRole ? c.S.role[ROLES[i]!] : undefined)).join('');
   };
-  return `<header><b>${esc(c.S.view.draftGame)}</b><span class="muted">${esc(c.S.gameNo(g.game))}</span>${c.mock ? `<span class="tag">${esc(c.S.ui.mock)}</span>` : ''}</header>
+  return `<header><b>${esc(c.S.view.draftGame)}</b><span class="muted">${esc(c.S.gameNo(g.game))}</span></header>
     <div class="dgrid">${TEAMS.map((t) => `<div class="dteam">${dot(t)}<b class="tn" style="color:${TEAM_COLOUR[t]}">${esc(g.sides[t].team)}</b></div>
       <div class="dline">${line(t, 'ban')}</div><div class="dline">${line(t, 'pick')}</div>`).join('')}</div>`;
 }
@@ -256,7 +271,7 @@ export function draftSeriesView(c: ViewCtx): string {
   const order = d.current ? [d.current.sides.B.team, d.current.sides.R.team] : d.earlier[0] ? [d.earlier[0].sides.B.team, d.earlier[0].sides.R.team] : [];
   const locked = d.earlier.reduce((n, g) => n + TEAMS.reduce((m, t) => m + g.sides[t].picks.filter(Boolean).length, 0), 0);
   const sideOf = (g: DraftGame, code: string): Team => (g.sides.B.team === code ? 'B' : 'R');
-  const head = `<header><b>${esc(c.S.view.draftSeries)}</b><span class="muted">${esc(c.S.locked(locked))}</span>${c.mock ? `<span class="tag">${esc(c.S.ui.mock)}</span>` : ''}</header>`;
+  const head = `<header><b>${esc(c.S.view.draftSeries)}</b><span class="muted">${esc(c.S.locked(locked))}</span></header>`;
   if (!d.earlier.length) return `${head}<p class="empty-note muted">${esc(c.S.ui.noEarlier)}</p>`;
   const rows = order.flatMap((code) => d.earlier.map((g, i) => {
     const t = sideOf(g, code);

@@ -2,8 +2,7 @@
 // one of three size tiers (dot, bar, map), the draft views under it, and the settings page.
 // Runs in a plain browser too (without window controls), which is how the UI is checked headless.
 // Checking aids (launch args in the app, ?query in a browser), never saved:
-//   --sample       show the bundled sample instead of asking the service (dev builds only), with a
-//                  made-up series and draft to lay those views out
+//   --sample       show the bundled sample instead of asking the service (dev builds only)
 //   --demo         with the sample: treat it as a game in progress, so countdowns run
 //   --settings     open the settings page
 //   --set=path:value,...  change settings in memory (e.g. language:en,views.draftGame:true)
@@ -126,14 +125,11 @@ let haveLive = false;
 const flags = { sample: false, demo: false };
 
 async function loadSample(): Promise<void> {
-  // Dev builds only: neither the sample nor the made-up draft is bundled into a release.
+  // Dev builds only: the sample is not bundled into a release.
   if (!import.meta.env.DEV) return;
-  const [game, mock] = await Promise.all([
-    import('../../fixtures/streamcv/state_finished_game.json'),
-    import('../../fixtures/dev/series_draft_mock.json'),
-  ]);
+  const game = await import('../../fixtures/streamcv/state_finished_game.json');
   if (haveLive && !flags.sample) return;
-  let s = adapt({ ...game.default, ...mock.default });
+  let s = adapt(game.default);
   if (flags.demo) s = { ...s, status: 'in_game' };
   state = s;
   receivedAt = Date.now();
@@ -181,7 +177,7 @@ function render(): void {
   const vh = viewsHeight();
   const tier = tierOf(window.innerHeight - vh);
   const c: ViewCtx = {
-    s: state, clock: clockNow(state, receivedAt, Date.now(), cfg().tickClock), show: cfg().show, gold: cfg().gold, S, lang, conn, sample, mock: sample,
+    s: state, clock: clockNow(state, receivedAt, Date.now(), cfg().tickClock), show: cfg().show, gold: cfg().gold, S, lang, conn, sample,
   };
   // The pill has no room for tabs or views.
   const pill = tier === 'dot';

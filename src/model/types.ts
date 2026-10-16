@@ -69,13 +69,16 @@ export interface NextDragon {
   at: number;
 }
 
-/** The series this game belongs to. Not in the service contract v0 (see docs/CONTRACT_PROPOSAL.md). */
+/** The series this game belongs to (service contract v0.1, "系列賽與 BP"). */
 export interface SeriesInfo {
   bestOf: number;
   /** 1-based number of this game in the series. */
   game: number;
-  /** Who plays which side this game, and series wins before it. */
-  teams: Record<Team, { code: string; wins: number }>;
+  matchId: string | null;
+  /** Who plays which side this game, and series wins before it (null when the service could not tell). */
+  teams: Record<Team, { code: string; wins: number | null }>;
+  /** Why the wins are unknown, from the service. */
+  winsNote: string | null;
 }
 
 /** A champion by its Data Dragon id ("KSante"); names come from src/data/champions.ts. */
@@ -84,16 +87,30 @@ export type Champion = string;
 export interface DraftSide {
   /** Team code, so a series can follow a team across side swaps. */
   team: string;
-  /** Five slots each, in draft order; null while not chosen yet. */
+  /** Five slots each; null while not chosen yet (or not supported, see DraftState). */
   bans: (Champion | null)[];
+  /** In draft order, or by role (top, jungle, mid, bot, support): DraftState.picksOrder says which. */
   picks: (Champion | null)[];
 }
+
+export const ROLES = ['top', 'jungle', 'mid', 'bot', 'support'] as const;
+export type Role = (typeof ROLES)[number];
 
 export interface DraftGame {
   game: number;
   sides: Record<Team, DraftSide>;
   /** The next action while the draft is on; null once it is done. */
   turn: { side: Team; kind: 'ban' | 'pick'; slot: number } | null;
+}
+
+export interface DraftState {
+  current: DraftGame | null;
+  earlier: DraftGame[];
+  /** v0.1 sends picks by role: the feed has positions, not the order they were picked in. */
+  picksOrder: 'draft' | 'role';
+  /** v0.1 cannot see bans or whose turn it is yet; the views say so instead of showing empty slots. */
+  bansSupported: boolean;
+  turnSupported: boolean;
 }
 
 export interface MatchState {
@@ -113,5 +130,5 @@ export interface MatchState {
   buffs: Buff[];
   series: SeriesInfo | null;
   /** This game's draft, and the earlier games of the series (fearless draft: their picks are locked). */
-  draft: { current: DraftGame | null; earlier: DraftGame[] } | null;
+  draft: DraftState | null;
 }

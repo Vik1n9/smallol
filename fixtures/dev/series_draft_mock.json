@@ -1,5 +1,5 @@
 {
- "_note": "MADE-UP DATA for laying out the series tab and the draft views in dev mode. Not a real series. Field shape follows docs/CONTRACT_PROPOSAL.md.",
+ "_note": "MADE-UP DATA for tests of the draft views once bans and draft order are supported (contract v0.1 has neither). Not a real series. Not used by the app.",
  "series": { "bestOf": 5, "game": 3, "teams": { "B": { "code": "AAA", "wins": 1 }, "R": { "code": "BBB", "wins": 1 } } },
  "draft": {
   "current": {

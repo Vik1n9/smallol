@@ -6,6 +6,8 @@
 
 **維護者 2026-10-16 裁定：系列賽和 BP 由 Stream CV 服務抓，照本文件加進 `state.json`，桌面工具只讀服務。** 欄位名稱以服務實作後的合約（`SERVICE_CONTRACT.md`）為準；若與本文件不同，桌面工具的 adapter 跟著改。
 
+**已實作（StreamCV a34f808，合約 v0.1「系列賽與 BP」）。與本提案不同之處，桌面工具已跟著改：** `picks` 依位置排（`draft.picksOrder: "role"`）；禁用與輪到誰尚未支援（`draft.bansSupported` / `turnSupported` 為 false）；`series` 多了 `matchId`，勝場不知道時 `wins` 為 null 並附 `series.winsNote`。下面是原始提案，保留作紀錄。
+
 ## 欄位
 
 ```json

@@ -130,7 +130,7 @@ export function adapt(input: unknown): MatchState {
   return s;
 }
 
-// ---------- series and draft: proposed v1 fields (docs/CONTRACT_PROPOSAL.md), not in v0 ----------
+// ---------- series and draft: contract v0.1 ("系列賽與 BP"), after docs/CONTRACT_PROPOSAL.md ----------
 
 const CODE = /^[A-Za-z0-9]{1,6}$/;
 const CHAMP = /^[A-Za-z0-9]{2,30}$/;
@@ -158,13 +158,24 @@ function readSeriesAndDraft(raw: Record<string, unknown>, s: MatchState): void {
   const series = obj(raw.series);
   const bestOf = count(series.bestOf), game = count(series.game);
   const teams = obj(series.teams);
-  const side = (t: Team) => { const o = obj(teams[t]); return typeof o.code === 'string' && CODE.test(o.code) ? { code: o.code, wins: count(o.wins) ?? 0 } : null; };
+  // wins is null when the service did not see the series before this game started (winsNote says why).
+  const side = (t: Team) => { const o = obj(teams[t]); return typeof o.code === 'string' && CODE.test(o.code) ? { code: o.code, wins: count(o.wins) } : null; };
   const b = side('B'), r = side('R');
-  if (bestOf && game && game <= bestOf && b && r) s.series = { bestOf, game, teams: { B: b, R: r } };
+  const text = (v: unknown) => (typeof v === 'string' && v.length <= 300 ? v : null);
+  if (bestOf && game && game <= bestOf && b && r) {
+    s.series = { bestOf, game, matchId: text(series.matchId), teams: { B: b, R: r }, winsNote: text(series.winsNote) };
+  }
 
   const draft = obj(raw.draft);
   if (!('current' in draft) && !('earlier' in draft)) return;
   const current = draftGame(draft.current);
   const earlier = arr(draft.earlier).map(draftGame).filter((g): g is DraftGame => g !== null && (!current || g.game < current.game));
-  s.draft = { current, earlier: earlier.sort((a, b2) => a.game - b2.game) };
+  // Missing flags mean the proposal's reading: picks in draft order, bans and turn sent when known.
+  s.draft = {
+    current, earlier: earlier.sort((a, b2) => a.game - b2.game),
+    picksOrder: draft.picksOrder === 'role' ? 'role' : 'draft',
+    bansSupported: draft.bansSupported !== false,
+    turnSupported: draft.turnSupported !== false,
+  };
+  if (!s.draft.turnSupported && current) current.turn = null;
 }

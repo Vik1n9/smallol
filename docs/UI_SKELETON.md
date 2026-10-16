@@ -17,12 +17,12 @@ npm run typecheck
 
 | 參數 | 作用 |
 | --- | --- |
-| `sample` | 不問服務，直接畫樣本（只有開發版有樣本），並帶一份假的系列賽與 BP（`fixtures/dev/series_draft_mock.json`）來排版，畫面標「示意」 |
+| `sample` | 不問服務，直接畫樣本（只有開發版有樣本）。樣本是 Stream CV 合約 v0.1 的真實輸出，含系列賽與 BP（MVK vs FUR 第 3 局） |
 | `demo` | 搭配 `sample`：把已結束的樣本當成進行中，倒數會走 |
 | `settings` | 開啟設定頁 |
 | `set=path:value,...` | 例：`set=language:en,show.gold:false,background:semi` |
 
-開發版連不到服務時，會自動改畫樣本並標「樣本資料」；正式建置不含樣本與假 BP（`dist/` 搜尋 game id、`MADE-UP DATA` 皆 0 筆）。
+開發版連不到服務時，會自動改畫樣本並標「樣本資料」；正式建置不含樣本（`dist/` 搜尋 game id 0 筆）。`fixtures/dev/series_draft_mock.json` 是假資料，只給測試用（禁用與 BP 順序支援之後的版面），App 不讀。
 
 截圖：`npm run dev` 開著時跑 `node scripts/screenshots.mjs`，輸出到 `docs/screenshots/`。
 
@@ -43,7 +43,13 @@ npm run typecheck
 
 ## 系列賽與 BP
 
-合約 v0 沒有這兩項，畫面會明白寫「系列賽資料未接上」「還沒有 BP 資料」。要的欄位與可能來源見 `docs/CONTRACT_PROPOSAL.md`（提案，待裁決）。
+由 Stream CV 服務提供（合約 v0.1「系列賽與 BP」，2026-10-16；提案見 `docs/CONTRACT_PROPOSAL.md`）。v0.1 的限制，畫面照實顯示：
+
+- 選角依**位置**排（上、野、中、下、輔，每格前面標位置），不是選角順序：feed 只給位置。
+- 禁用與「輪到誰」**尚未支援**，畫面寫「尚未支援」，不畫空格。
+- 本局選角開局後才有；BP 進行中顯示「開局後才會有」。
+- 服務沒在本局開始前看到系列賽時，勝場不知道，上方標籤顯示「MVK vs FUR」，滑鼠移上去看原因。
+- 服務沒有系列賽資料時（例如沒有設定 API key），畫面寫「系列賽資料未接上」「還沒有 BP 資料」。
 
 ## 從資料推論的地方（要知道的）
 
@@ -56,7 +62,7 @@ npm run typecheck
 
 ## 驗證狀態
 
-- 單元測試 49 項通過，含：樣本的「CV 命名的塔數＝對方 `towersDestroyedBy`＝tower 事件數」(10)。
+- 單元測試 54 項通過，含：樣本的「CV 命名的塔數＝對方 `towersDestroyedBy`＝tower 事件數」(10)；樣本三局 30 個英雄 ID 全部對得上名稱表、沒有重複（無懼選角）。
 - 瀏覽器（localhost:1430）讀到實際服務的 `idle` 回應，畫出「目前沒有進行中的比賽」。
 - 第一版用 Tauri debug 版實際開窗截過圖；2.5D 這一版只有瀏覽器截圖（`scripts/screenshots.mjs`），沒有另開 App 視窗截圖。
 - **未驗證**：Tauri 正式建置（release、CSP 下對 127.0.0.1:8787 的請求）、進行中比賽的實際資料、延遲。

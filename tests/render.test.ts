@@ -14,11 +14,13 @@ import sample from '../fixtures/streamcv/state_finished_game.json' with { type: 
 import mock from '../fixtures/dev/series_draft_mock.json' with { type: 'json' };
 
 const finished = adapt(sample);
+/** The same game as the service sent it before v0.1: no series, no draft. */
+const bare = { ...finished, series: null, draft: null };
 const live = { ...finished, status: 'in_game' as const };
 const withMock = { ...adapt({ ...sample, ...mock }), status: 'in_game' as const };
 const ctx = (over: Partial<ViewCtx> = {}): ViewCtx => ({
   s: finished, clock: finished.clock, show: { ...DEFAULTS.show }, gold: 'diff', S: STRINGS['zh-Hant'], lang: 'zh-Hant',
-  conn: 'ok', sample: false, mock: false, ...over,
+  conn: 'ok', sample: false, ...over,
 });
 const opts = { inhibitors: true, inhibTimers: true, nexusTimers: true, unnamed: (n: number) => `+${n}?`, unnamedTitle: '', unknownTitle: '' };
 const AT = 27 * 60 + 6;
@@ -95,8 +97,9 @@ describe('views', () => {
     const chips = timerChips(c, false);
     expect(chips.match(/class="chip/g)).toHaveLength(3);
     expect(times(chips)).toEqual(['2:42', '3:10', '4:49']);
-    expect(chips).toContain('紅方水晶');
-    expect(chips).toContain('紅方主堡塔');
+    expect(chips).toContain('FUR 水晶');
+    expect(chips).toContain('FUR 主堡塔');
+    expect(timerChips(ctx({ s: { ...bare, status: 'in_game' }, clock: AT }), false)).toContain('紅方 水晶');
     expect(timerChips(ctx(), false)).toBe('');
   });
 
@@ -130,7 +133,11 @@ describe('tab strip and draft views', () => {
     const tabs = tabsView(ctx({ s: withMock }), DEFAULTS.views, true, false);
     expect(tabs).toContain('BO5 第 3 局');
     expect(tabs).toContain('AAA 1–1 BBB');
-    expect(tabsView(ctx(), DEFAULTS.views, true, false)).toContain(STRINGS['zh-Hant'].ui.noSeries);
+    expect(tabsView(ctx({ s: bare }), DEFAULTS.views, true, false)).toContain(STRINGS['zh-Hant'].ui.noSeries);
+    // Real sample: the service did not see the series before this game, so no score, and its note on hover.
+    const real = tabsView(ctx(), DEFAULTS.views, true, false);
+    expect(real).toContain('MVK <span class="muted">vs</span> FUR');
+    expect(real).toContain(`title="${finished.series!.winsNote}"`);
     expect(tabsView(ctx({ s: withMock, S: STRINGS.en, lang: 'en' }), DEFAULTS.views, true, false)).toContain('Bo5 · Game 3');
   });
 
@@ -158,8 +165,26 @@ describe('tab strip and draft views', () => {
   });
 
   it('says plainly when there is no draft data', () => {
-    expect(draftGameView(ctx())).toContain(STRINGS['zh-Hant'].ui.noDraft);
-    expect(draftSeriesView(ctx())).toContain(STRINGS['zh-Hant'].ui.noDraft);
+    expect(draftGameView(ctx({ s: bare }))).toContain(STRINGS['zh-Hant'].ui.noDraft);
+    expect(draftSeriesView(ctx({ s: bare }))).toContain(STRINGS['zh-Hant'].ui.noDraft);
+  });
+
+  it('real sample: picks marked by role, bans said to be unsupported (not five empty slots)', () => {
+    const html = draftGameView(ctx());
+    expect(html.match(/class="ch pick"/g)).toHaveLength(10);
+    expect(html.match(/class="ch ban"|class="ch empty/g)).toBeNull();
+    expect(html.match(new RegExp(STRINGS['zh-Hant'].ui.bansUnsupported.replace(/[()（）]/g, '.'), 'g'))).toHaveLength(2);
+    expect(html).toContain('<i class="role">上</i>');
+    expect(html).toContain('<i class="role">輔</i>');
+    // During the draft (v0.1: picks only arrive once the game starts).
+    const waiting = adapt({ status: 'waiting', draft: { current: { game: 4, B: { team: 'MVK' }, R: { team: 'FUR' } }, earlier: [], picksOrder: 'role', bansSupported: false } });
+    expect(draftGameView(ctx({ s: waiting }))).toContain(STRINGS['zh-Hant'].ui.picksAtStart);
+  });
+
+  it('real sample: the series view locks the 20 picks of games 1 and 2', () => {
+    const html = draftSeriesView(ctx());
+    expect(html).toContain('已鎖 20 隻');
+    expect(html.indexOf('>MVK<')).toBeLessThan(html.indexOf('>FUR<'));
   });
 
   it('the made-up layout data follows the fearless rule and names real champions', () => {
