@@ -18,6 +18,7 @@ npm run typecheck
 | 參數 | 作用 |
 | --- | --- |
 | `sample` | 不問服務，直接畫樣本（只有開發版有樣本）。樣本是 Stream CV 合約 v0.2 的真實輸出，含系列賽、BP 與選手（MVK vs FUR 第 3 局） |
+| `sample=v03` | 改用 v0.3 的樣本（`fixtures/streamcv/state_v03_bans.json`，有禁用）。這份樣本的 `towersLost` 是空的，是服務那邊的退步，所以地圖的塔畫成「沒有辨識資料」；塔的測試用主樣本（StreamCV e74ea27） |
 | `demo` | 搭配 `sample`：把已結束的樣本當成進行中，倒數會走 |
 | `settings` | 開啟設定頁 |
 | `set=path:value,...` | 例：`set=language:en,show.gold:false,background:semi` |
@@ -46,7 +47,7 @@ npm run typecheck
 由 Stream CV 服務提供（合約 v0.1「系列賽與 BP」，2026-10-16；提案見 `docs/CONTRACT_PROPOSAL.md`）。v0.1 的限制，畫面照實顯示：
 
 - 選角依**位置**排（上、野、中、下、輔，每格前面標位置），不是選角順序：feed 只給位置。
-- 禁用與「輪到誰」**尚未支援**，畫面寫「尚未支援」，不畫空格。
+- 禁用：v0.3（StreamCV 6e99ae1）起支援，依各隊的禁用順序（第 1–5 手）。不支援時寫「尚未支援」；支援但整局 5 格都空（服務沒看到該局 BP 畫面）時寫「這局沒有禁用資料」；BP 進行中的空格照畫空格。「輪到誰」仍未支援。
 - 本局選角開局後才有；BP 進行中顯示「開局後才會有」。
 - 服務沒在本局開始前看到系列賽時，勝場不知道，上方標籤顯示「MVK vs FUR」，滑鼠移上去看原因。
 - 服務沒有系列賽資料時（例如沒有設定 API key），畫面寫「系列賽資料未接上」「還沒有 BP 資料」。

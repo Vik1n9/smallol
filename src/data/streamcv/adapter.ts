@@ -175,6 +175,7 @@ function readSeriesAndDraft(raw: Record<string, unknown>, s: MatchState): void {
   s.draft = {
     current, earlier: earlier.sort((a, b2) => a.game - b2.game),
     picksOrder: draft.picksOrder === 'role' ? 'role' : 'draft',
+    bansOrder: draft.bansOrder === 'ban' ? 'ban' : null,
     bansSupported: draft.bansSupported !== false,
     turnSupported: draft.turnSupported !== false,
   };

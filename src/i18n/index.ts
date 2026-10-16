@@ -32,7 +32,7 @@ export interface Strings {
     | 'soul' | 'inhibitor' | 'nexusTurret' | 'kills' | 'gold' | 'towersUnnamed' | 'towersUnknown'
     | 'settings' | 'done' | 'quit' | 'quitAgain' | 'noGame' | 'waiting'
     | 'next' | 'elder' | 'noSeries' | 'bans' | 'picks' | 'fearless' | 'noDraft' | 'noEarlier' | 'turn'
-    | 'vs' | 'winsUnknown' | 'bansUnsupported' | 'picksAtStart' | 'noPlayers' | 'level' | 'cs' | 'kda' | 'hp' | 'itemsUnknown',
+    | 'vs' | 'winsUnknown' | 'bansUnsupported' | 'picksAtStart' | 'noPlayers' | 'level' | 'cs' | 'kda' | 'hp' | 'itemsUnknown' | 'bansMissing',
     string
   >;
   set: Record<
@@ -81,7 +81,7 @@ const zh: Strings = {
     fearless: '無懼選角：前面局選過的英雄，雙方都不能再選', noDraft: '還沒有 BP 資料（服務合約 v0 沒有這項）',
     noEarlier: '這是第一局，還沒有鎖住的英雄', turn: '輪到',
     vs: 'vs', winsUnknown: '不知道本局開始前的勝場', bansUnsupported: '尚未支援（服務還讀不到禁用）', picksAtStart: '開局後才會有',
-    noPlayers: '沒有選手資料（開局後才有）', itemsUnknown: '裝備資料暫缺', level: 'Lv', cs: '補刀', kda: '擊殺／死亡／助攻', hp: '血量',
+    noPlayers: '沒有選手資料（開局後才有）', itemsUnknown: '裝備資料暫缺', bansMissing: '這局沒有禁用資料（服務沒看到這局的 BP 畫面）', level: 'Lv', cs: '補刀', kda: '擊殺／死亡／助攻', hp: '血量',
   },
   set: {
     title: '設定', language: '語言', auto: '跟隨系統', background: '背景', solid: '不透明', semi: '半透明', clear: '透明',
@@ -128,7 +128,7 @@ const en: Strings = {
     fearless: 'Fearless draft: champions picked earlier in the series are locked for both teams', noDraft: 'No draft data yet (not in service contract v0)',
     noEarlier: 'Game 1: nothing locked yet', turn: 'Now',
     vs: 'vs', winsUnknown: 'Series score before this game is unknown', bansUnsupported: 'Not supported yet (the service cannot read bans)', picksAtStart: 'Shown once the game starts',
-    noPlayers: 'No player data (it comes once the game starts)', itemsUnknown: 'Items not available right now', level: 'Lv', cs: 'CS', kda: 'Kills / deaths / assists', hp: 'Health',
+    noPlayers: 'No player data (it comes once the game starts)', itemsUnknown: 'Items not available right now', bansMissing: 'No bans for this game (the service did not see its draft)', level: 'Lv', cs: 'CS', kda: 'Kills / deaths / assists', hp: 'Health',
   },
   set: {
     title: 'Settings', language: 'Language', auto: 'System', background: 'Background', solid: 'Solid', semi: 'Translucent', clear: 'Clear',

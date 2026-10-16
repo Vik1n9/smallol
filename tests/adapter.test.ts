@@ -3,6 +3,8 @@ import { adapt, parseClock } from '../src/data/streamcv/adapter.ts';
 import { TOWER_SITES } from '../src/model/types.ts';
 import { knownChampion } from '../src/data/champions.ts';
 import sample from '../fixtures/streamcv/state_finished_game.json' with { type: 'json' };
+// StreamCV 6e99ae1 (contract v0.3, bans). Its towersLost is empty, a regression on the service side; tower tests use the main sample.
+import v03 from '../fixtures/streamcv/state_v03_bans.json' with { type: 'json' };
 
 const downSites = (s: ReturnType<typeof adapt>, t: 'B' | 'R') => TOWER_SITES.filter((x) => s.teams[t].towers[x].down);
 
@@ -123,9 +125,14 @@ describe('Stream CV adapter, series and draft (contract v0.1)', () => {
     expect(s.series!.winsNote).toBeTruthy();
   });
 
-  it('real sample: picks by role, bans and turn not supported yet', () => {
-    const d = adapt(sample).draft!;
-    expect(d).toMatchObject({ picksOrder: 'role', bansSupported: false, turnSupported: false });
+  it('real sample (v0.3): picks by role, bans in ban order, turn not supported yet', () => {
+    const d = adapt(v03).draft!;
+    expect(d).toMatchObject({ picksOrder: 'role', bansOrder: 'ban', bansSupported: true, turnSupported: false });
+    expect(d.current!.sides.B.bans).toEqual(['Ezreal', 'Renata', 'Sylas', 'Poppy', 'Shen']);
+    expect(d.current!.sides.R.bans).toEqual(['Locke', 'Nocturne', 'Yone', 'Orianna', 'Vayne']);
+    const bans = [d.current!, ...d.earlier].flatMap((g) => [...g.sides.B.bans, ...g.sides.R.bans]);
+    expect(bans).toHaveLength(30);
+    expect(bans.filter((id) => !id || !knownChampion(id))).toEqual([]);
     expect(d.current!.sides.B).toMatchObject({ team: 'MVK', picks: ['Zaahen', 'JarvanIV', 'KogMaw', 'Jhin', 'Camille'] });
     expect(d.current!.sides.R.picks).toEqual(['KSante', 'Naafiri', 'Ryze', 'Kaisa', 'Leona']);
     expect(d.current!.turn).toBeNull();

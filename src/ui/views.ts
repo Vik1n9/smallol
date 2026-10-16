@@ -256,6 +256,8 @@ export function draftGameView(c: ViewCtx): string {
     if (kind === 'ban' && !d.bansSupported) return `${label}<span class="unsupported muted">${esc(c.S.ui.bansUnsupported)}</span>`;
     const list = kind === 'ban' ? g.sides[t].bans : g.sides[t].picks;
     if (kind === 'pick' && byRole && list.every((x) => x === null)) return `${label}<span class="unsupported muted">${esc(c.S.ui.picksAtStart)}</span>`;
+    // Five empty bans after the draft: the service never saw this game's draft (v0.3), not "no bans".
+    if (kind === 'ban' && c.s.status !== 'waiting' && list.every((x) => x === null)) return `${label}<span class="unsupported muted">${esc(c.S.ui.bansMissing)}</span>`;
     const now = (i: number) => g.turn?.side === t && g.turn.kind === kind && g.turn.slot === i;
     // Positions are not marked here; they are in the players view (maintainer, 2026-10-16).
     return label + list.map((id, i) => champ(c, id, kind, t, now(i))).join('');

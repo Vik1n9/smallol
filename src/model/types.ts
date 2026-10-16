@@ -108,7 +108,12 @@ export interface DraftState {
   earlier: DraftGame[];
   /** v0.1 sends picks by role: the feed has positions, not the order they were picked in. */
   picksOrder: 'draft' | 'role';
-  /** v0.1 cannot see bans or whose turn it is yet; the views say so instead of showing empty slots. */
+  /** v0.3 sends bans in each side's own ban order (1st to 5th); null when the service does not say. */
+  bansOrder: 'ban' | null;
+  /**
+   * Whether the service reads bans at all (v0.3: yes) and whose turn it is (not yet). Supported does
+   * not mean every slot has a value: a game the service never saw the draft of has five nulls.
+   */
   bansSupported: boolean;
   turnSupported: boolean;
 }

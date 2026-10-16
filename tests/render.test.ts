@@ -12,6 +12,8 @@ import {
 } from '../src/ui/views.ts';
 import { settingsView } from '../src/ui/settings-view.ts';
 import sample from '../fixtures/streamcv/state_finished_game.json' with { type: 'json' };
+// StreamCV 6e99ae1 (contract v0.3, bans). Its towersLost is empty, a regression on the service side; tower tests use the main sample.
+import v03 from '../fixtures/streamcv/state_v03_bans.json' with { type: 'json' };
 import mock from '../fixtures/dev/series_draft_mock.json' with { type: 'json' };
 
 const finished = adapt(sample);
@@ -170,12 +172,27 @@ describe('tab strip and draft views', () => {
     expect(draftSeriesView(ctx({ s: bare }))).toContain(STRINGS['zh-Hant'].ui.noDraft);
   });
 
-  it('real sample: bans said to be unsupported (not five empty slots); no position marks in BP', () => {
-    const html = draftGameView(ctx());
+  it('real sample (v0.3): ten bans and ten picks by name, no position marks', () => {
+    const html = draftGameView(ctx({ s: adapt(v03) }));
     expect(html.match(/class="ch pick"/g)).toHaveLength(10);
-    expect(html.match(/class="ch ban"|class="ch empty/g)).toBeNull();
-    expect(html.match(new RegExp(STRINGS['zh-Hant'].ui.bansUnsupported.replace(/[()（）]/g, '.'), 'g'))).toHaveLength(2);
+    expect(html.match(/class="ch ban"/g)).toHaveLength(10);
+    expect(html).toContain('>伊澤瑞爾<');
+    expect(html).toContain('>洛克<');
     expect(html).not.toContain('class="role');
+  });
+
+  it('bans: unsupported, missing for a whole game, or still coming during the draft', () => {
+    expect(draftGameView(ctx())).toContain(STRINGS['zh-Hant'].ui.bansUnsupported);
+    const none = adapt({ ...v03, draft: { ...v03.draft, current: { ...v03.draft.current, B: { ...v03.draft.current.B, bans: [null, null, null, null, null] } } } });
+    const html = draftGameView(ctx({ s: none }));
+    expect(html).toContain(STRINGS['zh-Hant'].ui.bansMissing);
+    expect(html.match(/class="ch ban"/g)).toHaveLength(5);
+    // During the draft, empty ban slots are just not decided yet.
+    const live = adapt({ status: 'waiting', draft: { current: { game: 4, B: { team: 'MVK', bans: ['Ezreal', null] }, R: { team: 'FUR' } }, earlier: [], picksOrder: 'role', bansOrder: 'ban', bansSupported: true } });
+    const during = draftGameView(ctx({ s: live }));
+    expect(during).not.toContain(STRINGS['zh-Hant'].ui.bansMissing);
+    expect(during.match(/class="ch ban"/g)).toHaveLength(1);
+    expect(during.match(/class="ch empty/g)).toHaveLength(9);
     // During the draft (v0.1: picks only arrive once the game starts).
     const waiting = adapt({ status: 'waiting', draft: { current: { game: 4, B: { team: 'MVK' }, R: { team: 'FUR' } }, earlier: [], picksOrder: 'role', bansSupported: false } });
     expect(draftGameView(ctx({ s: waiting }))).toContain(STRINGS['zh-Hant'].ui.picksAtStart);
