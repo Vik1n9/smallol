@@ -128,13 +128,8 @@ async function loadSample(): Promise<void> {
   // Dev builds only: the sample is not bundled into a release.
   if (!import.meta.env.DEV) return;
   const game = await import('../../fixtures/streamcv/state_finished_game.json');
-  // Players are not in the service yet: scripts/feed-players.mjs can put real feed numbers in raw/
-  // (git-ignored) to lay that view out. Missing is fine.
-  const extra = import.meta.glob<{ default: object }>('../../raw/players_*.json');
-  const players = Object.values(extra)[0];
-  const more = players ? (await players()).default : {};
   if (haveLive && !flags.sample) return;
-  let s = adapt({ ...game.default, ...more });
+  let s = adapt(game.default);
   if (flags.demo) s = { ...s, status: 'in_game' };
   state = s;
   receivedAt = Date.now();

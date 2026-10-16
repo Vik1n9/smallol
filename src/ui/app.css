@@ -152,6 +152,7 @@ body:hover #tabs .controls { opacity: 1; pointer-events: auto; }
 .p1 .lv .k { font-size: 9px; margin-right: 1px; }
 .hp { height: 4px; border-radius: 2px; background: color-mix(in srgb, var(--muted) 25%, transparent); overflow: hidden; }
 .hp i { display: block; height: 100%; background: #6CC36C; border-radius: 2px; }
+.items.unknown { font-style: italic; }
 .items { font-size: 10px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 20px; height: 13px; line-height: 13px; }
 
 #grip { position: fixed; right: 0; bottom: 0; width: 14px; height: 14px; cursor: nwse-resize; z-index: 10; }

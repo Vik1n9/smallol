@@ -17,7 +17,7 @@ npm run typecheck
 
 | 參數 | 作用 |
 | --- | --- |
-| `sample` | 不問服務，直接畫樣本（只有開發版有樣本）。樣本是 Stream CV 合約 v0.1 的真實輸出，含系列賽與 BP（MVK vs FUR 第 3 局） |
+| `sample` | 不問服務，直接畫樣本（只有開發版有樣本）。樣本是 Stream CV 合約 v0.2 的真實輸出，含系列賽、BP 與選手（MVK vs FUR 第 3 局） |
 | `demo` | 搭配 `sample`：把已結束的樣本當成進行中，倒數會走 |
 | `settings` | 開啟設定頁 |
 | `set=path:value,...` | 例：`set=language:en,show.gold:false,background:semi` |
@@ -54,7 +54,7 @@ npm run typecheck
 ## 選手
 
 位置、選手、英雄、等級、血量、K/D/A、補刀、金錢，加一行裝備名稱（可關；飾品、藥水不列）。BP 視圖不標位置，位置只在這裡（維護者 2026-10-16）。
-服務還沒有這項，欄位見 `docs/CONTRACT_PROPOSAL.md` 的「選手」。開發時可用 `scripts/feed-players.mjs` 把真實 feed 的某一刻存到 `raw/`（不進 git）來排版；截圖裡的選手數據就是這樣來的（feed 01:27:09，比樣本的終局早，擊殺加總 18:8，不是 22:8）。
+由 Stream CV 服務提供（合約 v0.2「選手」）；`waiting` 時沒有，畫面寫「沒有選手資料」。details 取不到時裝備寫「裝備資料暫缺」。樣本的選手數據與隊伍總數對得上（測試：擊殺 22／8、金錢 59,398／46,224）。
 
 ## 從資料推論的地方（要知道的）
 

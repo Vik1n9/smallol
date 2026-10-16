@@ -293,7 +293,7 @@ function playerRow(c: ViewCtx, p: Player, t: Team, withItems: boolean): string {
   const kda = `${n(p.kills)}/${n(p.deaths)}/${n(p.assists)}`;
   const hp = p.hp !== null && p.maxHp ? Math.max(0, Math.min(100, Math.round((p.hp / p.maxHp) * 100))) : null;
   const champName = p.champion ? championName(p.champion, c.lang) : '–';
-  const items = p.items.filter((i) => !minorItem(i)).map((i) => itemName(i, c.lang));
+  const items = p.items?.filter((i) => !minorItem(i)).map((i) => itemName(i, c.lang)) ?? null;
   const line1 = `<span class="role k">${p.role ? esc(c.S.role[p.role]) : ''}</span>`
     + `<b class="pn" title="${esc(p.name)}">${esc(p.name)}</b>`
     + `<span class="pc" title="${esc(champName)}">${esc(champName)}</span>`
@@ -302,7 +302,8 @@ function playerRow(c: ViewCtx, p: Player, t: Team, withItems: boolean): string {
     + `<span class="kda mono" title="${esc(c.S.ui.kda)}">${kda}</span>`
     + `<span class="cs mono" title="${esc(c.S.ui.cs)}">${n(p.cs)}</span>`
     + `<span class="pg mono">${p.gold === null ? '–' : fmtGold(p.gold)}</span>`;
-  const line2 = withItems ? `<div class="items" title="${esc(items.join(' · '))}">${items.length ? esc(items.join(' · ')) : '&nbsp;'}</div>` : '';
+  const text = items === null ? c.S.ui.itemsUnknown : items.join(' · ');
+  const line2 = withItems ? `<div class="items${items === null ? ' unknown' : ''}" title="${esc(text)}">${text ? esc(text) : '&nbsp;'}</div>` : '';
   return `<div class="prow" style="--t:${TEAM_COLOUR[t]}"><div class="p1">${line1}</div>${line2}</div>`;
 }
 

@@ -35,7 +35,7 @@ function emptyTeam(): TeamState {
 export function emptyState(status: GameStatus = 'idle'): MatchState {
   return {
     status, gameId: null, updated: null, clock: null, teams: { B: emptyTeam(), R: emptyTeam() }, towersKnown: false,
-    riftElement: null, soul: null, nextDragon: null, nextBaron: null, buffs: [], series: null, draft: null, players: null,
+    riftElement: null, soul: null, nextDragon: null, nextBaron: null, buffs: [], series: null, draft: null, players: null, playersAsOf: null,
   };
 }
 
@@ -181,7 +181,7 @@ function readSeriesAndDraft(raw: Record<string, unknown>, s: MatchState): void {
   if (!s.draft.turnSupported && current) current.turn = null;
 }
 
-// ---------- players: proposed field (docs/CONTRACT_PROPOSAL.md, "選手"), not in v0.1 ----------
+// ---------- players: contract v0.2 ("選手"), after docs/CONTRACT_PROPOSAL.md ----------
 
 const ROLE_OF: Record<string, Role> = { top: 'top', jungle: 'jungle', mid: 'mid', bottom: 'bot', bot: 'bot', support: 'support' };
 
@@ -190,8 +190,10 @@ function player(v: unknown, code: string | null): Player | null {
   if (typeof o.name !== 'string' || !o.name.trim() || o.name.length > 40) return null;
   // The feed writes "MVK Kratos": the team code is already on screen.
   const name = code && o.name.startsWith(`${code} `) ? o.name.slice(code.length + 1) : o.name.trim();
-  const items = arr(o.items).map((i) => (typeof i === 'number' ? i : typeof i === 'string' ? Number(i) : NaN))
-    .filter((i) => Number.isInteger(i) && i > 0 && i < 100000).slice(0, 8);
+  // null: the service could not read the details frame. Not the same as "no items".
+  const items = o.items === null || o.items === undefined ? null
+    : arr(o.items).map((i) => (typeof i === 'number' ? i : typeof i === 'string' ? Number(i) : NaN))
+      .filter((i) => Number.isInteger(i) && i > 0 && i < 100000).slice(0, 8);
   return {
     role: typeof o.role === 'string' ? ROLE_OF[o.role] ?? null : null,
     name, champion: champion(o.champion),
@@ -211,4 +213,5 @@ function readPlayers(raw: Record<string, unknown>, s: MatchState): void {
     out[t] = list.sort((a, b) => (a.role ? ROLES.indexOf(a.role) : 9) - (b.role ? ROLES.indexOf(b.role) : 9)).slice(0, 5);
   }
   s.players = out;
+  s.playersAsOf = typeof ps.asOf === 'string' && ps.asOf.length <= 40 ? ps.asOf : null;
 }

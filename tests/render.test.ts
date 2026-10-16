@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { adapt } from '../src/data/streamcv/adapter.ts';
 import { championName, knownChampion } from '../src/data/champions.ts';
+import { itemName } from '../src/data/items.ts';
 import { clockNow, fmtClock, MAX_TICK_SEC } from '../src/model/clock.ts';
 import { TEAMS, TOWER_SITES } from '../src/model/types.ts';
 import { detectLang, LANGS, STRINGS } from '../src/i18n/index.ts';
@@ -15,7 +16,7 @@ import mock from '../fixtures/dev/series_draft_mock.json' with { type: 'json' };
 
 const finished = adapt(sample);
 /** The same game as the service sent it before v0.1: no series, no draft. */
-const bare = { ...finished, series: null, draft: null };
+const bare = { ...finished, series: null, draft: null, players: null, playersAsOf: null };
 const live = { ...finished, status: 'in_game' as const };
 const withMock = { ...adapt({ ...sample, ...mock }), status: 'in_game' as const };
 const ctx = (over: Partial<ViewCtx> = {}): ViewCtx => ({
@@ -237,7 +238,31 @@ describe('players view', () => {
   it('reads five a team, top to support, without the team tag in front of the name', () => {
     expect(s.players!.B.map((x) => x.role)).toEqual(['top', 'jungle', 'mid', 'bot', 'support']);
     expect(s.players!.B[0]).toMatchObject({ name: 'One', champion: 'Zaahen', kills: 2, gold: 11252, items: [3078, 3363, 3111, 6631, 2055] });
-    expect(adapt(sample).players).toBeNull();
+    const { players: _, ...v01 } = sample as Record<string, unknown>;
+    expect(adapt(v01).players).toBeNull();
+  });
+
+  it('real sample (contract v0.2): each team of five adds up to the team totals', () => {
+    const real = adapt(sample);
+    expect(real.playersAsOf).toBe('2026-10-16T01:28:32.295Z');
+    for (const t of TEAMS) {
+      const ps = real.players![t];
+      expect(ps.map((x) => x.role)).toEqual(['top', 'jungle', 'mid', 'bot', 'support']);
+      expect(ps.reduce((a, x) => a + x.kills!, 0)).toBe(real.teams[t].kills);
+      expect(ps.reduce((a, x) => a + x.gold!, 0)).toBe(real.teams[t].gold);
+      expect(ps.map((x) => x.champion)).toEqual(real.draft!.current!.sides[t].picks);
+    }
+    expect(real.players!.B.map((x) => x.name)).toEqual(['Kratos', 'Gury', 'Chika', 'Harky', 'SiuLoong']);
+    // Every item id the service sent has a name.
+    const ids = TEAMS.flatMap((t) => real.players![t].flatMap((x) => x.items ?? []));
+    expect(ids.length).toBeGreaterThan(40);
+    expect(ids.filter((i) => itemName(i, 'en').startsWith('#'))).toEqual([]);
+  });
+
+  it('items the service could not read are said to be missing, not drawn as "no items"', () => {
+    const s2 = adapt({ ...sample, players: { B: [{ role: 'top', name: 'MVK A', champion: 'Zaahen', items: null }], R: [] } });
+    expect(s2.players!.B[0]!.items).toBeNull();
+    expect(playersView(ctx({ s: s2 }))).toContain(STRINGS['zh-Hant'].ui.itemsUnknown);
   });
 
   it('shows position, name, champion, level, KDA, CS and gold; items by name without wards or potions', () => {
@@ -261,6 +286,7 @@ describe('players view', () => {
   });
 
   it('says plainly when the service sends no players', () => {
-    expect(playersView(ctx())).toContain(STRINGS['zh-Hant'].ui.noPlayers);
+    expect(playersView(ctx({ s: bare }))).toContain(STRINGS['zh-Hant'].ui.noPlayers);
+    expect(playersView(ctx())).not.toContain(STRINGS['zh-Hant'].ui.noPlayers);
   });
 });
