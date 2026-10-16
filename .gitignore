@@ -1,0 +1,8 @@
+# 錄下來的原始資料不提交（CLAUDE.md 第 5 條）
+raw/
+recordings/
+
+# 金鑰與本機設定（API key 只走環境變數）
+.env
+*.key
+config.local.*
