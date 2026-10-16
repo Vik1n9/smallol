@@ -1,0 +1,116 @@
+import { describe, expect, it } from 'vitest';
+import { adapt, parseClock } from '../src/data/streamcv/adapter.ts';
+import { TOWER_SITES } from '../src/model/types.ts';
+import sample from '../fixtures/streamcv/state_finished_game.json' with { type: 'json' };
+
+const downSites = (s: ReturnType<typeof adapt>, t: 'B' | 'R') => TOWER_SITES.filter((x) => s.teams[t].towers[x].down);
+
+describe('Stream CV adapter, real sample (Worlds 2026 Play-In MVK vs FUR G3, finished)', () => {
+  const s = adapt(sample);
+
+  it('reads status, clock and the feed totals', () => {
+    expect(s.status).toBe('finished');
+    expect(s.gameId).toBe('115660588583171785');
+    expect(s.clock).toBe(27 * 60 + 6);
+    expect(s.teams.B).toMatchObject({ kills: 22, gold: 59398, barons: 1, elders: 0, towersDestroyed: 10 });
+    expect(s.teams.R).toMatchObject({ kills: 8, gold: 46224, barons: 0, elders: 0, towersDestroyed: 0 });
+  });
+
+  it('keeps the drakes in the order taken', () => {
+    expect(s.teams.B.dragons).toEqual(['ocean', 'chemtech', 'chemtech']);
+    expect(s.teams.R.dragons).toEqual(['hextech']);
+    expect(s.riftElement).toBe('chemtech');
+    expect(s.soul).toBeNull();
+  });
+
+  it('marks the ten towers red lost, and none of blue', () => {
+    expect(s.towersKnown).toBe(true);
+    expect(downSites(s, 'R')).toEqual(TOWER_SITES.filter((x) => x !== 'top_inhib_tower'));
+    expect(downSites(s, 'B')).toEqual([]);
+    expect(s.teams.R.towers.mid_inhib_tower.lostAt).toBe(1525);
+    expect(s.teams.R.towers.nexus_t1).toMatchObject({ down: true, respawnAt: 30 * 60 + 16 });
+  });
+
+  it('agrees with the feed: named lost towers = towers the other side destroyed = tower events', () => {
+    const towerEvents = (sample.events as { type: string; team: string }[]).filter((e) => e.type === 'tower');
+    expect(downSites(s, 'R')).toHaveLength(s.teams.B.towersDestroyed!);
+    expect(towerEvents.filter((e) => e.team === 'B')).toHaveLength(s.teams.B.towersDestroyed!);
+    expect(s.teams.R.unnamedLost).toBe(0);
+    // Inhibitors: two inhibitor events for blue, two red inhibitors down.
+    expect(s.teams.R.inhibitorsDown).toHaveLength(sample.inhibitors.B);
+  });
+
+  it('places the down inhibitors in the lanes whose inhibitor tower fell', () => {
+    // Red lost mid and bot inhibitor towers and two inhibitors, so those two lanes.
+    expect(s.teams.R.inhibitorsDown.map((i) => i.lane).sort()).toEqual(['bot', 'mid']);
+    expect(s.teams.R.inhibitorsDown.map((i) => i.respawnAt)).toEqual([29 * 60 + 48, 31 * 60 + 55]);
+  });
+
+  it('reads the objective timers', () => {
+    expect(s.nextDragon).toEqual({ elder: false, element: 'chemtech', at: 1868 });
+    expect(s.nextBaron).toEqual({ at: 1711 });
+    expect(s.buffs).toEqual([]);
+  });
+});
+
+describe('Stream CV adapter, damaged input', () => {
+  it('idle carries only status and time', () => {
+    const s = adapt({ status: 'idle', updated: '2026-10-16T09:00:00Z' });
+    expect(s.status).toBe('idle');
+    expect(s.updated).toBe('2026-10-16T09:00:00Z');
+    expect(s.towersKnown).toBe(false);
+  });
+
+  it('never throws, whatever arrives', () => {
+    for (const junk of [null, undefined, 42, 'x', [], { status: 'in_game', kills: 'lots', dragons: { B: 'ocean' }, towersLost: { B: [null, 3, { site: 'moon' }] } }]) {
+      expect(() => adapt(junk)).not.toThrow();
+    }
+    expect(adapt(null).status).toBe('idle');
+  });
+
+  it('drops what it does not know, one value at a time', () => {
+    const s = adapt({
+      status: 'in_game', gameClock: '12:3', kills: { B: 3, R: -1 },
+      dragons: { B: ['ocean', 'elder', 'voidgrub', 'infernal'] },
+      towersLost: { B: [{ site: 'top_outer', sec: 600 }, { site: 'moon' }] },
+      timers: { activeBuffs: [{ buff: 'baron', team: 'R', until: '25:00' }, { buff: 'grubs', team: 'R', untilSec: 1 }], nextDragon: { kind: 'elder', spawnAt: '35:10' } },
+      soul: { team: 'B', element: 'lava' },
+    });
+    expect(s.clock).toBeNull();
+    expect(s.teams.B.kills).toBe(3);
+    expect(s.teams.R.kills).toBeNull();
+    expect(s.teams.B.dragons).toEqual(['ocean', 'infernal']);
+    expect(s.teams.B.towers.top_outer).toMatchObject({ down: true, lostAt: 600 });
+    expect(s.buffs).toEqual([{ kind: 'baron', team: 'R', until: 1500 }]);
+    expect(s.nextDragon).toEqual({ elder: true, element: null, at: 35 * 60 + 10 });
+    expect(s.soul).toBeNull();
+  });
+
+  it('without screen reading, tower state is unknown, not "all standing"', () => {
+    const s = adapt({ status: 'in_game', towersDestroyedBy: { B: 3, R: 1 } });
+    expect(s.towersKnown).toBe(false);
+    expect(s.teams.R.unnamedLost).toBe(0);
+  });
+
+  it('counts lost towers the screen reading has not named yet', () => {
+    const s = adapt({ status: 'in_game', towersDestroyedBy: { B: 3 }, towersLost: { R: [{ site: 'bot_outer' }], B: [] } });
+    expect(s.teams.R.unnamedLost).toBe(2);
+  });
+
+  it('leaves inhibitor lanes open when they cannot be told', () => {
+    // One inhibitor down but two inhibitor towers gone: either lane.
+    const s = adapt({
+      status: 'in_game',
+      towersLost: { R: [{ site: 'mid_inhib_tower' }, { site: 'bot_inhib_tower' }] },
+      timers: { inhibitorsDown: [{ teamLost: 'R', respawnAt: '30:00' }] },
+    });
+    expect(s.teams.R.inhibitorsDown).toEqual([{ lane: null, respawnAt: 1800 }]);
+  });
+
+  it('parses clocks', () => {
+    expect(parseClock('0:05')).toBe(5);
+    expect(parseClock('61:05')).toBe(3665);
+    expect(parseClock('1:5')).toBeNull();
+    expect(parseClock(90)).toBeNull();
+  });
+});

@@ -1,0 +1,116 @@
+/* Colours and the capsule look follow Basesmall's default style (styles/iso.json there). */
+:root {
+  --background: #15171C; --panel: #1B1E24; --border: #2A2E37; --text: #E8EAEE; --muted: #A0A6B1;
+  --accent: #E8B04A; --strike: #D9643F;
+  --blue: #4C93E6; --red: #E0574C; --baron: #A57FE0;
+  --board: #20242B; --lane: #3A404B; --river: #242932; --map-edge: #0F1115;
+  --font: 'Segoe UI Variable', 'Segoe UI', 'Microsoft JhengHei UI', 'PingFang TC', system-ui, sans-serif;
+  --mono: 'Cascadia Mono', Consolas, ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
+body { color: var(--text); font: 13px/1.35 var(--font); user-select: none; -webkit-user-select: none; }
+
+#app { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; border-radius: 14px; }
+#app.bg-solid { background: var(--background); border: 1px solid var(--border); }
+#app.bg-semi { background: color-mix(in srgb, var(--background) 62%, transparent); border: 1px solid color-mix(in srgb, var(--border) 60%, transparent); }
+#app.bg-clear { background: transparent; border: 1px solid transparent; }
+#app.bg-clear:hover { border-color: color-mix(in srgb, var(--muted) 45%, transparent); }
+/* The see-through looks are for glancing at a game. The settings page stays solid. */
+#app.bg-semi:has(> .settings), #app.bg-clear:has(> .settings) { background: var(--background); border-color: var(--border); }
+#app[data-tier='dot'] { border-radius: 999px; }
+
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--text) 70%, transparent); flex: 0 0 9px; }
+.muted { color: var(--muted); }
+.mono { font-family: var(--mono); }
+.grow { flex: 1; }
+button { font: inherit; color: inherit; border: 0; background: transparent; cursor: pointer; }
+.conn { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--strike); flex: 0 0 7px; }
+.status { color: var(--accent); font-size: 11px; white-space: nowrap; }
+.tag { font-size: 10px; padding: 0 5px; border-radius: 4px; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent); white-space: nowrap; }
+.drake { flex: 0 0 auto; display: block; }
+.drake.slot { opacity: .9; }
+
+/* The one line every tier shows: kills, clock, gold lead. */
+.kills { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
+.clock { color: var(--muted); }
+.gold { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); }
+.gold .dot { width: 7px; height: 7px; flex-basis: 7px; box-shadow: none; }
+.gold.lead-B { color: color-mix(in srgb, var(--blue) 70%, var(--text)); }
+.gold.lead-R { color: color-mix(in srgb, var(--red) 70%, var(--text)); }
+
+/* Capsules carry their own background, so text stays readable on any wallpaper. */
+.row, .pill, .bar .l1, .bar .l2, .chip { white-space: nowrap; overflow: hidden; min-width: 0; }
+.bg-solid .row, .bg-solid .chip { background: var(--panel); }
+.bg-semi .row, .bg-semi .chip { background: color-mix(in srgb, var(--panel) 70%, transparent); }
+.bg-clear .row, .bg-clear .chip, .bg-clear .pill, .bg-clear .bar { background: color-mix(in srgb, var(--panel) 88%, transparent); box-shadow: 0 1px 4px rgba(0, 0, 0, .35); }
+
+/* ---------- dot tier: one pill ---------- */
+.pill { flex: 1; display: flex; align-items: center; gap: 9px; padding: 0 14px; font-size: 12px; }
+.bg-clear .pill { border-radius: 999px; }
+
+/* ---------- bar tier ---------- */
+.bar { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 4px 12px; min-width: 0; }
+.bg-clear .bar { border-radius: 14px; }
+.bar .l1 { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.bar .l2 { display: flex; align-items: center; gap: 10px; font-size: 11px; }
+.bar .side { display: inline-flex; align-items: center; gap: 4px; }
+
+/* ---------- map tier: tower map left, capsules right ---------- */
+.game { flex: 1; display: flex; gap: 8px; padding: 8px; min-height: 0; }
+.mapwrap { flex: 0 0 auto; height: 100%; aspect-ratio: 1; min-width: 0; }
+.mapwrap svg { width: 100%; height: 100%; display: block; }
+.map .tower.unknown { opacity: .35; }
+.map .unnamed { fill: var(--accent); font-family: var(--mono); font-weight: 600; }
+.hud { flex: 1 1 auto; display: flex; flex-direction: column; gap: 5px; justify-content: center; min-width: 0; }
+.row { display: flex; align-items: center; gap: 6px; height: 24px; flex: 0 0 24px; padding: 0 9px; border-radius: 999px; font-size: 12px; }
+.row.l1 { font-size: 13px; gap: 9px; }
+.row.team { gap: 6px; }
+.drakes { display: inline-flex; align-items: center; gap: 3px; }
+.count { display: inline-flex; align-items: center; gap: 2px; font: 11px var(--mono); color: var(--muted); }
+.baron { margin-left: auto; }
+.soul { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; padding: 0 5px 0 3px; height: 16px; border-radius: 8px;
+  color: var(--c); border: 1px solid color-mix(in srgb, var(--c) 60%, transparent); }
+.nextrow { gap: 12px; }
+.next { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; max-height: 46px; overflow: hidden; }
+.chip { display: inline-flex; align-items: center; gap: 4px; height: 21px; padding: 0 8px; border-radius: 999px; font-size: 11px; }
+.chip .dot { width: 7px; height: 7px; flex-basis: 7px; box-shadow: none; }
+.chip .k { color: var(--muted); }
+
+/* nothing to show */
+.idle { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 12px; padding: 0 12px; white-space: nowrap; overflow: hidden; }
+
+/* ---------- controls: shown on hover, top right ---------- */
+.controls { position: absolute; top: 4px; right: 6px; display: flex; gap: 2px; z-index: 5; opacity: 0; transition: opacity .15s; pointer-events: none;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 1px 2px; }
+body:hover .controls { opacity: 1; pointer-events: auto; }
+.controls button { height: 18px; min-width: 20px; padding: 0 5px; border-radius: 6px; font-size: 11px; color: var(--muted); white-space: nowrap; }
+.controls button:hover { color: var(--text); background: var(--border); }
+.controls button.quit.armed { color: var(--strike); }
+#app[data-tier='dot'] .controls { top: 50%; transform: translateY(-50%); right: 12px; }
+
+#grip { position: fixed; right: 0; bottom: 0; width: 14px; height: 14px; cursor: nwse-resize; z-index: 10; }
+#grip::after { content: ''; position: absolute; right: 4px; bottom: 4px; width: 6px; height: 6px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); opacity: .45; }
+
+/* ---------- settings ---------- */
+.settings { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.settings header { display: flex; align-items: center; gap: 6px; padding: 9px 12px 6px; }
+.settings .done { height: 24px; padding: 0 12px; border-radius: 12px; background: var(--border); color: var(--text); }
+.settings .body { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 0 12px 12px; display: flex; flex-direction: column; gap: 6px; user-select: text; -webkit-user-select: text; }
+.settings .body > * { flex-shrink: 0; }
+.settings h3 { margin: 10px 0 0; font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: .04em; }
+.settings .srow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-height: 26px; }
+.settings .k { flex: 0 0 72px; color: var(--muted); font-size: 12px; }
+.seg { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 2px; border-radius: 8px; background: var(--panel); border: 1px solid var(--border); }
+.seg button { height: 22px; padding: 0 9px; border-radius: 6px; color: var(--muted); font-size: 12px; }
+.seg button:hover { color: var(--text); }
+.seg button[aria-pressed='true'] { background: var(--border); color: var(--text); }
+.check { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; cursor: pointer; }
+.check input { accent-color: var(--accent); margin: 0; }
+.settings .chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 5px 10px; padding-left: 4px; max-height: none; }
+.settings .note, .settings .about { margin: 0; font-size: 11px; color: var(--muted); line-height: 1.5; }
+.settings input.key { flex: 1; min-width: 160px; height: 24px; padding: 0 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--panel); color: var(--text); font: 12px var(--mono); }
+
+/* status and sample flags under the map tier's capsules */
+.foot { display: flex; align-items: center; gap: 6px; height: 16px; flex: 0 0 16px; padding: 0 4px; white-space: nowrap; overflow: hidden; }
