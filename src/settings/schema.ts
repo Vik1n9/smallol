@@ -17,12 +17,12 @@ export const FEATURES = [
   'towers', 'nexusTimers', 'inhibitors',
   'dragons', 'soul', 'nextDragon',
   'barons', 'nextBaron', 'buffs',
-  'series',
+  'series', 'playerItems',
 ] as const;
 export type Feature = (typeof FEATURES)[number];
 
 /** Views that open under the game, each on its own. */
-export const VIEWS = ['draftGame', 'draftSeries'] as const;
+export const VIEWS = ['draftGame', 'draftSeries', 'players'] as const;
 export type ViewName = (typeof VIEWS)[number];
 
 export interface Settings {
@@ -51,7 +51,7 @@ export const DEFAULTS: Settings = {
   show: Object.fromEntries(FEATURES.map((f) => [f, true])) as Record<Feature, boolean>,
   gold: 'diff',
   tickClock: true,
-  views: { draftGame: false, draftSeries: false },
+  views: { draftGame: false, draftSeries: false, players: false },
   sizes: {},
 };
 

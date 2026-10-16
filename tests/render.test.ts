@@ -7,7 +7,7 @@ import { detectLang, LANGS, STRINGS } from '../src/i18n/index.ts';
 import { DEFAULTS, FEATURES, VIEWS } from '../src/settings/schema.ts';
 import { mapSvg, towerAt } from '../src/render/map-svg.ts';
 import {
-  barView, dotView, draftGameView, draftSeriesView, fmtGold, mapView, tabsView, tierOf, timerChips, type ViewCtx,
+  barView, dotView, draftGameView, draftSeriesView, fmtGold, mapView, playersView, tabsView, tierOf, timerChips, viewHeight, type ViewCtx,
 } from '../src/ui/views.ts';
 import { settingsView } from '../src/ui/settings-view.ts';
 import sample from '../fixtures/streamcv/state_finished_game.json' with { type: 'json' };
@@ -169,13 +169,12 @@ describe('tab strip and draft views', () => {
     expect(draftSeriesView(ctx({ s: bare }))).toContain(STRINGS['zh-Hant'].ui.noDraft);
   });
 
-  it('real sample: picks marked by role, bans said to be unsupported (not five empty slots)', () => {
+  it('real sample: bans said to be unsupported (not five empty slots); no position marks in BP', () => {
     const html = draftGameView(ctx());
     expect(html.match(/class="ch pick"/g)).toHaveLength(10);
     expect(html.match(/class="ch ban"|class="ch empty/g)).toBeNull();
     expect(html.match(new RegExp(STRINGS['zh-Hant'].ui.bansUnsupported.replace(/[()（）]/g, '.'), 'g'))).toHaveLength(2);
-    expect(html).toContain('<i class="role">上</i>');
-    expect(html).toContain('<i class="role">輔</i>');
+    expect(html).not.toContain('class="role');
     // During the draft (v0.1: picks only arrive once the game starts).
     const waiting = adapt({ status: 'waiting', draft: { current: { game: 4, B: { team: 'MVK' }, R: { team: 'FUR' } }, earlier: [], picksOrder: 'role', bansSupported: false } });
     expect(draftGameView(ctx({ s: waiting }))).toContain(STRINGS['zh-Hant'].ui.picksAtStart);
@@ -219,5 +218,49 @@ describe('i18n and settings page', () => {
     const html = settingsView(DEFAULTS, STRINGS.en, false);
     for (const f of FEATURES) expect(html).toContain(`data-toggle="show.${f}"`);
     for (const v of VIEWS) expect(html).toContain(`data-toggle="views.${v}"`);
+  });
+});
+
+describe('players view', () => {
+  // Made-up numbers in the proposed shape (the service does not send players yet).
+  const p = (role: string, name: string, champion: string, items: number[], extra: object = {}) =>
+    ({ role, name, champion, level: 16, kills: 2, deaths: 1, assists: 5, cs: 230, gold: 11252, hp: 1500, maxHp: 3000, items, ...extra });
+  const raw = {
+    ...sample,
+    players: {
+      B: [p('support', 'MVK Five', 'Camille', [3363]), p('top', 'MVK One', 'Zaahen', [3078, 3363, 3111, 6631, 2055]), p('jungle', 'MVK Two', 'JarvanIV', []), p('mid', 'MVK Three', 'KogMaw', []), p('bottom', 'MVK Four', 'Jhin', [])],
+      R: [p('top', 'FUR One', 'KSante', [], { hp: 0 }), p('jungle', 'FUR Two', 'Naafiri', []), p('mid', 'FUR Three', 'Ryze', []), p('bottom', 'FUR Four', 'Kaisa', []), p('support', 'FUR Five', 'Leona', [])],
+    },
+  };
+  const s = adapt(raw);
+
+  it('reads five a team, top to support, without the team tag in front of the name', () => {
+    expect(s.players!.B.map((x) => x.role)).toEqual(['top', 'jungle', 'mid', 'bot', 'support']);
+    expect(s.players!.B[0]).toMatchObject({ name: 'One', champion: 'Zaahen', kills: 2, gold: 11252, items: [3078, 3363, 3111, 6631, 2055] });
+    expect(adapt(sample).players).toBeNull();
+  });
+
+  it('shows position, name, champion, level, KDA, CS and gold; items by name without wards or potions', () => {
+    const html = playersView(ctx({ s }));
+    expect(html.match(/class="prow"/g)).toHaveLength(10);
+    expect(html).toContain('>One<');
+    expect(html).toContain('>薩亨<');
+    expect(html).toContain('2/1/5');
+    expect(html).toContain('11.3k');
+    expect(html).toContain('三相之力 · 水星之靴 · 步履破壞者');
+    expect(html).not.toContain('鷹眼晶球');
+    expect(html).not.toContain('控域守衛');
+    expect(html).toContain('style="width:50%"');
+    expect(html).toContain('style="width:0%"');
+  });
+
+  it('item names are a switch of their own, and the view gets shorter without them', () => {
+    const show = { ...DEFAULTS.show, playerItems: false };
+    expect(playersView(ctx({ s, show }))).not.toContain('class="items"');
+    expect(viewHeight('players', show)).toBeLessThan(viewHeight('players', DEFAULTS.show));
+  });
+
+  it('says plainly when the service sends no players', () => {
+    expect(playersView(ctx())).toContain(STRINGS['zh-Hant'].ui.noPlayers);
   });
 });

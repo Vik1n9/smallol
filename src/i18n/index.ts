@@ -32,7 +32,7 @@ export interface Strings {
     | 'soul' | 'inhibitor' | 'nexusTurret' | 'kills' | 'gold' | 'towersUnnamed' | 'towersUnknown'
     | 'settings' | 'done' | 'quit' | 'quitAgain' | 'noGame' | 'waiting'
     | 'next' | 'elder' | 'noSeries' | 'bans' | 'picks' | 'fearless' | 'noDraft' | 'noEarlier' | 'turn'
-    | 'vs' | 'winsUnknown' | 'bansUnsupported' | 'picksAtStart',
+    | 'vs' | 'winsUnknown' | 'bansUnsupported' | 'picksAtStart' | 'noPlayers' | 'level' | 'cs' | 'kda' | 'hp',
     string
   >;
   set: Record<
@@ -58,17 +58,17 @@ const zh: Strings = {
   connection: { connecting: '連線中', ok: '已連線', retrying: '連不到服務，重試中' },
   // 用語為一般玩家的叫法，尚未對照官方中文版。
   element: { infernal: '火龍', ocean: '水龍', mountain: '土龍', cloud: '風龍', hextech: '海克斯龍', chemtech: '化學龍', elder: '遠古龍' },
-  // 海克斯龍寫「海克」：單一個「海」會被看成海龍（水龍的另一個叫法）。
-  elementShort: { infernal: '火', ocean: '水', mountain: '土', cloud: '風', hextech: '海克', chemtech: '化', elder: '遠' },
+  // 海克斯龍寫「科」（維護者 2026-10-16 定）：「海」會被看成海龍（水龍的另一個叫法）。
+  elementShort: { infernal: '火', ocean: '水', mountain: '土', cloud: '風', hextech: '科', chemtech: '化', elder: '遠' },
   feature: {
     clock: '遊戲時間', kills: '擊殺數', gold: '經濟差',
     towers: '防禦塔小地圖', nexusTimers: '主堡塔重生倒數', inhibitors: '水晶與重生倒數',
     dragons: '小龍', soul: '龍魂', nextDragon: '下一條龍與倒數',
     barons: '巴龍次數', nextBaron: '巴龍重生倒數', buffs: '巴龍／遠古龍增益倒數',
-    series: '上方標籤：BO 幾、第幾局',
+    series: '上方標籤：BO 幾、第幾局', playerItems: '選手視圖：裝備名稱',
   },
   role: { top: '上', jungle: '野', mid: '中', bot: '下', support: '輔' },
-  view: { draftGame: '本局 BP', draftSeries: '全場 BP' },
+  view: { draftGame: '本局 BP', draftSeries: '全場 BP', players: '選手' },
   ui: {
     sample: '樣本資料', sampleShort: '樣本', sampleHint: '連不到 Stream CV 服務，顯示的是樣本資料（開發模式）',
     baron: '巴龍', baronUp: '巴龍在場', baronBuff: '巴龍增益', elderBuff: '遠古龍增益',
@@ -81,6 +81,7 @@ const zh: Strings = {
     fearless: '無懼選角：前面局選過的英雄，雙方都不能再選', noDraft: '還沒有 BP 資料（服務合約 v0 沒有這項）',
     noEarlier: '這是第一局，還沒有鎖住的英雄', turn: '輪到',
     vs: 'vs', winsUnknown: '不知道本局開始前的勝場', bansUnsupported: '尚未支援（服務還讀不到禁用）', picksAtStart: '開局後才會有',
+    noPlayers: '還沒有選手資料（服務還沒有這項）', level: 'Lv', cs: '補刀', kda: '擊殺／死亡／助攻', hp: '血量',
   },
   set: {
     title: '設定', language: '語言', auto: '跟隨系統', background: '背景', solid: '不透明', semi: '半透明', clear: '透明',
@@ -111,10 +112,10 @@ const en: Strings = {
     towers: 'Tower map', nexusTimers: 'Nexus turret respawns', inhibitors: 'Inhibitors and respawns',
     dragons: 'Dragons', soul: 'Dragon soul', nextDragon: 'Next dragon and timer',
     barons: 'Baron count', nextBaron: 'Baron timer', buffs: 'Baron / Elder buff timers',
-    series: 'Top tab: best of, game number',
+    series: 'Top tab: best of, game number', playerItems: 'Players view: item names',
   },
   role: { top: 'T', jungle: 'J', mid: 'M', bot: 'B', support: 'S' },
-  view: { draftGame: 'Draft', draftSeries: 'Series draft' },
+  view: { draftGame: 'Draft', draftSeries: 'Series draft', players: 'Players' },
   ui: {
     sample: 'Sample data', sampleShort: 'Sample', sampleHint: "Can't reach the Stream CV service; showing sample data (dev mode)",
     baron: 'Baron', baronUp: 'Baron up', baronBuff: 'Baron buff', elderBuff: 'Elder buff',
@@ -127,6 +128,7 @@ const en: Strings = {
     fearless: 'Fearless draft: champions picked earlier in the series are locked for both teams', noDraft: 'No draft data yet (not in service contract v0)',
     noEarlier: 'Game 1: nothing locked yet', turn: 'Now',
     vs: 'vs', winsUnknown: 'Series score before this game is unknown', bansUnsupported: 'Not supported yet (the service cannot read bans)', picksAtStart: 'Shown once the game starts',
+    noPlayers: 'No player data yet (the service does not send it yet)', level: 'Lv', cs: 'CS', kda: 'Kills / deaths / assists', hp: 'Health',
   },
   set: {
     title: 'Settings', language: 'Language', auto: 'System', background: 'Background', solid: 'Solid', semi: 'Translucent', clear: 'Clear',

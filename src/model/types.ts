@@ -113,6 +113,24 @@ export interface DraftState {
   turnSupported: boolean;
 }
 
+/** One player right now (proposed `players` field, docs/CONTRACT_PROPOSAL.md). */
+export interface Player {
+  role: Role | null;
+  /** Without the team tag the feed puts in front ("MVK Kratos" -> "Kratos"). */
+  name: string;
+  champion: Champion | null;
+  level: number | null;
+  kills: number | null;
+  deaths: number | null;
+  assists: number | null;
+  cs: number | null;
+  gold: number | null;
+  hp: number | null;
+  maxHp: number | null;
+  /** Data Dragon item ids, as the feed lists them (trinket and potions included). */
+  items: number[];
+}
+
 export interface MatchState {
   status: GameStatus;
   gameId: string | null;
@@ -131,4 +149,6 @@ export interface MatchState {
   series: SeriesInfo | null;
   /** This game's draft, and the earlier games of the series (fearless draft: their picks are locked). */
   draft: DraftState | null;
+  /** Five per team, top to support; null when the service sends none. */
+  players: Record<Team, Player[]> | null;
 }

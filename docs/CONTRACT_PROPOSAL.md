@@ -48,3 +48,37 @@
 | 前面局的 pick | 各局 feed 的 `gameMetadata` | 需要先知道各局的 game id（esports-api） |
 
 由服務端（之後的 VPS）統一取這些資料，桌面工具只讀 `state.json` 一個來源，key 不必放進發給使用者的 App 裡。上表的來源都還沒有驗證，由服務那邊實際打過再定。
+
+---
+
+# 選手（提案，2026-10-16；維護者裁定由服務提供）
+
+桌面工具的「選手」視圖（位置、選手、英雄、等級、血量、K/D/A、補刀、金錢、裝備名稱）要的欄位。
+**合約 v0.1 沒有這一項**，畫面目前寫「還沒有選手資料」。桌面工具已經能讀下面的形狀（`readPlayers`），缺少或格式不對的值逐項丟掉。
+
+```json
+"players": {
+  "B": [
+    { "role": "top", "name": "MVK Kratos", "champion": "Zaahen", "level": 16, "kills": 2, "deaths": 1, "assists": 5,
+      "cs": 230, "gold": 11252, "hp": 3293, "maxHp": 3293, "items": [3078, 3363, 3111, 6631, 2019, 3155, 2055] }
+  ],
+  "R": [ ]
+}
+```
+
+| 欄位 | feed 的來源（2026-10-16 實際打過 115660588583171785） | 說明 |
+| --- | --- | --- |
+| `role` | `window` 的 `gameMetadata.*.participantMetadata[].role` | feed 的值是 `top` `jungle` `mid` `bottom` `support`，照原樣送即可 |
+| `name` | 同上 `summonerName` | feed 寫成「MVK Kratos」；照原樣送，桌面工具會去掉前面的隊伍代碼 |
+| `champion` | 同上 `championId` | Data Dragon id |
+| `level` `kills` `deaths` `assists` | `window` 每一幀的 `participants[]` | |
+| `cs` | 同上 `creepScore` | |
+| `gold` | 同上 `totalGold` | |
+| `hp` / `maxHp` | 同上 `currentHealth` / `maxHealth` | 畫成血量條；陣亡時是 0 |
+| `items` | `details` 每一幀的 `participants[].items` | Data Dragon 裝備 id（數字）。這場 40 個 id 全部對得上 16.20.1。飾品、藥水照送，桌面工具自己濾掉 |
+
+- B/R 各 5 人，順序不拘，桌面工具會照上野中下輔排。
+- 對照用參與者編號：`participantId` 1–5 是藍方、6–10 是紅方（這場的 `gameMetadata` 是這樣，未在其他局驗證）。
+- 延遲、`details` 的更新間隔都**未量測**。
+
+開發用：`node scripts/feed-players.mjs <gameId> [分鐘]` 會把 feed 的某一刻轉成上面的形狀，存到 `raw/`（不進 git），開發模式的樣本會自動帶上，用來排版。

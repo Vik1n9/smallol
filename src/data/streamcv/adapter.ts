@@ -3,7 +3,7 @@
 
 import {
   ELEMENTS, LANES, TEAMS, TOWER_SITES, other, isNexusTurret,
-  type Buff, type Champion, type DraftGame, type DraftSide, type Element, type GameStatus, type InhibitorDown, type Lane, type MatchState, type Team, type TeamState, type Tower, type TowerSite,
+  ROLES, type Buff, type Champion, type Player, type Role, type DraftGame, type DraftSide, type Element, type GameStatus, type InhibitorDown, type Lane, type MatchState, type Team, type TeamState, type Tower, type TowerSite,
 } from '../../model/types.ts';
 import type { RawState } from './contract.ts';
 
@@ -35,7 +35,7 @@ function emptyTeam(): TeamState {
 export function emptyState(status: GameStatus = 'idle'): MatchState {
   return {
     status, gameId: null, updated: null, clock: null, teams: { B: emptyTeam(), R: emptyTeam() }, towersKnown: false,
-    riftElement: null, soul: null, nextDragon: null, nextBaron: null, buffs: [], series: null, draft: null,
+    riftElement: null, soul: null, nextDragon: null, nextBaron: null, buffs: [], series: null, draft: null, players: null,
   };
 }
 
@@ -127,6 +127,7 @@ export function adapt(input: unknown): MatchState {
   const soulTeam = team(soul.team), soulEl = element(soul.element);
   s.soul = soulTeam && soulEl ? { team: soulTeam, element: soulEl } : null;
   readSeriesAndDraft(raw, s);
+  readPlayers(raw, s);
   return s;
 }
 
@@ -178,4 +179,36 @@ function readSeriesAndDraft(raw: Record<string, unknown>, s: MatchState): void {
     turnSupported: draft.turnSupported !== false,
   };
   if (!s.draft.turnSupported && current) current.turn = null;
+}
+
+// ---------- players: proposed field (docs/CONTRACT_PROPOSAL.md, "選手"), not in v0.1 ----------
+
+const ROLE_OF: Record<string, Role> = { top: 'top', jungle: 'jungle', mid: 'mid', bottom: 'bot', bot: 'bot', support: 'support' };
+
+function player(v: unknown, code: string | null): Player | null {
+  const o = obj(v);
+  if (typeof o.name !== 'string' || !o.name.trim() || o.name.length > 40) return null;
+  // The feed writes "MVK Kratos": the team code is already on screen.
+  const name = code && o.name.startsWith(`${code} `) ? o.name.slice(code.length + 1) : o.name.trim();
+  const items = arr(o.items).map((i) => (typeof i === 'number' ? i : typeof i === 'string' ? Number(i) : NaN))
+    .filter((i) => Number.isInteger(i) && i > 0 && i < 100000).slice(0, 8);
+  return {
+    role: typeof o.role === 'string' ? ROLE_OF[o.role] ?? null : null,
+    name, champion: champion(o.champion),
+    level: count(o.level), kills: count(o.kills), deaths: count(o.deaths), assists: count(o.assists),
+    cs: count(o.cs), gold: count(o.gold), hp: count(o.hp), maxHp: count(o.maxHp), items,
+  };
+}
+
+function readPlayers(raw: Record<string, unknown>, s: MatchState): void {
+  const ps = obj(raw.players);
+  if (!Array.isArray(ps.B) && !Array.isArray(ps.R)) return;
+  const out = {} as Record<Team, Player[]>;
+  for (const t of TEAMS) {
+    const code = s.series?.teams[t].code ?? s.draft?.current?.sides[t].team ?? null;
+    const list = arr(ps[t]).map((p) => player(p, code)).filter((p): p is Player => p !== null);
+    // Top to support, whatever order they came in; unknown roles last.
+    out[t] = list.sort((a, b) => (a.role ? ROLES.indexOf(a.role) : 9) - (b.role ? ROLES.indexOf(b.role) : 9)).slice(0, 5);
+  }
+  s.players = out;
 }

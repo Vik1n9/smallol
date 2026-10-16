@@ -138,6 +138,22 @@ body:hover #tabs .controls { opacity: 1; pointer-events: auto; }
 .spicks .ch { max-width: 72px; }
 .spicks { gap: 3px; }
 
+/* players: two lines each, the team colour as a left edge */
+.drawer.players { gap: 2px; }
+.pteam { display: flex; align-items: center; gap: 6px; font-size: 12px; height: 18px; margin-top: 3px; }
+.prow { padding: 1px 6px 1px 8px; border-radius: 6px; box-shadow: inset 2px 0 0 var(--t); }
+.bg-solid .prow { background: var(--panel); }
+.bg-semi .prow, .bg-clear .prow { background: color-mix(in srgb, var(--panel) 75%, transparent); }
+.p1 { display: grid; grid-template-columns: 14px minmax(0, 1fr) minmax(0, 1fr) 36px 30px 58px 32px 42px; column-gap: 6px; align-items: center; height: 17px; font-size: 12px; white-space: nowrap; }
+.p1 > * { overflow: hidden; text-overflow: ellipsis; }
+.p1 .pn { font-weight: 600; }
+.p1 .pc { color: color-mix(in srgb, var(--text) 85%, var(--muted)); }
+.p1 .mono { text-align: right; font-size: 11px; }
+.p1 .lv .k { font-size: 9px; margin-right: 1px; }
+.hp { height: 4px; border-radius: 2px; background: color-mix(in srgb, var(--muted) 25%, transparent); overflow: hidden; }
+.hp i { display: block; height: 100%; background: #6CC36C; border-radius: 2px; }
+.items { font-size: 10px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 20px; height: 13px; line-height: 13px; }
+
 #grip { position: fixed; right: 0; bottom: 0; width: 14px; height: 14px; cursor: nwse-resize; z-index: 10; }
 #grip::after { content: ''; position: absolute; right: 4px; bottom: 4px; width: 6px; height: 6px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); opacity: .45; }
 

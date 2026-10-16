@@ -3,10 +3,11 @@
 // Words before symbols: every capsule says what it counts ("小龍", "巴龍", "紅方水晶"), and colour
 // only repeats what the words say.
 
-import { ROLES, TEAMS, type DraftGame, type MatchState, type Team } from '../model/types.ts';
+import { TEAMS, type DraftGame, type MatchState, type Player, type Team } from '../model/types.ts';
 import { fmtClock, left, timersOn, towerDown } from '../model/clock.ts';
 import type { Connection } from '../data/streamcv/source.ts';
 import { championName } from '../data/champions.ts';
+import { itemName, minorItem } from '../data/items.ts';
 import type { Lang, Strings } from '../i18n/index.ts';
 import type { Feature, GoldView, ViewName } from '../settings/schema.ts';
 import { ELEMENT_COLOUR } from '../render/dragons.ts';
@@ -17,7 +18,11 @@ export type Tier = 'dot' | 'bar' | 'map';
 
 /** Height of the tab strip above the game, and of each view under it. */
 export const TAB_H = 22;
-export const VIEW_H: Record<ViewName, number> = { draftGame: 134, draftSeries: 152 };
+const VIEW_H: Record<ViewName, number> = { draftGame: 134, draftSeries: 152, players: 0 };
+/** Players: two lines a player with item names, one without. */
+export function viewHeight(v: ViewName, show: Record<Feature, boolean>): number {
+  return v === 'players' ? (show.playerItems ? 420 : 290) : VIEW_H[v];
+}
 
 /** The window minus the views under it picks the level of detail, as in Basesmall. */
 export function tierOf(height: number): Tier {
@@ -224,17 +229,16 @@ export function tabsView(c: ViewCtx, open: Record<ViewName, boolean>, canQuit: b
   }
   const toggle = (v: ViewName) => `<button class="vt" data-view="${v}" aria-pressed="${open[v]}">${esc(c.S.view[v])}</button>`;
   const quit = canQuit ? `<button class="quit${quitArmed ? ' armed' : ''}" data-action="quit" title="${esc(c.S.ui.quit)}">${quitArmed ? esc(c.S.ui.quitAgain) : '✕'}</button>` : '';
-  return `${series}<span class="grow"></span><span class="views">${toggle('draftGame')}${toggle('draftSeries')}</span>
+  return `${series}<span class="grow"></span><span class="views">${toggle('draftGame')}${toggle('draftSeries')}${toggle('players')}</span>
     <span class="controls"><button data-action="settings" title="${esc(c.S.ui.settings)}">⚙</button>${quit}</span>`;
 }
 
 // ---------- views under the game: draft of this game, and of the whole series ----------
 
-const champ = (c: ViewCtx, id: string | null, kind: 'ban' | 'pick', side: Team, now = false, role?: string) => {
-  const mark = role ? `<i class="role">${esc(role)}</i>` : '';
-  if (!id) return `<span class="ch empty${now ? ' now' : ''}"${now ? ` title="${esc(c.S.ui.turn)}"` : ''}>${mark}</span>`;
+const champ = (c: ViewCtx, id: string | null, kind: 'ban' | 'pick', side: Team, now = false) => {
+  if (!id) return `<span class="ch empty${now ? ' now' : ''}"${now ? ` title="${esc(c.S.ui.turn)}"` : ''}></span>`;
   const name = championName(id, c.lang);
-  return `<span class="ch ${kind}" style="--t:${TEAM_COLOUR[side]}" title="${esc(name)}">${mark}${esc(name)}</span>`;
+  return `<span class="ch ${kind}" style="--t:${TEAM_COLOUR[side]}" title="${esc(name)}">${esc(name)}</span>`;
 };
 
 function noDraft(c: ViewCtx, title: string): string {
@@ -253,7 +257,8 @@ export function draftGameView(c: ViewCtx): string {
     const list = kind === 'ban' ? g.sides[t].bans : g.sides[t].picks;
     if (kind === 'pick' && byRole && list.every((x) => x === null)) return `${label}<span class="unsupported muted">${esc(c.S.ui.picksAtStart)}</span>`;
     const now = (i: number) => g.turn?.side === t && g.turn.kind === kind && g.turn.slot === i;
-    return label + list.map((id, i) => champ(c, id, kind, t, now(i), kind === 'pick' && byRole ? c.S.role[ROLES[i]!] : undefined)).join('');
+    // Positions are not marked here; they are in the players view (maintainer, 2026-10-16).
+    return label + list.map((id, i) => champ(c, id, kind, t, now(i))).join('');
   };
   return `<header><b>${esc(c.S.view.draftGame)}</b><span class="muted">${esc(c.S.gameNo(g.game))}</span></header>
     <div class="dgrid">${TEAMS.map((t) => `<div class="dteam">${dot(t)}<b class="tn" style="color:${TEAM_COLOUR[t]}">${esc(g.sides[t].team)}</b></div>
@@ -279,4 +284,33 @@ export function draftSeriesView(c: ViewCtx): string {
       + `<span class="spicks">${dot(t)}${g.sides[t].picks.map((id) => champ(c, id, 'pick', t)).join('')}</span>`;
   })).join('');
   return `${head}<div class="sgrid">${rows}</div><p class="note muted">${esc(c.S.ui.fearless)}</p>`;
+}
+
+// ---------- players: position, champion, KDA, CS, gold, health, items ----------
+
+function playerRow(c: ViewCtx, p: Player, t: Team, withItems: boolean): string {
+  const n = (v: number | null) => (v === null ? '–' : String(v));
+  const kda = `${n(p.kills)}/${n(p.deaths)}/${n(p.assists)}`;
+  const hp = p.hp !== null && p.maxHp ? Math.max(0, Math.min(100, Math.round((p.hp / p.maxHp) * 100))) : null;
+  const champName = p.champion ? championName(p.champion, c.lang) : '–';
+  const items = p.items.filter((i) => !minorItem(i)).map((i) => itemName(i, c.lang));
+  const line1 = `<span class="role k">${p.role ? esc(c.S.role[p.role]) : ''}</span>`
+    + `<b class="pn" title="${esc(p.name)}">${esc(p.name)}</b>`
+    + `<span class="pc" title="${esc(champName)}">${esc(champName)}</span>`
+    + `<span class="lv mono"><span class="k">${esc(c.S.ui.level)}</span>${n(p.level)}</span>`
+    + `<span class="hp" title="${esc(c.S.ui.hp)}">${hp === null ? '' : `<i style="width:${hp}%"></i>`}</span>`
+    + `<span class="kda mono" title="${esc(c.S.ui.kda)}">${kda}</span>`
+    + `<span class="cs mono" title="${esc(c.S.ui.cs)}">${n(p.cs)}</span>`
+    + `<span class="pg mono">${p.gold === null ? '–' : fmtGold(p.gold)}</span>`;
+  const line2 = withItems ? `<div class="items" title="${esc(items.join(' · '))}">${items.length ? esc(items.join(' · ')) : '&nbsp;'}</div>` : '';
+  return `<div class="prow" style="--t:${TEAM_COLOUR[t]}"><div class="p1">${line1}</div>${line2}</div>`;
+}
+
+export function playersView(c: ViewCtx): string {
+  const ps = c.s.players;
+  const head = `<header><b>${esc(c.S.view.players)}</b></header>`;
+  if (!ps) return `${head}<p class="empty-note muted">${esc(c.S.ui.noPlayers)}</p>`;
+  const withItems = c.show.playerItems;
+  return head + TEAMS.map((t) => `<div class="pteam">${dot(t)}${teamText(c, t)}</div>`
+    + ps[t].map((p) => playerRow(c, p, t, withItems)).join('')).join('');
 }

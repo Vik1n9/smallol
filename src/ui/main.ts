@@ -18,7 +18,7 @@ import type { MatchState } from '../model/types.ts';
 import { detectLang, STRINGS, type Lang } from '../i18n/index.ts';
 import { DEFAULTS, normalize, VIEWS, type Settings, type Size, type ViewName } from '../settings/schema.ts';
 import { SettingsStore, type SettingsBackend } from '../settings/store.ts';
-import { barView, dotView, draftGameView, draftSeriesView, mapView, TAB_H, tabsView, tierOf, VIEW_H, type ViewCtx } from './views.ts';
+import { barView, dotView, draftGameView, draftSeriesView, mapView, playersView, TAB_H, tabsView, tierOf, viewHeight, type ViewCtx } from './views.ts';
 import { settingsView } from './settings-view.ts';
 
 const inTauri = '__TAURI_INTERNALS__' in window;
@@ -81,7 +81,7 @@ let page: Page = 'game';
 const SIZE_DEFAULT: Record<Page, Size> = { game: { w: 480, h: 236 }, settings: { w: 440, h: 500 } };
 const GAP = 4;
 /** Height the open views under the game add to the window. */
-const viewsHeight = (s: Settings = cfg()) => VIEWS.reduce((h, v) => h + (s.views[v] ? VIEW_H[v] + GAP : 0), 0);
+const viewsHeight = (s: Settings = cfg()) => VIEWS.reduce((h, v) => h + (s.views[v] ? viewHeight(v, s.show) + GAP : 0), 0);
 
 /** True while the app itself resizes, so that size is not saved as the user's. */
 let resizingTo = false;
@@ -128,8 +128,13 @@ async function loadSample(): Promise<void> {
   // Dev builds only: the sample is not bundled into a release.
   if (!import.meta.env.DEV) return;
   const game = await import('../../fixtures/streamcv/state_finished_game.json');
+  // Players are not in the service yet: scripts/feed-players.mjs can put real feed numbers in raw/
+  // (git-ignored) to lay that view out. Missing is fine.
+  const extra = import.meta.glob<{ default: object }>('../../raw/players_*.json');
+  const players = Object.values(extra)[0];
+  const more = players ? (await players()).default : {};
   if (haveLive && !flags.sample) return;
-  let s = adapt(game.default);
+  let s = adapt({ ...game.default, ...more });
   if (flags.demo) s = { ...s, status: 'in_game' };
   state = s;
   receivedAt = Date.now();
@@ -186,9 +191,9 @@ function render(): void {
   tabsEl.innerHTML = pill ? '' : tabsView(c, open, !!win, !!quitArmed);
   const body = tier === 'dot' ? dotView(c) : tier === 'bar' ? barView(c) : mapView(c, window.innerWidth >= 320);
   app.innerHTML = body;
-  const views: Record<ViewName, (c: ViewCtx) => string> = { draftGame: draftGameView, draftSeries: draftSeriesView };
+  const views: Record<ViewName, (c: ViewCtx) => string> = { draftGame: draftGameView, draftSeries: draftSeriesView, players: playersView };
   belowEl.innerHTML = pill ? '' : VIEWS.filter((v) => open[v])
-    .map((v) => `<div class="drawer ${v}" style="height:${VIEW_H[v]}px">${views[v](c)}</div>`).join('');
+    .map((v) => `<div class="drawer ${v}" style="height:${viewHeight(v, cfg().show)}px">${views[v](c)}</div>`).join('');
 }
 
 // Countdowns move every second; the data itself changes every 5 s.

@@ -1,0 +1,1287 @@
+{
+ "source": "Data Dragon 16.20.1",
+ "names": {
+  "1001": {
+   "zh-Hant": "鞋子",
+   "en": "Boots"
+  },
+  "1004": {
+   "zh-Hant": "仙女護符",
+   "en": "Faerie Charm"
+  },
+  "1006": {
+   "zh-Hant": "治療寶珠",
+   "en": "Rejuvenation Bead"
+  },
+  "1011": {
+   "zh-Hant": "巨人腰帶",
+   "en": "Giant's Belt"
+  },
+  "1018": {
+   "zh-Hant": "靈巧披風",
+   "en": "Cloak of Agility"
+  },
+  "1026": {
+   "zh-Hant": "爆裂魔杖",
+   "en": "Blasting Wand"
+  },
+  "1027": {
+   "zh-Hant": "藍水晶",
+   "en": "Sapphire Crystal"
+  },
+  "1028": {
+   "zh-Hant": "紅水晶",
+   "en": "Ruby Crystal"
+  },
+  "1029": {
+   "zh-Hant": "布甲",
+   "en": "Cloth Armor"
+  },
+  "1031": {
+   "zh-Hant": "鎖子甲",
+   "en": "Chain Vest"
+  },
+  "1033": {
+   "zh-Hant": "抗魔斗篷",
+   "en": "Null-Magic Mantle"
+  },
+  "1036": {
+   "zh-Hant": "長劍",
+   "en": "Long Sword"
+  },
+  "1037": {
+   "zh-Hant": "十字鎬",
+   "en": "Pickaxe"
+  },
+  "1038": {
+   "zh-Hant": "暴風之劍",
+   "en": "B. F. Sword"
+  },
+  "1042": {
+   "zh-Hant": "短劍",
+   "en": "Dagger"
+  },
+  "1043": {
+   "zh-Hant": "反曲弓",
+   "en": "Recurve Bow"
+  },
+  "1052": {
+   "zh-Hant": "增幅典籍",
+   "en": "Amplifying Tome"
+  },
+  "1053": {
+   "zh-Hant": "吸血鬼權杖",
+   "en": "Vampiric Scepter"
+  },
+  "1054": {
+   "zh-Hant": "多蘭之盾",
+   "en": "Doran's Shield"
+  },
+  "1055": {
+   "zh-Hant": "多蘭之劍",
+   "en": "Doran's Blade"
+  },
+  "1056": {
+   "zh-Hant": "多蘭之戒",
+   "en": "Doran's Ring"
+  },
+  "1057": {
+   "zh-Hant": "負極斗篷",
+   "en": "Negatron Cloak"
+  },
+  "1058": {
+   "zh-Hant": "巨型魔棒",
+   "en": "Needlessly Large Rod"
+  },
+  "1082": {
+   "zh-Hant": "黑暗玉璽",
+   "en": "Dark Seal"
+  },
+  "1083": {
+   "zh-Hant": "剔除鐮刀",
+   "en": "Cull"
+  },
+  "1086": {
+   "zh-Hant": "多蘭之弓",
+   "en": "Doran's Bow"
+  },
+  "1101": {
+   "zh-Hant": "熾爪幼犬",
+   "en": "Scorchclaw Pup"
+  },
+  "1102": {
+   "zh-Hant": "馭風幼狐",
+   "en": "Gustwalker Hatchling"
+  },
+  "1103": {
+   "zh-Hant": "重踏幼螈",
+   "en": "Mosstomper Seedling"
+  },
+  "1105": {
+   "zh-Hant": "重踏幼螈",
+   "en": "Mosstomper Seedling"
+  },
+  "1106": {
+   "zh-Hant": "馭風幼狐",
+   "en": "Gustwalker Hatchling"
+  },
+  "1107": {
+   "zh-Hant": "熾爪幼犬",
+   "en": "Scorchclaw Pup"
+  },
+  "1120": {
+   "zh-Hant": "多蘭之盔",
+   "en": "Doran's Helm"
+  },
+  "1501": {
+   "zh-Hant": "強化堡壘",
+   "en": "Fortification"
+  },
+  "1502": {
+   "zh-Hant": "武裝強化",
+   "en": "Reinforced Armor"
+  },
+  "1503": {
+   "zh-Hant": "守護之眼",
+   "en": "Warden's Eye"
+  },
+  "1505": {
+   "zh-Hant": "強化護甲",
+   "en": "Reinforced Armor"
+  },
+  "1506": {
+   "zh-Hant": "強化護甲",
+   "en": "Reinforced Armor"
+  },
+  "1507": {
+   "zh-Hant": "超載",
+   "en": "Overcharged"
+  },
+  "1508": {
+   "zh-Hant": "扛塔之襪",
+   "en": "Anti-tower Socks"
+  },
+  "1509": {
+   "zh-Hant": "熱血情懷",
+   "en": "Gusto"
+  },
+  "1510": {
+   "zh-Hant": "弗瑞克式的熱血情懷",
+   "en": "Phreakish Gusto"
+  },
+  "1511": {
+   "zh-Hant": "超級士兵裝甲",
+   "en": "Super Mech Armor"
+  },
+  "1512": {
+   "zh-Hant": "超級士兵能量力場",
+   "en": "Super Mech Power Field"
+  },
+  "1515": {
+   "zh-Hant": "防禦塔護甲",
+   "en": "Turret Plating"
+  },
+  "1516": {
+   "zh-Hant": "建築物賞金",
+   "en": "Structure Bounty"
+  },
+  "1517": {
+   "zh-Hant": "建築物賞金",
+   "en": "Structure Bounty"
+  },
+  "1518": {
+   "zh-Hant": "建築物賞金",
+   "en": "Structure Bounty"
+  },
+  "1519": {
+   "zh-Hant": "建築物賞金",
+   "en": "Structure Bounty"
+  },
+  "1520": {
+   "zh-Hant": "咆嘯深淵超載",
+   "en": "OvererchargedHA"
+  },
+  "1521": {
+   "zh-Hant": "強化堡壘",
+   "en": "Fortification"
+  },
+  "1522": {
+   "zh-Hant": "強化防禦塔",
+   "en": "Tower Power-Up"
+  },
+  "1523": {
+   "zh-Hant": "超載",
+   "en": "Overcharged"
+  },
+  "1524": {
+   "zh-Hant": "激增",
+   "en": "Overgrowth"
+  },
+  "2001": {
+   "zh-Hant": "回城",
+   "en": "Recall"
+  },
+  "2003": {
+   "zh-Hant": "生命藥水",
+   "en": "Health Potion",
+   "minor": true
+  },
+  "2007": {
+   "zh-Hant": "取消回城",
+   "en": "Disabled Recall"
+  },
+  "2010": {
+   "zh-Hant": "活力乾糧",
+   "en": "Total Biscuit of Everlasting Will"
+  },
+  "2019": {
+   "zh-Hant": "鋼鐵紋章",
+   "en": "Steel Sigil"
+  },
+  "2020": {
+   "zh-Hant": "兇殘之柄",
+   "en": "The Brutalizer"
+  },
+  "2021": {
+   "zh-Hant": "鑽掘機",
+   "en": "Tunneler"
+  },
+  "2022": {
+   "zh-Hant": "發光結晶",
+   "en": "Glowing Mote"
+  },
+  "2031": {
+   "zh-Hant": "回復藥水",
+   "en": "Refillable Potion",
+   "minor": true
+  },
+  "2033": {
+   "zh-Hant": "污濁藥劑",
+   "en": "Corrupting Potion",
+   "minor": true
+  },
+  "2051": {
+   "zh-Hant": "保衛者號角",
+   "en": "Guardian's Horn"
+  },
+  "2052": {
+   "zh-Hant": "普羅的飼料",
+   "en": "Poro-Snax"
+  },
+  "2055": {
+   "zh-Hant": "控域守衛",
+   "en": "Control Ward",
+   "minor": true
+  },
+  "2065": {
+   "zh-Hant": "蘇瑞亞的戰歌",
+   "en": "Shurelya's Battlesong"
+  },
+  "2138": {
+   "zh-Hant": "抗擊藥劑",
+   "en": "Elixir of Iron",
+   "minor": true
+  },
+  "2139": {
+   "zh-Hant": "巫魔藥劑",
+   "en": "Elixir of Sorcery",
+   "minor": true
+  },
+  "2140": {
+   "zh-Hant": "憤怒藥劑",
+   "en": "Elixir of Wrath",
+   "minor": true
+  },
+  "2141": {
+   "zh-Hant": "帽帽果汁",
+   "en": "Cappa Juice",
+   "minor": true
+  },
+  "2150": {
+   "zh-Hant": "精通藥劑",
+   "en": "Elixir of Skill",
+   "minor": true
+  },
+  "2151": {
+   "zh-Hant": "貪婪藥劑",
+   "en": "Elixir of Avarice",
+   "minor": true
+  },
+  "2152": {
+   "zh-Hant": "力量藥劑",
+   "en": "Elixir of Force",
+   "minor": true
+  },
+  "2403": {
+   "zh-Hant": "士兵去質器",
+   "en": "Minion Dematerializer"
+  },
+  "2420": {
+   "zh-Hant": "探索者護腕",
+   "en": "Seeker's Armguard"
+  },
+  "2421": {
+   "zh-Hant": "破碎的護腕",
+   "en": "Shattered Armguard"
+  },
+  "2422": {
+   "zh-Hant": "輕魔之靴",
+   "en": "Slightly Magical Footwear"
+  },
+  "2501": {
+   "zh-Hant": "狂霸血甲",
+   "en": "Overlord's Bloodmail"
+  },
+  "2502": {
+   "zh-Hant": "無盡絕望",
+   "en": "Unending Despair"
+  },
+  "2503": {
+   "zh-Hant": "黑焰火炬",
+   "en": "Blackfire Torch"
+  },
+  "2504": {
+   "zh-Hant": "凱尼克欺瞞者",
+   "en": "Kaenic Rookern"
+  },
+  "2508": {
+   "zh-Hant": "命定灰燼",
+   "en": "Fated Ashes"
+  },
+  "2510": {
+   "zh-Hant": "暮夜與黎明",
+   "en": "Dusk and Dawn"
+  },
+  "2512": {
+   "zh-Hant": "獵魔弩箭",
+   "en": "Fiendhunter Bolts"
+  },
+  "2517": {
+   "zh-Hant": "無盡飢渴",
+   "en": "Endless Hunger"
+  },
+  "2520": {
+   "zh-Hant": "破堡者",
+   "en": "Bastionbreaker"
+  },
+  "2522": {
+   "zh-Hant": "時現者",
+   "en": "Actualizer"
+  },
+  "2523": {
+   "zh-Hant": "海克斯光學C44",
+   "en": "Hexoptics C44"
+  },
+  "2524": {
+   "zh-Hant": "班德爾笛子",
+   "en": "Bandlepipes"
+  },
+  "2525": {
+   "zh-Hant": "原質馭帶",
+   "en": "Protoplasm Harness"
+  },
+  "2526": {
+   "zh-Hant": "低語之環",
+   "en": "Whispering Circlet"
+  },
+  "2530": {
+   "zh-Hant": "歌謠之冠",
+   "en": "Diadem of Songs"
+  },
+  "3002": {
+   "zh-Hant": "開拓者",
+   "en": "Trailblazer"
+  },
+  "3003": {
+   "zh-Hant": "大天使之杖",
+   "en": "Archangel's Staff"
+  },
+  "3004": {
+   "zh-Hant": "魔劍正宗",
+   "en": "Manamune"
+  },
+  "3006": {
+   "zh-Hant": "狂戰士護脛",
+   "en": "Berserker's Greaves"
+  },
+  "3008": {
+   "zh-Hant": "貪婪護脛",
+   "en": "Gluttonous Greaves"
+  },
+  "3009": {
+   "zh-Hant": "輕靈之靴",
+   "en": "Boots of Swiftness"
+  },
+  "3010": {
+   "zh-Hant": "共生之足",
+   "en": "Symbiotic Soles"
+  },
+  "3011": {
+   "zh-Hant": "生化科技腐化器",
+   "en": "Chemtech Putrifier"
+  },
+  "3013": {
+   "zh-Hant": "靈魂同步",
+   "en": "Synchronized Souls"
+  },
+  "3020": {
+   "zh-Hant": "法師之靴",
+   "en": "Sorcerer's Shoes"
+  },
+  "3024": {
+   "zh-Hant": "冰川圓盾",
+   "en": "Glacial Buckler"
+  },
+  "3026": {
+   "zh-Hant": "守護天使",
+   "en": "Guardian Angel"
+  },
+  "3031": {
+   "zh-Hant": "無盡之刃",
+   "en": "Infinity Edge"
+  },
+  "3032": {
+   "zh-Hant": "雲陶狂箭",
+   "en": "Yun Tal Wildarrows"
+  },
+  "3033": {
+   "zh-Hant": "致死宣告",
+   "en": "Mortal Reminder"
+  },
+  "3035": {
+   "zh-Hant": "最後耳語",
+   "en": "Last Whisper"
+  },
+  "3036": {
+   "zh-Hant": "多明尼克的問候",
+   "en": "Lord Dominik's Regards"
+  },
+  "3040": {
+   "zh-Hant": "熾天使的擁抱",
+   "en": "Seraph's Embrace"
+  },
+  "3041": {
+   "zh-Hant": "靈魂竊取者",
+   "en": "Mejai's Soulstealer"
+  },
+  "3042": {
+   "zh-Hant": "終極魔劍",
+   "en": "Muramana"
+  },
+  "3044": {
+   "zh-Hant": "淨蝕之槌",
+   "en": "Phage"
+  },
+  "3046": {
+   "zh-Hant": "幻影之舞",
+   "en": "Phantom Dancer"
+  },
+  "3047": {
+   "zh-Hant": "鍍板鋼蓋",
+   "en": "Plated Steelcaps"
+  },
+  "3050": {
+   "zh-Hant": "錫柯的聚合之力",
+   "en": "Zeke's Convergence"
+  },
+  "3051": {
+   "zh-Hant": "爐縛之斧",
+   "en": "Hearthbound Axe"
+  },
+  "3053": {
+   "zh-Hant": "史特拉克手套",
+   "en": "Sterak's Gage"
+  },
+  "3057": {
+   "zh-Hant": "閃耀劍",
+   "en": "Sheen"
+  },
+  "3065": {
+   "zh-Hant": "振奮盔甲",
+   "en": "Spirit Visage"
+  },
+  "3066": {
+   "zh-Hant": "飛翼月甲",
+   "en": "Winged Moonplate"
+  },
+  "3067": {
+   "zh-Hant": "燃燒寶石",
+   "en": "Kindlegem"
+  },
+  "3068": {
+   "zh-Hant": "日炎聖盾",
+   "en": "Sunfire Aegis"
+  },
+  "3070": {
+   "zh-Hant": "女神之淚",
+   "en": "Tear of the Goddess"
+  },
+  "3071": {
+   "zh-Hant": "黑色切割者",
+   "en": "Black Cleaver"
+  },
+  "3072": {
+   "zh-Hant": "嗜血者",
+   "en": "Bloodthirster"
+  },
+  "3073": {
+   "zh-Hant": "實驗型海克斯板甲",
+   "en": "Experimental Hexplate"
+  },
+  "3074": {
+   "zh-Hant": "狂怒九頭蛇",
+   "en": "Ravenous Hydra"
+  },
+  "3075": {
+   "zh-Hant": "荊棘之甲",
+   "en": "Thornmail"
+  },
+  "3076": {
+   "zh-Hant": "刺藤胸甲",
+   "en": "Bramble Vest"
+  },
+  "3077": {
+   "zh-Hant": "海神之斧",
+   "en": "Tiamat"
+  },
+  "3078": {
+   "zh-Hant": "三相之力",
+   "en": "Trinity Force"
+  },
+  "3082": {
+   "zh-Hant": "守望者鎧甲",
+   "en": "Warden's Mail"
+  },
+  "3083": {
+   "zh-Hant": "好戰者鎧甲",
+   "en": "Warmog's Armor"
+  },
+  "3084": {
+   "zh-Hant": "雄心之鋼",
+   "en": "Heartsteel"
+  },
+  "3085": {
+   "zh-Hant": "芮蘭颶風箭",
+   "en": "Runaan's Hurricane"
+  },
+  "3086": {
+   "zh-Hant": "狂熱雙刀",
+   "en": "Zeal"
+  },
+  "3087": {
+   "zh-Hant": "史提克彈簧刀",
+   "en": "Statikk Shiv"
+  },
+  "3089": {
+   "zh-Hant": "死亡之帽",
+   "en": "Rabadon's Deathcap"
+  },
+  "3091": {
+   "zh-Hant": "智慧末刃",
+   "en": "Wit's End"
+  },
+  "3094": {
+   "zh-Hant": "衝擊火炮",
+   "en": "Rapid Firecannon"
+  },
+  "3095": {
+   "zh-Hant": "狂暴利刃",
+   "en": "Stormrazor"
+  },
+  "3100": {
+   "zh-Hant": "巫妖之禍",
+   "en": "Lich Bane"
+  },
+  "3102": {
+   "zh-Hant": "女妖面紗",
+   "en": "Banshee's Veil"
+  },
+  "3107": {
+   "zh-Hant": "贖罪神石",
+   "en": "Redemption"
+  },
+  "3108": {
+   "zh-Hant": "惡魔法典",
+   "en": "Fiendish Codex"
+  },
+  "3109": {
+   "zh-Hant": "騎士誓願",
+   "en": "Knight's Vow"
+  },
+  "3110": {
+   "zh-Hant": "冰霜之心",
+   "en": "Frozen Heart"
+  },
+  "3111": {
+   "zh-Hant": "水星之靴",
+   "en": "Mercury's Treads"
+  },
+  "3112": {
+   "zh-Hant": "保衛者冰玉",
+   "en": "Guardian's Orb"
+  },
+  "3113": {
+   "zh-Hant": "蒼穹神火",
+   "en": "Aether Wisp"
+  },
+  "3114": {
+   "zh-Hant": "禁忌之像",
+   "en": "Forbidden Idol"
+  },
+  "3115": {
+   "zh-Hant": "納什之牙",
+   "en": "Nashor's Tooth"
+  },
+  "3116": {
+   "zh-Hant": "瑞萊的冰晶節杖",
+   "en": "Rylai's Crystal Scepter"
+  },
+  "3117": {
+   "zh-Hant": "疾行之靴",
+   "en": "Mobility Boots"
+  },
+  "3118": {
+   "zh-Hant": "惡意",
+   "en": "Malignance"
+  },
+  "3119": {
+   "zh-Hant": "凜冬將至",
+   "en": "Winter's Approach"
+  },
+  "3121": {
+   "zh-Hant": "芬布爾之冬",
+   "en": "Fimbulwinter"
+  },
+  "3123": {
+   "zh-Hant": "死刑宣告",
+   "en": "Executioner's Calling"
+  },
+  "3124": {
+   "zh-Hant": "鬼索的狂暴之刃",
+   "en": "Guinsoo's Rageblade"
+  },
+  "3133": {
+   "zh-Hant": "考菲爾德的戰槌",
+   "en": "Caulfield's Warhammer"
+  },
+  "3134": {
+   "zh-Hant": "殘暴之力",
+   "en": "Serrated Dirk"
+  },
+  "3135": {
+   "zh-Hant": "虛空之杖",
+   "en": "Void Staff"
+  },
+  "3137": {
+   "zh-Hant": "死墓之花",
+   "en": "Cryptbloom"
+  },
+  "3139": {
+   "zh-Hant": "水星彎刀",
+   "en": "Mercurial Scimitar"
+  },
+  "3140": {
+   "zh-Hant": "水銀飾帶",
+   "en": "Quicksilver Sash"
+  },
+  "3142": {
+   "zh-Hant": "妖夢鬼刀",
+   "en": "Youmuu's Ghostblade"
+  },
+  "3143": {
+   "zh-Hant": "蘭頓之兆",
+   "en": "Randuin's Omen"
+  },
+  "3144": {
+   "zh-Hant": "斥候彈弓",
+   "en": "Scout's Slingshot"
+  },
+  "3145": {
+   "zh-Hant": "海克斯科技發電機",
+   "en": "Hextech Alternator"
+  },
+  "3146": {
+   "zh-Hant": "海克斯科技槍刃",
+   "en": "Hextech Gunblade"
+  },
+  "3147": {
+   "zh-Hant": "幽魂面具",
+   "en": "Haunting Guise"
+  },
+  "3152": {
+   "zh-Hant": "海克斯科技火箭腰帶",
+   "en": "Hextech Rocketbelt"
+  },
+  "3153": {
+   "zh-Hant": "殞落王者之劍",
+   "en": "Blade of The Ruined King"
+  },
+  "3155": {
+   "zh-Hant": "吸魔劍",
+   "en": "Hexdrinker"
+  },
+  "3156": {
+   "zh-Hant": "魔提斯深淵",
+   "en": "Maw of Malmortius"
+  },
+  "3157": {
+   "zh-Hant": "中婭沙漏",
+   "en": "Zhonya's Hourglass"
+  },
+  "3158": {
+   "zh-Hant": "愛歐尼亞之靴",
+   "en": "Ionian Boots of Lucidity"
+  },
+  "3161": {
+   "zh-Hant": "精進之矛",
+   "en": "Spear of Shojin"
+  },
+  "3165": {
+   "zh-Hant": "黑魔禁書",
+   "en": "Morellonomicon"
+  },
+  "3168": {
+   "zh-Hant": "不朽之道",
+   "en": "Immortal Path"
+  },
+  "3170": {
+   "zh-Hant": "快速行軍",
+   "en": "Swiftmarch"
+  },
+  "3171": {
+   "zh-Hant": "血色法靴",
+   "en": "Crimson Lucidity"
+  },
+  "3172": {
+   "zh-Hant": "槍銅護脛",
+   "en": "Gunmetal Greaves"
+  },
+  "3173": {
+   "zh-Hant": "鎖鍊軍靴",
+   "en": "Chainlaced Crushers"
+  },
+  "3174": {
+   "zh-Hant": "裝甲戰靴",
+   "en": "Armored Advance"
+  },
+  "3175": {
+   "zh-Hant": "魔法使之鞋",
+   "en": "Spellslinger's Shoes"
+  },
+  "3176": {
+   "zh-Hant": "勇進靈靴",
+   "en": "Forever Forward"
+  },
+  "3177": {
+   "zh-Hant": "保衛者之刃",
+   "en": "Guardian's Blade"
+  },
+  "3179": {
+   "zh-Hant": "闇影戰戟",
+   "en": "Umbral Glaive"
+  },
+  "3181": {
+   "zh-Hant": "破船戰斧",
+   "en": "Hullbreaker"
+  },
+  "3184": {
+   "zh-Hant": "保衛者戰鎚",
+   "en": "Guardian's Hammer"
+  },
+  "3190": {
+   "zh-Hant": "日輪的加冕",
+   "en": "Locket of the Iron Solari"
+  },
+  "3211": {
+   "zh-Hant": "亡靈斗篷",
+   "en": "Spectre's Cowl"
+  },
+  "3222": {
+   "zh-Hant": "米凱的祝福",
+   "en": "Mikael's Blessing"
+  },
+  "3302": {
+   "zh-Hant": "臨界點",
+   "en": "Terminus"
+  },
+  "3330": {
+   "zh-Hant": "稻草人",
+   "en": "Scarecrow Effigy",
+   "minor": true
+  },
+  "3340": {
+   "zh-Hant": "潛行守衛",
+   "en": "Stealth Ward",
+   "minor": true
+  },
+  "3363": {
+   "zh-Hant": "鷹眼晶球",
+   "en": "Farsight Alteration",
+   "minor": true
+  },
+  "3364": {
+   "zh-Hant": "先知透視鏡",
+   "en": "Oracle Lens",
+   "minor": true
+  },
+  "3400": {
+   "zh-Hant": "你也有份",
+   "en": "Your Cut",
+   "minor": true
+  },
+  "3504": {
+   "zh-Hant": "熾灼魔器",
+   "en": "Ardent Censer"
+  },
+  "3508": {
+   "zh-Hant": "奪魄之鐮",
+   "en": "Essence Reaver"
+  },
+  "3599": {
+   "zh-Hant": "克黎思妲的靈魂黑矛",
+   "en": "Kalista's Black Spear",
+   "minor": true
+  },
+  "3600": {
+   "zh-Hant": "克黎思妲的靈魂黑矛",
+   "en": "Kalista's Black Spear",
+   "minor": true
+  },
+  "3742": {
+   "zh-Hant": "死者肩甲",
+   "en": "Dead Man's Plate"
+  },
+  "3748": {
+   "zh-Hant": "泰坦九頭蛇",
+   "en": "Titanic Hydra"
+  },
+  "3801": {
+   "zh-Hant": "水晶護腕",
+   "en": "Crystalline Bracer"
+  },
+  "3802": {
+   "zh-Hant": "失落之章",
+   "en": "Lost Chapter"
+  },
+  "3803": {
+   "zh-Hant": "催化魔方",
+   "en": "Catalyst of Aeons"
+  },
+  "3814": {
+   "zh-Hant": "夜色緣界",
+   "en": "Edge of Night"
+  },
+  "3865": {
+   "zh-Hant": "世界地圖",
+   "en": "World Atlas"
+  },
+  "3866": {
+   "zh-Hant": "符文指針",
+   "en": "Runic Compass"
+  },
+  "3867": {
+   "zh-Hant": "跨界獎賞",
+   "en": "Bounty of Worlds"
+  },
+  "3869": {
+   "zh-Hant": "星體抗力",
+   "en": "Celestial Opposition"
+  },
+  "3870": {
+   "zh-Hant": "夢寐以求",
+   "en": "Dream Maker"
+  },
+  "3871": {
+   "zh-Hant": "薩茲薩克的領域之刺",
+   "en": "Zaz'Zak's Realmspike"
+  },
+  "3876": {
+   "zh-Hant": "冬至雪橇",
+   "en": "Solstice Sleigh"
+  },
+  "3877": {
+   "zh-Hant": "血歌",
+   "en": "Bloodsong"
+  },
+  "3901": {
+   "zh-Hant": "恣意開火",
+   "en": "Fire at Will"
+  },
+  "3902": {
+   "zh-Hant": "死亡之女",
+   "en": "Death's Daughter"
+  },
+  "3903": {
+   "zh-Hant": "士氣高昂",
+   "en": "Raise Morale"
+  },
+  "3916": {
+   "zh-Hant": "遺忘寶珠",
+   "en": "Oblivion Orb"
+  },
+  "4005": {
+   "zh-Hant": "帝王命令",
+   "en": "Imperial Mandate"
+  },
+  "4401": {
+   "zh-Hant": "自然之力",
+   "en": "Force of Nature"
+  },
+  "4628": {
+   "zh-Hant": "視界專注",
+   "en": "Horizon Focus"
+  },
+  "4629": {
+   "zh-Hant": "星河馳騁",
+   "en": "Cosmic Drive"
+  },
+  "4630": {
+   "zh-Hant": "枯萎寶石",
+   "en": "Blighting Jewel"
+  },
+  "4632": {
+   "zh-Hant": "蒼翠屏障",
+   "en": "Verdant Barrier"
+  },
+  "4633": {
+   "zh-Hant": "峽谷製造者",
+   "en": "Riftmaker"
+  },
+  "4635": {
+   "zh-Hant": "榨血睥睨",
+   "en": "Leeching Leer"
+  },
+  "4636": {
+   "zh-Hant": "闇夜收割者",
+   "en": "Night Harvester"
+  },
+  "4637": {
+   "zh-Hant": "惡魔之擁",
+   "en": "Demonic Embrace"
+  },
+  "4641": {
+   "zh-Hant": "活耀視石",
+   "en": "Stirring Wardstone"
+  },
+  "4642": {
+   "zh-Hant": "班德爾玻璃之鏡",
+   "en": "Bandleglass Mirror"
+  },
+  "4645": {
+   "zh-Hant": "黯影之炎",
+   "en": "Shadowflame"
+  },
+  "4646": {
+   "zh-Hant": "雷霆風暴",
+   "en": "Stormsurge"
+  },
+  "6333": {
+   "zh-Hant": "死亡之舞",
+   "en": "Death's Dance"
+  },
+  "6609": {
+   "zh-Hant": "生化龐克鏈鋸之劍",
+   "en": "Chempunk Chainsword"
+  },
+  "6610": {
+   "zh-Hant": "突破天際",
+   "en": "Sundered Sky"
+  },
+  "6616": {
+   "zh-Hant": "流水之杖",
+   "en": "Staff of Flowing Water"
+  },
+  "6617": {
+   "zh-Hant": "月之石再生裝置",
+   "en": "Moonstone Renewer"
+  },
+  "6620": {
+   "zh-Hant": "希利亞的迴響",
+   "en": "Echoes of Helia"
+  },
+  "6621": {
+   "zh-Hant": "破曉之核",
+   "en": "Dawncore"
+  },
+  "6631": {
+   "zh-Hant": "步履破壞者",
+   "en": "Stridebreaker"
+  },
+  "6653": {
+   "zh-Hant": "黎安卓的折磨",
+   "en": "Liandry's Torment"
+  },
+  "6655": {
+   "zh-Hant": "盧登回音",
+   "en": "Luden's Echo"
+  },
+  "6657": {
+   "zh-Hant": "時光之杖",
+   "en": "Rod of Ages"
+  },
+  "6660": {
+   "zh-Hant": "巴米灰燼",
+   "en": "Bami's Cinder"
+  },
+  "6662": {
+   "zh-Hant": "寒冰霸拳",
+   "en": "Iceborn Gauntlet"
+  },
+  "6664": {
+   "zh-Hant": "虛偽光彩",
+   "en": "Hollow Radiance"
+  },
+  "6665": {
+   "zh-Hant": "千變萬化之賈克修",
+   "en": "Jak'Sho, The Protean"
+  },
+  "6670": {
+   "zh-Hant": "正午箭筒",
+   "en": "Noonquiver"
+  },
+  "6672": {
+   "zh-Hant": "海妖殺手",
+   "en": "Kraken Slayer"
+  },
+  "6673": {
+   "zh-Hant": "不朽盾弓",
+   "en": "Immortal Shieldbow"
+  },
+  "6675": {
+   "zh-Hant": "那歐閃刃",
+   "en": "Navori Flickerblade"
+  },
+  "6676": {
+   "zh-Hant": "蒐集者",
+   "en": "The Collector"
+  },
+  "6690": {
+   "zh-Hant": "導翔之羽",
+   "en": "Rectrix"
+  },
+  "6692": {
+   "zh-Hant": "星蝕",
+   "en": "Eclipse"
+  },
+  "6693": {
+   "zh-Hant": "潛行者之爪",
+   "en": "Prowler's Claw"
+  },
+  "6694": {
+   "zh-Hant": "席利妲咒怨",
+   "en": "Serylda's Grudge"
+  },
+  "6695": {
+   "zh-Hant": "巨蛇鋒牙",
+   "en": "Serpent's Fang"
+  },
+  "6696": {
+   "zh-Hant": "公理弧刃",
+   "en": "Axiom Arc"
+  },
+  "6697": {
+   "zh-Hant": "傲慢",
+   "en": "Hubris"
+  },
+  "6698": {
+   "zh-Hant": "瀆神九頭蛇",
+   "en": "Profane Hydra"
+  },
+  "6699": {
+   "zh-Hant": "電流旋風劍",
+   "en": "Voltaic Cyclosword"
+  },
+  "6701": {
+   "zh-Hant": "機會",
+   "en": "Opportunity"
+  },
+  "7050": {
+   "zh-Hant": "剛普朗克 版面",
+   "en": "Gangplank Placeholder"
+  },
+  "8001": {
+   "zh-Hant": "咒恨縛鎖",
+   "en": "Anathema's Chains"
+  },
+  "8010": {
+   "zh-Hant": "血書詛咒",
+   "en": "Bloodletter's Curse"
+  },
+  "8020": {
+   "zh-Hant": "深淵面具",
+   "en": "Abyssal Mask"
+  },
+  "322065": {
+   "zh-Hant": "蘇瑞亞的戰歌",
+   "en": "Shurelya's Battlesong"
+  },
+  "322526": {
+   "zh-Hant": "低語之環",
+   "en": "Whispering Circlet"
+  },
+  "322530": {
+   "zh-Hant": "歌謠之冠",
+   "en": "Diadem of Songs"
+  },
+  "323002": {
+   "zh-Hant": "開拓者",
+   "en": "Trailblazer"
+  },
+  "323003": {
+   "zh-Hant": "大天使之杖",
+   "en": "Archangel's Staff"
+  },
+  "323004": {
+   "zh-Hant": "魔劍正宗",
+   "en": "Manamune"
+  },
+  "323040": {
+   "zh-Hant": "熾天使的擁抱",
+   "en": "Seraph's Embrace"
+  },
+  "323042": {
+   "zh-Hant": "終極魔劍",
+   "en": "Muramana"
+  },
+  "323050": {
+   "zh-Hant": "錫柯的聚合之力",
+   "en": "Zeke's Convergence"
+  },
+  "323070": {
+   "zh-Hant": "女神之淚",
+   "en": "Tear of the Goddess"
+  },
+  "323075": {
+   "zh-Hant": "荊棘之甲",
+   "en": "Thornmail"
+  },
+  "323107": {
+   "zh-Hant": "贖罪神石",
+   "en": "Redemption"
+  },
+  "323109": {
+   "zh-Hant": "騎士誓願",
+   "en": "Knight's Vow"
+  },
+  "323110": {
+   "zh-Hant": "冰霜之心",
+   "en": "Frozen Heart"
+  },
+  "323119": {
+   "zh-Hant": "凜冬將至",
+   "en": "Winter's Approach"
+  },
+  "323121": {
+   "zh-Hant": "芬布爾之冬",
+   "en": "Fimbulwinter"
+  },
+  "323190": {
+   "zh-Hant": "日輪的加冕",
+   "en": "Locket of the Iron Solari"
+  },
+  "323222": {
+   "zh-Hant": "米凱的祝福",
+   "en": "Mikael's Blessing"
+  },
+  "323504": {
+   "zh-Hant": "熾灼魔器",
+   "en": "Ardent Censer"
+  },
+  "324005": {
+   "zh-Hant": "帝王命令",
+   "en": "Imperial Mandate"
+  },
+  "326616": {
+   "zh-Hant": "流水之杖",
+   "en": "Staff of Flowing Water"
+  },
+  "326617": {
+   "zh-Hant": "月之石再生裝置",
+   "en": "Moonstone Renewer"
+  },
+  "326620": {
+   "zh-Hant": "希利亞的迴響",
+   "en": "Echoes of Helia"
+  },
+  "326621": {
+   "zh-Hant": "破曉之核",
+   "en": "Dawncore"
+  },
+  "326657": {
+   "zh-Hant": "時光之杖",
+   "en": "Rod of Ages"
+  },
+  "328020": {
+   "zh-Hant": "深淵面具",
+   "en": "Abyssal Mask"
+  },
+  "663039": {
+   "zh-Hant": "終末戰戟",
+   "en": "Atma's Reckoning"
+  },
+  "663056": {
+   "zh-Hant": "魔王的王冠",
+   "en": "Demon King's Crown"
+  },
+  "663058": {
+   "zh-Hant": "熔岩護盾",
+   "en": "Shield of Molten Stone"
+  },
+  "663059": {
+   "zh-Hant": "星夜斗篷",
+   "en": "Cloak of Starry Night"
+  },
+  "663060": {
+   "zh-Hant": "神聖之劍",
+   "en": "Sword of the Divine"
+  },
+  "663064": {
+   "zh-Hant": "維迦的昇華護符",
+   "en": "Veigar's Talisman of Ascension"
+  },
+  "663146": {
+   "zh-Hant": "海克斯科技槍刃",
+   "en": "Hextech Gunblade"
+  },
+  "663172": {
+   "zh-Hant": "和風守護",
+   "en": "Zephyr"
+  },
+  "663193": {
+   "zh-Hant": "石像鬼磐核",
+   "en": "Gargoyle Stoneplate"
+  },
+  "664011": {
+   "zh-Hant": "破曉綻放之劍",
+   "en": "Sword of Blossoming Dawn"
+  },
+  "664403": {
+   "zh-Hant": "黃金鍋鏟",
+   "en": "The Golden Spatula"
+  },
+  "664644": {
+   "zh-Hant": "殘破王后之冠",
+   "en": "Crown of the Shattered Queen"
+  },
+  "667101": {
+   "zh-Hant": "賭徒之刀",
+   "en": "Gambler's Blade"
+  },
+  "667109": {
+   "zh-Hant": "殘忍",
+   "en": "Cruelty"
+  },
+  "667112": {
+   "zh-Hant": "食肉者",
+   "en": "Flesheater"
+  },
+  "667666": {
+   "zh-Hant": "蒐集者",
+   "en": "The Collector"
+  },
+  "771500": {
+   "zh-Hant": "穿甲彈",
+   "en": "Penetrating Bullets"
+  }
+ }
+}
