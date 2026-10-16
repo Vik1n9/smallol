@@ -17,8 +17,7 @@ npm run typecheck
 
 | 參數 | 作用 |
 | --- | --- |
-| `sample` | 不問服務，直接畫樣本（只有開發版有樣本）。樣本是 Stream CV 合約 v0.2 的真實輸出，含系列賽、BP 與選手（MVK vs FUR 第 3 局） |
-| `sample=v03` | 改用 v0.3 的樣本（`fixtures/streamcv/state_v03_bans.json`，有禁用）。這份樣本的 `towersLost` 是空的，是服務那邊的退步，所以地圖的塔畫成「沒有辨識資料」；塔的測試用主樣本（StreamCV e74ea27） |
+| `sample` | 不問服務，直接畫樣本（只有開發版有樣本）。樣本是 Stream CV 合約 v0.3 的真實輸出（StreamCV aee7c8b），含塔、系列賽、禁用與選角、選手（MVK vs FUR 第 3 局） |
 | `demo` | 搭配 `sample`：把已結束的樣本當成進行中，倒數會走 |
 | `settings` | 開啟設定頁 |
 | `set=path:value,...` | 例：`set=language:en,show.gold:false,background:semi` |

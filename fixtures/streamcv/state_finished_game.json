@@ -1,7 +1,7 @@
 {
  "status": "finished",
  "game": "115660588583171785",
- "updated": "2026-10-16T10:46:44Z",
+ "updated": "2026-10-16T17:10:48Z",
  "videoLagSec": 31.0,
  "series": {
   "bestOf": 5,
@@ -25,11 +25,11 @@
    "B": {
     "team": "MVK",
     "bans": [
-     null,
-     null,
-     null,
-     null,
-     null
+     "Ezreal",
+     "Renata",
+     "Sylas",
+     "Poppy",
+     "Shen"
     ],
     "picks": [
      "Zaahen",
@@ -42,11 +42,11 @@
    "R": {
     "team": "FUR",
     "bans": [
-     null,
-     null,
-     null,
-     null,
-     null
+     "Locke",
+     "Nocturne",
+     "Yone",
+     "Orianna",
+     "Vayne"
     ],
     "picks": [
      "KSante",
@@ -64,11 +64,11 @@
     "B": {
      "team": "MVK",
      "bans": [
-      null,
-      null,
-      null,
-      null,
-      null
+      "Ezreal",
+      "Pantheon",
+      "Akali",
+      "Sylas",
+      "Locke"
      ],
      "picks": [
       "Olaf",
@@ -81,11 +81,11 @@
     "R": {
      "team": "FUR",
      "bans": [
-      null,
-      null,
-      null,
-      null,
-      null
+      "Pyke",
+      "Nocturne",
+      "JarvanIV",
+      "Maokai",
+      "LeeSin"
      ],
      "picks": [
       "Jax",
@@ -101,11 +101,11 @@
     "B": {
      "team": "MVK",
      "bans": [
-      null,
-      null,
-      null,
-      null,
-      null
+      "Ezreal",
+      "Renata",
+      "Akali",
+      "Pantheon",
+      "Ambessa"
      ],
      "picks": [
       "Rumble",
@@ -118,11 +118,11 @@
     "R": {
      "team": "FUR",
      "bans": [
-      null,
-      null,
-      null,
-      null,
-      null
+      "Nocturne",
+      "JarvanIV",
+      "Caitlyn",
+      "Locke",
+      "Leblanc"
      ],
      "picks": [
       "Ornn",
@@ -135,7 +135,8 @@
    }
   ],
   "picksOrder": "role",
-  "bansSupported": false,
+  "bansSupported": true,
+  "bansOrder": "ban",
   "turnSupported": false
  },
  "players": {

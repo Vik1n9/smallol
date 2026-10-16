@@ -12,8 +12,6 @@ import {
 } from '../src/ui/views.ts';
 import { settingsView } from '../src/ui/settings-view.ts';
 import sample from '../fixtures/streamcv/state_finished_game.json' with { type: 'json' };
-// StreamCV 6e99ae1 (contract v0.3, bans). Its towersLost is empty, a regression on the service side; tower tests use the main sample.
-import v03 from '../fixtures/streamcv/state_v03_bans.json' with { type: 'json' };
 import mock from '../fixtures/dev/series_draft_mock.json' with { type: 'json' };
 
 const finished = adapt(sample);
@@ -173,7 +171,7 @@ describe('tab strip and draft views', () => {
   });
 
   it('real sample (v0.3): ten bans and ten picks by name, no position marks', () => {
-    const html = draftGameView(ctx({ s: adapt(v03) }));
+    const html = draftGameView(ctx({ s: adapt(sample) }));
     expect(html.match(/class="ch pick"/g)).toHaveLength(10);
     expect(html.match(/class="ch ban"/g)).toHaveLength(10);
     expect(html).toContain('>伊澤瑞爾<');
@@ -182,8 +180,10 @@ describe('tab strip and draft views', () => {
   });
 
   it('bans: unsupported, missing for a whole game, or still coming during the draft', () => {
-    expect(draftGameView(ctx())).toContain(STRINGS['zh-Hant'].ui.bansUnsupported);
-    const none = adapt({ ...v03, draft: { ...v03.draft, current: { ...v03.draft.current, B: { ...v03.draft.current.B, bans: [null, null, null, null, null] } } } });
+    const v01 = { ...finished, draft: { ...finished.draft!, bansSupported: false } };
+    expect(draftGameView(ctx({ s: v01 }))).toContain(STRINGS['zh-Hant'].ui.bansUnsupported);
+    expect(draftGameView(ctx())).not.toContain(STRINGS['zh-Hant'].ui.bansUnsupported);
+    const none = adapt({ ...sample, draft: { ...sample.draft, current: { ...sample.draft.current, B: { ...sample.draft.current.B, bans: [null, null, null, null, null] } } } });
     const html = draftGameView(ctx({ s: none }));
     expect(html).toContain(STRINGS['zh-Hant'].ui.bansMissing);
     expect(html.match(/class="ch ban"/g)).toHaveLength(5);

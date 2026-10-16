@@ -122,13 +122,12 @@ let receivedAt = Date.now();
 let conn: Connection = 'connecting';
 let sample = false;
 let haveLive = false;
-const flags = { sample: false, demo: false, v03: false };
+const flags = { sample: false, demo: false };
 
 async function loadSample(): Promise<void> {
   // Dev builds only: the sample is not bundled into a release.
   if (!import.meta.env.DEV) return;
-  // --sample=v03: the v0.3 sample (bans), whose tower naming is empty on the service side.
-  const game = flags.v03 ? await import('../../fixtures/streamcv/state_v03_bans.json') : await import('../../fixtures/streamcv/state_finished_game.json');
+  const game = await import('../../fixtures/streamcv/state_finished_game.json');
   if (haveLive && !flags.sample) return;
   let s = adapt(game.default);
   if (flags.demo) s = { ...s, status: 'in_game' };
@@ -268,14 +267,13 @@ async function start(): Promise<void> {
   const q = new URLSearchParams(location.search);
   if (inTauri) {
     for (const a of await invoke<string[]>('launch_args').catch(() => [] as string[])) {
-      const m = /^--(set|sample)=(.+)$/.exec(a);
+      const m = /^--(set)=(.+)$/.exec(a);
       if (m) q.set(m[1]!, m[2]!);
       for (const flag of ['sample', 'demo', 'settings']) if (a === `--${flag}`) q.set(flag, '1');
     }
   }
   flags.sample = q.has('sample');
   flags.demo = q.has('demo');
-  flags.v03 = q.get('sample') === 'v03';
   const checking = ['sample', 'demo', 'settings', 'set'].some((k) => q.has(k));
   settings = await SettingsStore.open(backend, () => DEFAULTS);
   // A checking run changes nothing on disk.
