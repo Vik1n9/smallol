@@ -1,27 +1,36 @@
 import { describe, expect, it } from 'vitest';
 import { adapt } from '../src/data/streamcv/adapter.ts';
+import { championName, knownChampion } from '../src/data/champions.ts';
 import { clockNow, fmtClock, MAX_TICK_SEC } from '../src/model/clock.ts';
 import { TEAMS, TOWER_SITES } from '../src/model/types.ts';
 import { detectLang, LANGS, STRINGS } from '../src/i18n/index.ts';
-import { DEFAULTS, FEATURES } from '../src/settings/schema.ts';
+import { DEFAULTS, FEATURES, VIEWS } from '../src/settings/schema.ts';
 import { mapSvg, towerAt } from '../src/render/map-svg.ts';
-import { barView, dotView, fmtGold, mapView, tierOf, timerChips, type ViewCtx } from '../src/ui/views.ts';
+import {
+  barView, dotView, draftGameView, draftSeriesView, fmtGold, mapView, tabsView, tierOf, timerChips, type ViewCtx,
+} from '../src/ui/views.ts';
 import { settingsView } from '../src/ui/settings-view.ts';
 import sample from '../fixtures/streamcv/state_finished_game.json' with { type: 'json' };
+import mock from '../fixtures/dev/series_draft_mock.json' with { type: 'json' };
 
 const finished = adapt(sample);
 const live = { ...finished, status: 'in_game' as const };
+const withMock = { ...adapt({ ...sample, ...mock }), status: 'in_game' as const };
 const ctx = (over: Partial<ViewCtx> = {}): ViewCtx => ({
-  s: finished, clock: finished.clock, show: { ...DEFAULTS.show }, gold: 'diff', S: STRINGS['zh-Hant'], conn: 'ok', sample: false, ...over,
+  s: finished, clock: finished.clock, show: { ...DEFAULTS.show }, gold: 'diff', S: STRINGS['zh-Hant'], lang: 'zh-Hant',
+  conn: 'ok', sample: false, mock: false, ...over,
 });
-const opts = { inhibitors: true, unnamed: (n: number) => `+${n}?`, unnamedTitle: '', unknownTitle: '' };
+const opts = { inhibitors: true, inhibTimers: true, nexusTimers: true, unnamed: (n: number) => `+${n}?`, unnamedTitle: '', unknownTitle: '' };
+const AT = 27 * 60 + 6;
+const times = (html: string) => [...html.matchAll(/>(\d+:\d\d)</g)].map((m) => m[1]);
 
-describe('tower map', () => {
-  it('draws 22 towers, with red\'s ten losses hollow', () => {
+describe('tower map (2.5D)', () => {
+  it("draws 22 towers, with red's ten losses as stumps", () => {
     const svg = mapSvg(finished, finished.clock, opts);
     expect(svg.match(/class="tower/g)).toHaveLength(22);
     expect(svg.match(/class="tower down"/g)).toHaveLength(10);
     expect(svg.match(/class="inhib down"/g)).toHaveLength(2);
+    expect(svg.match(/class="nexus"/g)).toHaveLength(2);
   });
 
   it('puts every building at its own spot, blue bottom-left and red its mirror', () => {
@@ -32,28 +41,42 @@ describe('tower map', () => {
     expect(towerAt('R', 'bot_outer')).toEqual([100 - towerAt('B', 'top_outer')[0], 100 - towerAt('B', 'top_outer')[1]]);
   });
 
+  it('puts respawn countdowns on the buildings, only while the game is on', () => {
+    expect(times(mapSvg(live, AT, opts)).sort()).toEqual(['2:42', '3:10', '4:49']);
+    expect(times(mapSvg(finished, AT, opts))).toEqual([]);
+    expect(times(mapSvg(live, AT, { ...opts, nexusTimers: false, inhibTimers: false }))).toEqual([]);
+  });
+
   it('brings nexus turrets back at their respawn time in a live game', () => {
     expect(mapSvg(live, 30 * 60 + 15, opts).match(/class="tower down"/g)).toHaveLength(10);
     expect(mapSvg(live, 30 * 60 + 16, opts).match(/class="tower down"/g)).toHaveLength(8);
   });
 
   it('shows unknown towers as unknown, not as standing', () => {
-    const s = adapt({ status: 'in_game' });
-    expect(mapSvg(s, 0, opts)).toContain('class="map unknown"');
+    const svg = mapSvg(adapt({ status: 'in_game' }), 0, opts);
+    expect(svg).toContain('class="map unknown"');
+    expect(svg.match(/class="tower unknown"/g)).toHaveLength(22);
   });
 });
 
 describe('views', () => {
-  it('picks the tier from the height', () => {
-    expect([28, 43, 44, 119, 120, 400].map(tierOf)).toEqual(['dot', 'dot', 'bar', 'bar', 'map', 'map']);
+  it('picks the tier from the height without the views under the game', () => {
+    expect([28, 49, 50, 121, 122, 400].map(tierOf)).toEqual(['dot', 'dot', 'bar', 'bar', 'map', 'map']);
   });
 
   it('shows kills, clock and gold lead on every tier', () => {
     for (const html of [dotView(ctx()), barView(ctx()), mapView(ctx(), true)]) {
-      expect(html).toContain('22<span class="muted">:</span>8');
+      expect(html).toContain('<b>22</b><span class="muted">:</span><b>8</b>');
       expect(html).toContain('27:06');
       expect(html).toContain('+13.2k');
     }
+  });
+
+  it('says what each capsule counts, in words', () => {
+    const html = mapView(ctx({ s: live, clock: AT }), true);
+    for (const w of ['經濟', '巴龍', '下一隻']) expect(html).toContain(w);
+    expect(html).toContain('>水<');
+    expect(html).toContain('>化<');
   });
 
   it('hides each piece when its setting is off', () => {
@@ -61,18 +84,24 @@ describe('views', () => {
     const html = mapView(ctx({ show: off }), true);
     expect(html).not.toContain('class="map');
     expect(html).not.toContain('27:06');
-    expect(html).not.toContain('class="drake');
+    expect(html).not.toContain('class="el');
     expect(html).not.toContain('+13.2k');
+    expect(tabsView(ctx({ s: withMock, show: off }), DEFAULTS.views, false, false)).not.toContain('BO5');
   });
 
-  it('runs countdowns only while the game is on', () => {
-    expect(timerChips(ctx())).toBe('');
-    const at = 27 * 60 + 6;
-    const chips = timerChips(ctx({ s: live, clock: at }));
-    // Two red inhibitors (2:42, 4:49) and both nexus turrets together (3:10), soonest first.
+  it('lists countdowns as words only where the map does not show them', () => {
+    const c = ctx({ s: live, clock: AT });
+    expect(timerChips(c, true)).toBe('');
+    const chips = timerChips(c, false);
     expect(chips.match(/class="chip/g)).toHaveLength(3);
-    expect([...chips.matchAll(/mono">(\d+:\d\d)</g)].map((m) => m[1])).toEqual(['2:42', '3:10', '4:49']);
-    const html = mapView(ctx({ s: live, clock: at }), true);
+    expect(times(chips)).toEqual(['2:42', '3:10', '4:49']);
+    expect(chips).toContain('紅方水晶');
+    expect(chips).toContain('紅方主堡塔');
+    expect(timerChips(ctx(), false)).toBe('');
+  });
+
+  it('counts down to the next dragon and baron, then says they are up', () => {
+    const html = mapView(ctx({ s: live, clock: AT }), true);
     expect(html).toContain('4:02'); // next dragon 31:08
     expect(html).toContain('1:25'); // next baron 28:31
     expect(mapView(ctx({ s: live, clock: 28 * 60 + 40 }), true)).toContain(STRINGS['zh-Hant'].ui.baronUp);
@@ -96,7 +125,59 @@ describe('views', () => {
   });
 });
 
-describe('i18n', () => {
+describe('tab strip and draft views', () => {
+  it('shows best-of, game number and series score; or says there is no series data', () => {
+    const tabs = tabsView(ctx({ s: withMock }), DEFAULTS.views, true, false);
+    expect(tabs).toContain('BO5 第 3 局');
+    expect(tabs).toContain('AAA 1–1 BBB');
+    expect(tabsView(ctx(), DEFAULTS.views, true, false)).toContain(STRINGS['zh-Hant'].ui.noSeries);
+    expect(tabsView(ctx({ s: withMock, S: STRINGS.en, lang: 'en' }), DEFAULTS.views, true, false)).toContain('Bo5 · Game 3');
+  });
+
+  it("lists this game's five bans and five picks per team, by name", () => {
+    const html = draftGameView(ctx({ s: withMock }));
+    expect(html.match(/class="ch ban"/g)).toHaveLength(10);
+    expect(html.match(/class="ch pick"/g)).toHaveLength(10);
+    expect(html).toContain('>賈克斯<');
+    expect(draftGameView(ctx({ s: withMock, S: STRINGS.en, lang: 'en' }))).toContain('>Xin Zhao<');
+  });
+
+  it('marks whose turn it is and leaves open slots empty', () => {
+    const s = adapt({ status: 'waiting', draft: { current: { game: 1, B: { team: 'AAA', bans: ['Ahri'] }, R: { team: 'BBB', bans: [] }, turn: { side: 'R', kind: 'ban', slot: 0 } } } });
+    const html = draftGameView(ctx({ s }));
+    expect(html.match(/class="ch empty now"/g)).toHaveLength(1);
+    expect(html.match(/class="ch empty/g)).toHaveLength(19);
+  });
+
+  it('series view: every earlier pick, grouped by team, with the side it had that game', () => {
+    const html = draftSeriesView(ctx({ s: withMock }));
+    expect(html).toContain('已鎖 20 隻');
+    expect(html.match(/class="ch pick"/g)).toHaveLength(20);
+    expect(html.indexOf('>AAA<')).toBeLessThan(html.indexOf('>BBB<'));
+    expect(draftSeriesView(ctx({ s: adapt({ status: 'in_game', draft: { current: { game: 1, B: { team: 'A' }, R: { team: 'B' } } } }) }))).toContain(STRINGS['zh-Hant'].ui.noEarlier);
+  });
+
+  it('says plainly when there is no draft data', () => {
+    expect(draftGameView(ctx())).toContain(STRINGS['zh-Hant'].ui.noDraft);
+    expect(draftSeriesView(ctx())).toContain(STRINGS['zh-Hant'].ui.noDraft);
+  });
+
+  it('the made-up layout data follows the fearless rule and names real champions', () => {
+    const d = withMock.draft!;
+    const earlier = new Set(d.earlier.flatMap((g) => TEAMS.flatMap((t) => g.sides[t].picks)));
+    for (const t of TEAMS) for (const p of d.current!.sides[t].picks) expect(earlier.has(p)).toBe(false);
+    const all = [d.current!, ...d.earlier].flatMap((g) => TEAMS.flatMap((t) => [...g.sides[t].picks, ...g.sides[t].bans]));
+    expect(all.filter((id) => !id || !knownChampion(id))).toEqual([]);
+  });
+
+  it('shows an id it does not know as it is', () => {
+    expect(championName('KSante', 'zh-Hant')).toBe('卡桑帝');
+    expect(championName('KSante', 'en')).toBe("K'Sante");
+    expect(championName('Newchamp', 'zh-Hant')).toBe('Newchamp');
+  });
+});
+
+describe('i18n and settings page', () => {
   it('has the same keys in both languages', () => {
     const shape = (o: object): string[] => Object.entries(o).flatMap(([k, v]) => (v && typeof v === 'object' ? shape(v).map((x) => `${k}.${x}`) : [k])).sort();
     expect(shape(STRINGS.en)).toEqual(shape(STRINGS['zh-Hant']));
@@ -109,8 +190,9 @@ describe('i18n', () => {
     expect(detectLang(undefined)).toBe('en');
   });
 
-  it('settings page has a switch for every feature', () => {
+  it('settings page has a switch for every feature and view', () => {
     const html = settingsView(DEFAULTS, STRINGS.en, false);
     for (const f of FEATURES) expect(html).toContain(`data-toggle="show.${f}"`);
+    for (const v of VIEWS) expect(html).toContain(`data-toggle="views.${v}"`);
   });
 });

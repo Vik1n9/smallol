@@ -3,7 +3,7 @@
 
 import {
   ELEMENTS, LANES, TEAMS, TOWER_SITES, other, isNexusTurret,
-  type Buff, type Element, type GameStatus, type InhibitorDown, type Lane, type MatchState, type Team, type TeamState, type Tower, type TowerSite,
+  type Buff, type Champion, type DraftGame, type DraftSide, type Element, type GameStatus, type InhibitorDown, type Lane, type MatchState, type Team, type TeamState, type Tower, type TowerSite,
 } from '../../model/types.ts';
 import type { RawState } from './contract.ts';
 
@@ -35,7 +35,7 @@ function emptyTeam(): TeamState {
 export function emptyState(status: GameStatus = 'idle'): MatchState {
   return {
     status, gameId: null, updated: null, clock: null, teams: { B: emptyTeam(), R: emptyTeam() }, towersKnown: false,
-    riftElement: null, soul: null, nextDragon: null, nextBaron: null, buffs: [],
+    riftElement: null, soul: null, nextDragon: null, nextBaron: null, buffs: [], series: null, draft: null,
   };
 }
 
@@ -126,5 +126,45 @@ export function adapt(input: unknown): MatchState {
   const soul = obj(raw.soul);
   const soulTeam = team(soul.team), soulEl = element(soul.element);
   s.soul = soulTeam && soulEl ? { team: soulTeam, element: soulEl } : null;
+  readSeriesAndDraft(raw, s);
   return s;
+}
+
+// ---------- series and draft: proposed v1 fields (docs/CONTRACT_PROPOSAL.md), not in v0 ----------
+
+const CODE = /^[A-Za-z0-9]{1,6}$/;
+const CHAMP = /^[A-Za-z0-9]{2,30}$/;
+const champion = (v: unknown): Champion | null => (typeof v === 'string' && CHAMP.test(v) ? v : null);
+const slots = (v: unknown): (Champion | null)[] => Array.from({ length: 5 }, (_, i) => champion(arr(v)[i]));
+
+function draftGame(v: unknown): DraftGame | null {
+  const o = obj(v);
+  const game = count(o.game);
+  const sides = {} as Record<Team, DraftSide>;
+  for (const t of TEAMS) {
+    const side = obj(o[t]);
+    const code = typeof side.team === 'string' && CODE.test(side.team) ? side.team : null;
+    if (!code) return null;
+    sides[t] = { team: code, bans: slots(side.bans), picks: slots(side.picks) };
+  }
+  if (!game) return null;
+  const turn = obj(o.turn);
+  const tt = team(turn.side), slot = count(turn.slot);
+  const kind = turn.kind === 'ban' || turn.kind === 'pick' ? turn.kind : null;
+  return { game, sides, turn: tt && kind && slot !== null && slot < 5 ? { side: tt, kind, slot } : null };
+}
+
+function readSeriesAndDraft(raw: Record<string, unknown>, s: MatchState): void {
+  const series = obj(raw.series);
+  const bestOf = count(series.bestOf), game = count(series.game);
+  const teams = obj(series.teams);
+  const side = (t: Team) => { const o = obj(teams[t]); return typeof o.code === 'string' && CODE.test(o.code) ? { code: o.code, wins: count(o.wins) ?? 0 } : null; };
+  const b = side('B'), r = side('R');
+  if (bestOf && game && game <= bestOf && b && r) s.series = { bestOf, game, teams: { B: b, R: r } };
+
+  const draft = obj(raw.draft);
+  if (!('current' in draft) && !('earlier' in draft)) return;
+  const current = draftGame(draft.current);
+  const earlier = arr(draft.earlier).map(draftGame).filter((g): g is DraftGame => g !== null && (!current || g.game < current.game));
+  s.draft = { current, earlier: earlier.sort((a, b2) => a.game - b2.game) };
 }

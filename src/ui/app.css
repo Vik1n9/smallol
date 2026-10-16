@@ -1,20 +1,20 @@
-/* Colours and the capsule look follow Basesmall's default style (styles/iso.json there). */
+/* Colours, the capsule look and the tab strip follow Basesmall's default style (styles/iso.json there). */
 :root {
   --background: #15171C; --panel: #1B1E24; --border: #2A2E37; --text: #E8EAEE; --muted: #A0A6B1;
   --accent: #E8B04A; --strike: #D9643F;
-  --blue: #4C93E6; --red: #E0574C; --baron: #A57FE0;
-  --board: #20242B; --lane: #3A404B; --river: #242932; --map-edge: #0F1115;
+  --blue: #4C93E6; --red: #E0574C;
+  --board: #20242B; --lane: #333944; --river: #1C2027;
   --font: 'Segoe UI Variable', 'Segoe UI', 'Microsoft JhengHei UI', 'PingFang TC', system-ui, sans-serif;
   --mono: 'Cascadia Mono', Consolas, ui-monospace, monospace;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
-body { color: var(--text); font: 13px/1.35 var(--font); user-select: none; -webkit-user-select: none; }
+body { color: var(--text); font: 13px/1.35 var(--font); user-select: none; -webkit-user-select: none; --tabs-h: 0px; --below-h: 0px; }
 
-#app { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; border-radius: 14px; }
-#app.bg-solid { background: var(--background); border: 1px solid var(--border); }
-#app.bg-semi { background: color-mix(in srgb, var(--background) 62%, transparent); border: 1px solid color-mix(in srgb, var(--border) 60%, transparent); }
-#app.bg-clear { background: transparent; border: 1px solid transparent; }
+#app { position: absolute; left: 0; right: 0; top: var(--tabs-h); bottom: var(--below-h); display: flex; flex-direction: column; overflow: hidden; border-radius: 14px; }
+.bg-solid#app, .bg-solid .drawer { background: var(--background); border: 1px solid var(--border); }
+.bg-semi#app, .bg-semi .drawer { background: color-mix(in srgb, var(--background) 62%, transparent); border: 1px solid color-mix(in srgb, var(--border) 60%, transparent); }
+.bg-clear#app, .bg-clear .drawer { background: transparent; border: 1px solid transparent; }
 #app.bg-clear:hover { border-color: color-mix(in srgb, var(--muted) 45%, transparent); }
 /* The see-through looks are for glancing at a game. The settings page stays solid. */
 #app.bg-semi:has(> .settings), #app.bg-clear:has(> .settings) { background: var(--background); border-color: var(--border); }
@@ -24,20 +24,27 @@ body { color: var(--text); font: 13px/1.35 var(--font); user-select: none; -webk
 .muted { color: var(--muted); }
 .mono { font-family: var(--mono); }
 .grow { flex: 1; }
+.k { color: var(--muted); font-size: 11px; }
+.tn { font-weight: 600; }
 button { font: inherit; color: inherit; border: 0; background: transparent; cursor: pointer; }
 .conn { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--strike); flex: 0 0 7px; }
 .status { color: var(--accent); font-size: 11px; white-space: nowrap; }
-.tag { font-size: 10px; padding: 0 5px; border-radius: 4px; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent); white-space: nowrap; }
-.drake { flex: 0 0 auto; display: block; }
-.drake.slot { opacity: .9; }
+.tag { font-size: 10px; padding: 0 5px; border-radius: 4px; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent); white-space: nowrap; line-height: 14px; }
 
-/* The one line every tier shows: kills, clock, gold lead. */
-.kills { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
+/* A dragon: a small coloured tile with one character, like a game piece seen from above. */
+.el { display: inline-grid; place-items: center; width: 17px; height: 17px; border-radius: 5px; flex: 0 0 17px; font-size: 10px; font-weight: 700; color: #111;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--c) 100%, #fff 18%), var(--c)); box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .28), 0 1px 2px rgba(0, 0, 0, .4); }
+.el.empty { background: transparent; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--muted) 35%, transparent); color: var(--muted); }
+.tiles { display: inline-flex; gap: 3px; }
+
+/* Score line pieces */
+.kills { display: inline-flex; align-items: center; gap: 5px; }
+.kills b { font-weight: 600; font-size: 14px; }
 .clock { color: var(--muted); }
-.gold { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); }
-.gold .dot { width: 7px; height: 7px; flex-basis: 7px; box-shadow: none; }
-.gold.lead-B { color: color-mix(in srgb, var(--blue) 70%, var(--text)); }
-.gold.lead-R { color: color-mix(in srgb, var(--red) 70%, var(--text)); }
+.gold { display: inline-flex; align-items: center; gap: 5px; }
+.gold .mono { font-weight: 600; }
+.lead-B { color: color-mix(in srgb, var(--blue) 70%, var(--text)); }
+.lead-R { color: color-mix(in srgb, var(--red) 70%, var(--text)); }
 
 /* Capsules carry their own background, so text stays readable on any wallpaper. */
 .row, .pill, .bar .l1, .bar .l2, .chip { white-space: nowrap; overflow: hidden; min-width: 0; }
@@ -47,48 +54,86 @@ button { font: inherit; color: inherit; border: 0; background: transparent; curs
 
 /* ---------- dot tier: one pill ---------- */
 .pill { flex: 1; display: flex; align-items: center; gap: 9px; padding: 0 14px; font-size: 12px; }
+.pill .kills b { font-size: 12px; }
 .bg-clear .pill { border-radius: 999px; }
 
 /* ---------- bar tier ---------- */
-.bar { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 4px 12px; min-width: 0; }
+.bar { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 5px; padding: 4px 12px; min-width: 0; }
 .bg-clear .bar { border-radius: 14px; }
-.bar .l1 { display: flex; align-items: center; gap: 10px; font-size: 14px; }
-.bar .l2 { display: flex; align-items: center; gap: 10px; font-size: 11px; }
-.bar .side { display: inline-flex; align-items: center; gap: 4px; }
+.bar .l1 { display: flex; align-items: center; gap: 12px; }
+.bar .l2 { display: flex; align-items: center; gap: 12px; font-size: 11px; }
+.bar .side { display: inline-flex; align-items: center; gap: 5px; }
 
-/* ---------- map tier: tower map left, capsules right ---------- */
+/* ---------- map tier: the 2.5D tower map left, capsules right ---------- */
 .game { flex: 1; display: flex; gap: 8px; padding: 8px; min-height: 0; }
-.mapwrap { flex: 0 0 auto; height: 100%; aspect-ratio: 1; min-width: 0; }
-.mapwrap svg { width: 100%; height: 100%; display: block; }
-.map .tower.unknown { opacity: .35; }
+.mapwrap { flex: 0 0 auto; height: 100%; aspect-ratio: 102 / 78.2; min-width: 0; }
+.mapwrap svg { width: 100%; height: 100%; display: block; overflow: visible; }
 .map .unnamed { fill: var(--accent); font-family: var(--mono); font-weight: 600; }
-.hud { flex: 1 1 auto; display: flex; flex-direction: column; gap: 5px; justify-content: center; min-width: 0; }
+.map .tag text { fill: var(--text); font-family: var(--mono); font-weight: 600; }
+.hud { flex: 1 1 auto; display: flex; flex-direction: column; gap: 4px; justify-content: center; min-width: 0; }
 .row { display: flex; align-items: center; gap: 6px; height: 24px; flex: 0 0 24px; padding: 0 9px; border-radius: 999px; font-size: 12px; }
-.row.l1 { font-size: 13px; gap: 9px; }
-.row.team { gap: 6px; }
-.drakes { display: inline-flex; align-items: center; gap: 3px; }
-.count { display: inline-flex; align-items: center; gap: 2px; font: 11px var(--mono); color: var(--muted); }
-.baron { margin-left: auto; }
-.soul { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; padding: 0 5px 0 3px; height: 16px; border-radius: 8px;
+.row.l1 { gap: 8px; }
+.count { display: inline-flex; align-items: baseline; gap: 3px; font: 600 12px var(--mono); }
+.count .k { font-family: var(--font); font-weight: 400; }
+.count.push { margin-left: auto; }
+.soul { display: inline-flex; align-items: center; font-size: 10px; padding: 0 6px; height: 17px; border-radius: 9px; font-weight: 600;
   color: var(--c); border: 1px solid color-mix(in srgb, var(--c) 60%, transparent); }
 .nextrow { gap: 12px; }
-.next { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; }
+.next { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; }
+.next .mono { font-weight: 600; }
 .chips { display: flex; flex-wrap: wrap; gap: 4px; max-height: 46px; overflow: hidden; }
-.chip { display: inline-flex; align-items: center; gap: 4px; height: 21px; padding: 0 8px; border-radius: 999px; font-size: 11px; }
-.chip .dot { width: 7px; height: 7px; flex-basis: 7px; box-shadow: none; }
-.chip .k { color: var(--muted); }
+.chip { display: inline-flex; align-items: center; gap: 5px; height: 21px; padding: 0 8px; border-radius: 999px; font-size: 11px; box-shadow: inset 2px 0 0 var(--t); }
+.chip .mono { font-weight: 600; }
+.foot { display: flex; align-items: center; gap: 6px; height: 16px; flex: 0 0 16px; padding: 0 4px; white-space: nowrap; overflow: hidden; }
 
 /* nothing to show */
 .idle { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 12px; padding: 0 12px; white-space: nowrap; overflow: hidden; }
 
-/* ---------- controls: shown on hover, top right ---------- */
-.controls { position: absolute; top: 4px; right: 6px; display: flex; gap: 2px; z-index: 5; opacity: 0; transition: opacity .15s; pointer-events: none;
-  background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 1px 2px; }
-body:hover .controls { opacity: 1; pointer-events: auto; }
-.controls button { height: 18px; min-width: 20px; padding: 0 5px; border-radius: 6px; font-size: 11px; color: var(--muted); white-space: nowrap; }
-.controls button:hover { color: var(--text); background: var(--border); }
-.controls button.quit.armed { color: var(--strike); }
-#app[data-tier='dot'] .controls { top: 50%; transform: translateY(-50%); right: 12px; }
+/* ---------- tab strip above the game (Basesmall's) ---------- */
+#tabs { position: absolute; top: 0; left: 14px; right: 14px; height: 22px; display: none; gap: 4px; align-items: flex-end; z-index: 2; }
+body.has-tabs #tabs { display: flex; }
+#tabs .tab, #tabs .views, #tabs .controls { height: 21px; display: inline-flex; align-items: center; gap: 6px; padding: 0 9px; border-radius: 8px 8px 0 0; white-space: nowrap; min-width: 0; overflow: hidden;
+  border: 1px solid var(--border); border-bottom: 0; font-size: 11px; position: relative; top: 1px; }
+#tabs.bg-solid :is(.tab, .views, .controls) { background: var(--background); }
+#tabs.bg-semi :is(.tab, .views, .controls) { background: color-mix(in srgb, var(--background) 62%, transparent); }
+#tabs.bg-clear :is(.tab, .views, .controls) { background: color-mix(in srgb, var(--panel) 88%, transparent); }
+#tabs .series { flex: 0 1 auto; }
+#tabs .series b { color: var(--accent); font-weight: 600; }
+#tabs .series .score { display: inline-flex; align-items: center; gap: 4px; }
+#tabs .series .dot { width: 7px; height: 7px; flex-basis: 7px; box-shadow: none; }
+#tabs .views { padding: 0 2px; gap: 1px; flex: 0 0 auto; }
+#tabs .views button, #tabs .controls button { height: 18px; padding: 0 7px; border-radius: 6px; font-size: 11px; color: var(--muted); white-space: nowrap; }
+#tabs .views button:hover, #tabs .controls button:hover { color: var(--text); background: var(--border); }
+#tabs .views button[aria-pressed='true'] { color: var(--text); background: var(--border); }
+/* Settings and quit: shown on hover, so the strip stays quiet. */
+#tabs .controls { padding: 0 2px; gap: 1px; flex: 0 0 auto; opacity: 0; transition: opacity .15s; pointer-events: none; }
+body:hover #tabs .controls { opacity: 1; pointer-events: auto; }
+#tabs .controls button.quit.armed { color: var(--strike); }
+
+/* ---------- views under the game ---------- */
+#below { position: absolute; left: 0; right: 0; bottom: 0; height: var(--below-h); display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; }
+.drawer { flex: 0 0 auto; border-radius: 12px; padding: 7px 10px 8px; display: flex; flex-direction: column; gap: 5px; overflow: hidden; }
+.drawer header { display: flex; align-items: center; gap: 8px; font-size: 12px; height: 16px; }
+.drawer .empty-note { margin: 0; font-size: 12px; }
+.drawer .note { margin: 0; font-size: 10px; }
+/* a champion: its name in a capsule (text only, no portraits) */
+.ch { display: inline-block; height: 19px; line-height: 19px; padding: 0 6px; border-radius: 6px; font-size: 11px; min-width: 0; max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ch.pick { background: color-mix(in srgb, var(--t) 22%, var(--panel)); box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--t) 55%, transparent); }
+.ch.ban { color: var(--muted); background: var(--panel); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--muted) 70%, transparent); }
+.ch.empty { width: 40px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--muted) 30%, transparent); }
+.ch.empty.now { box-shadow: inset 0 0 0 1.5px var(--accent); animation: turn 1.2s ease-in-out infinite; }
+@keyframes turn { 50% { box-shadow: inset 0 0 0 1.5px transparent; } }
+.dgrid { display: grid; grid-template-columns: auto 1fr; grid-auto-rows: 21px; column-gap: 8px; row-gap: 3px; align-items: center; }
+.dteam { grid-row: span 2; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; }
+.dline { display: flex; align-items: center; gap: 3px; min-width: 0; overflow: hidden; }
+.dline .k { min-width: 14px; flex: 0 0 auto; margin-right: 2px; }
+.sgrid { display: grid; grid-template-columns: auto auto 1fr; grid-auto-rows: 21px; column-gap: 8px; row-gap: 3px; align-items: center; min-width: 0; overflow-y: auto; }
+.sgrid .sh { font-size: 12px; }
+.sgrid .gn { font-size: 11px; color: var(--muted); }
+.spicks { display: flex; align-items: center; gap: 2px; min-width: 0; overflow: hidden; }
+.spicks .dot { width: 7px; height: 7px; flex-basis: 7px; box-shadow: none; margin-right: 2px; }
+.spicks .ch { max-width: 72px; }
+.spicks { gap: 3px; }
 
 #grip { position: fixed; right: 0; bottom: 0; width: 14px; height: 14px; cursor: nwse-resize; z-index: 10; }
 #grip::after { content: ''; position: absolute; right: 4px; bottom: 4px; width: 6px; height: 6px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); opacity: .45; }
@@ -101,16 +146,13 @@ body:hover .controls { opacity: 1; pointer-events: auto; }
 .settings .body > * { flex-shrink: 0; }
 .settings h3 { margin: 10px 0 0; font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: .04em; }
 .settings .srow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-height: 26px; }
-.settings .k { flex: 0 0 72px; color: var(--muted); font-size: 12px; }
+.settings .k { flex: 0 0 72px; font-size: 12px; }
 .seg { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 2px; border-radius: 8px; background: var(--panel); border: 1px solid var(--border); }
 .seg button { height: 22px; padding: 0 9px; border-radius: 6px; color: var(--muted); font-size: 12px; }
 .seg button:hover { color: var(--text); }
 .seg button[aria-pressed='true'] { background: var(--border); color: var(--text); }
 .check { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; cursor: pointer; }
 .check input { accent-color: var(--accent); margin: 0; }
-.settings .chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 5px 10px; padding-left: 4px; max-height: none; }
+.settings .chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 5px 10px; padding-left: 4px; max-height: none; }
 .settings .note, .settings .about { margin: 0; font-size: 11px; color: var(--muted); line-height: 1.5; }
 .settings input.key { flex: 1; min-width: 160px; height: 24px; padding: 0 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--panel); color: var(--text); font: 12px var(--mono); }
-
-/* status and sample flags under the map tier's capsules */
-.foot { display: flex; align-items: center; gap: 6px; height: 16px; flex: 0 0 16px; padding: 0 4px; white-space: nowrap; overflow: hidden; }

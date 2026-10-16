@@ -2,7 +2,7 @@
 // data-set="path:value" (or data-toggle="path") and main.ts applies them.
 
 import type { Strings } from '../i18n/index.ts';
-import { FEATURES, type Settings } from '../settings/schema.ts';
+import { FEATURES, VIEWS, type Settings } from '../settings/schema.ts';
 import { esc } from './views.ts';
 
 const seg = (path: string, current: string, options: [string, string][]) =>
@@ -20,6 +20,8 @@ export function settingsView(cfg: Settings, S: Strings, endpointError: boolean):
       <div class="srow"><span class="k">${esc(t.background)}</span>${seg('background', cfg.background, [['solid', t.solid], ['semi', t.semi], ['clear', t.clear]])}</div>
       <h3>${esc(t.show)}</h3>
       <div class="chips">${FEATURES.map((f) => check(`show.${f}`, cfg.show[f], S.feature[f])).join('')}</div>
+      <h3>${esc(t.views)}</h3>
+      <div class="chips">${VIEWS.map((v) => check(`views.${v}`, cfg.views[v], S.view[v])).join('')}</div>
       <div class="srow"><span class="k">${esc(t.goldView)}</span>${seg('gold', cfg.gold, [['diff', t.goldDiff], ['totals', t.goldTotals]])}</div>
       <div class="srow">${check('tickClock', cfg.tickClock, t.tickClock)}</div>
       <h3>${esc(t.endpoint)}</h3>

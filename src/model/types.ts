@@ -69,6 +69,33 @@ export interface NextDragon {
   at: number;
 }
 
+/** The series this game belongs to. Not in the service contract v0 (see docs/CONTRACT_PROPOSAL.md). */
+export interface SeriesInfo {
+  bestOf: number;
+  /** 1-based number of this game in the series. */
+  game: number;
+  /** Who plays which side this game, and series wins before it. */
+  teams: Record<Team, { code: string; wins: number }>;
+}
+
+/** A champion by its Data Dragon id ("KSante"); names come from src/data/champions.ts. */
+export type Champion = string;
+
+export interface DraftSide {
+  /** Team code, so a series can follow a team across side swaps. */
+  team: string;
+  /** Five slots each, in draft order; null while not chosen yet. */
+  bans: (Champion | null)[];
+  picks: (Champion | null)[];
+}
+
+export interface DraftGame {
+  game: number;
+  sides: Record<Team, DraftSide>;
+  /** The next action while the draft is on; null once it is done. */
+  turn: { side: Team; kind: 'ban' | 'pick'; slot: number } | null;
+}
+
 export interface MatchState {
   status: GameStatus;
   gameId: string | null;
@@ -84,4 +111,7 @@ export interface MatchState {
   nextDragon: NextDragon | null;
   nextBaron: { at: number } | null;
   buffs: Buff[];
+  series: SeriesInfo | null;
+  /** This game's draft, and the earlier games of the series (fearless draft: their picks are locked). */
+  draft: { current: DraftGame | null; earlier: DraftGame[] } | null;
 }

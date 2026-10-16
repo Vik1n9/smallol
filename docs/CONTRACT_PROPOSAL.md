@@ -1,0 +1,48 @@
+# 給 Stream CV 服務的欄位提案：系列賽與 BP（草案，2026-10-16）
+
+桌面工具的上方標籤（BO 幾、第幾局）和兩個下方視圖（本局 BP、全場 BP）需要以下欄位。
+**合約 v0 沒有這些欄位**，所以目前畫面上顯示「系列賽資料未接上」「還沒有 BP 資料」。
+桌面工具已經能讀下面這種形狀（`src/data/streamcv/adapter.ts`），欄位缺少或格式不對時會逐項丟掉，不會讓整個畫面失敗。
+
+這只是提案，不是已經講定的規格；欄位名稱和來源要由維護者與 Stream CV 那邊決定。
+
+## 欄位
+
+```json
+"series": {
+  "bestOf": 5,
+  "game": 3,
+  "teams": { "B": { "code": "T1", "wins": 1 }, "R": { "code": "GEN", "wins": 1 } }
+},
+"draft": {
+  "current": {
+    "game": 3,
+    "B": { "team": "T1",  "bans": ["Azir", null, null, null, null], "picks": [null, null, null, null, null] },
+    "R": { "team": "GEN", "bans": ["Rell", null, null, null, null], "picks": [null, null, null, null, null] },
+    "turn": { "side": "B", "kind": "ban", "slot": 1 }
+  },
+  "earlier": [
+    { "game": 1, "B": { "team": "T1", "bans": [], "picks": ["KSante", "Vi", "Azir", "Kalista", "Rell"] }, "R": { "team": "GEN", "bans": [], "picks": [] } }
+  ]
+}
+```
+
+| 欄位 | 說明 |
+| --- | --- |
+| `series.teams.B/R` | 這一局誰在藍方、誰在紅方（系列賽中會換邊），`wins` 是這局開始前的勝場 |
+| `draft.*.bans` / `picks` | 各 5 格，依 BP 順序；還沒定的格子是 `null` |
+| 英雄 | Data Dragon 的 id（`KSante`、`XinZhao`），桌面工具自己換成中英文名稱 |
+| `draft.current.turn` | BP 進行中時，下一手是誰、禁或選、第幾格（0 起算）；BP 結束後為 `null` |
+| `draft.earlier` | 同一系列賽前面幾局（無懼選角：這些局的 pick 雙方都不能再選） |
+| `status` | BP 進行中時建議用 `waiting`，桌面工具就能在開局前顯示 BP |
+
+## 各欄位可能的來源（未驗證，給維護者裁決）
+
+| 資料 | 可能來源 | 已知的事 |
+| --- | --- | --- |
+| BO 幾、第幾局、勝場、隊伍代碼 | esports-api `getEventDetails` / `getSchedule` | 需要 `x-api-key`（非官方核發，見 `PROBE_2026-10-14.md`） |
+| 本局 pick | feed `window` 的 `gameMetadata`（`championId`） | 不需 key；開局後才有 |
+| 本局 ban、BP 進行中的順序 | 只有轉播畫面（CV） | feed 與 `details` 搜尋 `ban` 0 命中（2025 局）；StreamCV 有 `coach_bans.py` 實驗 |
+| 前面局的 pick | 各局 feed 的 `gameMetadata` | 需要先知道各局的 game id（esports-api） |
+
+建議由服務端（之後的 VPS）統一取這些資料，桌面工具只讀 `state.json` 一個來源：key 不必放進發給使用者的 App 裡。

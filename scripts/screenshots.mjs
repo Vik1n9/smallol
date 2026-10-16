@@ -12,14 +12,16 @@ const BASE = process.env.BASE ?? 'http://localhost:1430/';
 const OUT = process.argv[2] ?? 'docs/screenshots';
 
 const SHOTS = [
-  ['map-live-zh', '?sample=1&demo=1&set=language:zh-Hant', 420, 214],
-  ['map-live-en', '?sample=1&demo=1&set=language:en', 420, 214],
-  ['map-finished-zh', '?sample=1&set=language:zh-Hant', 420, 214],
-  ['map-live-semi-zh', '?sample=1&demo=1&set=language:zh-Hant,background:semi', 420, 214],
-  ['bar-live-zh', '?sample=1&demo=1&set=language:zh-Hant', 420, 70],
-  ['dot-zh', '?sample=1&set=language:zh-Hant', 240, 30],
-  ['settings-zh', '?sample=1&settings=1&set=language:zh-Hant', 420, 470],
-  ['service-idle-zh', '?set=language:zh-Hant', 420, 214],
+  ['map-live-zh', '?sample=1&demo=1&set=language:zh-Hant', 480, 236],
+  ['map-live-en', '?sample=1&demo=1&set=language:en', 480, 236],
+  ['map-finished-zh', '?sample=1&set=language:zh-Hant', 480, 236],
+  ['map-live-semi-zh', '?sample=1&demo=1&set=language:zh-Hant,background:semi', 480, 236],
+  ['views-both-zh', '?sample=1&demo=1&set=language:zh-Hant,views.draftGame:true,views.draftSeries:true', 480, 236 + 138 + 156],
+  ['views-both-en', '?sample=1&demo=1&set=language:en,views.draftGame:true,views.draftSeries:true', 480, 236 + 138 + 156],
+  ['bar-live-zh', '?sample=1&demo=1&set=language:zh-Hant', 480, 90],
+  ['dot-zh', '?sample=1&set=language:zh-Hant', 260, 30],
+  ['settings-zh', '?sample=1&settings=1&set=language:zh-Hant', 440, 500],
+  ['service-idle-zh', '?set=language:zh-Hant', 480, 236],
 ];
 
 mkdirSync(OUT, { recursive: true });

@@ -1,10 +1,12 @@
-// The main window: the game in one of three size tiers (dot, bar, map), and the settings page.
+// The main window: a tab strip (which game of the series; the views under the game), the game in
+// one of three size tiers (dot, bar, map), the draft views under it, and the settings page.
 // Runs in a plain browser too (without window controls), which is how the UI is checked headless.
 // Checking aids (launch args in the app, ?query in a browser), never saved:
-//   --sample       show the bundled sample instead of asking the service (dev builds only)
+//   --sample       show the bundled sample instead of asking the service (dev builds only), with a
+//                  made-up series and draft to lay those views out
 //   --demo         with the sample: treat it as a game in progress, so countdowns run
 //   --settings     open the settings page
-//   --set=path:value,...  change settings in memory (e.g. language:en,show.gold:false)
+//   --set=path:value,...  change settings in memory (e.g. language:en,views.draftGame:true)
 
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { LogicalSize } from '@tauri-apps/api/dpi';
@@ -15,14 +17,16 @@ import { adapt, emptyState } from '../data/streamcv/adapter.ts';
 import { clockNow } from '../model/clock.ts';
 import type { MatchState } from '../model/types.ts';
 import { detectLang, STRINGS, type Lang } from '../i18n/index.ts';
-import { DEFAULTS, normalize, type Settings, type Size } from '../settings/schema.ts';
+import { DEFAULTS, normalize, VIEWS, type Settings, type Size, type ViewName } from '../settings/schema.ts';
 import { SettingsStore, type SettingsBackend } from '../settings/store.ts';
-import { barView, dotView, mapView, tierOf, type ViewCtx } from './views.ts';
+import { barView, dotView, draftGameView, draftSeriesView, mapView, TAB_H, tabsView, tierOf, VIEW_H, type ViewCtx } from './views.ts';
 import { settingsView } from './settings-view.ts';
 
 const inTauri = '__TAURI_INTERNALS__' in window;
 const win = inTauri ? getCurrentWindow() : null;
 const app = document.getElementById('app')!;
+const tabsEl = document.getElementById('tabs')!;
+const belowEl = document.getElementById('below')!;
 
 // ---------- settings ----------
 
@@ -49,8 +53,10 @@ function applyLanguage(): void {
 }
 
 function applyBackground(): void {
-  app.classList.remove('bg-solid', 'bg-semi', 'bg-clear');
-  app.classList.add(`bg-${cfg().background}`);
+  for (const el of [app, tabsEl, belowEl]) {
+    el.classList.remove('bg-solid', 'bg-semi', 'bg-clear');
+    el.classList.add(`bg-${cfg().background}`);
+  }
 }
 
 /** Set one setting by its dotted path ("show.gold", "language"), as a click or --set does. */
@@ -70,14 +76,26 @@ function setPath(path: string, value: unknown): void {
 
 // ---------- window size per view ----------
 
-type View = 'game' | 'settings';
-let view: View = 'game';
-const SIZE_DEFAULT: Record<View, Size> = { game: { w: 420, h: 214 }, settings: { w: 420, h: 470 } };
+type Page = 'game' | 'settings';
+let page: Page = 'game';
+/** The game's size without the views under it; those add their own height. */
+const SIZE_DEFAULT: Record<Page, Size> = { game: { w: 480, h: 236 }, settings: { w: 440, h: 500 } };
+const GAP = 4;
+/** Height the open views under the game add to the window. */
+const viewsHeight = (s: Settings = cfg()) => VIEWS.reduce((h, v) => h + (s.views[v] ? VIEW_H[v] + GAP : 0), 0);
 
-async function sizeFor(v: View): Promise<void> {
+/** True while the app itself resizes, so that size is not saved as the user's. */
+let resizingTo = false;
+async function resizeTo(w: number, h: number): Promise<void> {
   if (!win) return;
-  const s = cfg().sizes[`size-${v}`] ?? SIZE_DEFAULT[v];
-  await win.setSize(new LogicalSize(s.w, s.h)).catch(() => { /* not allowed */ });
+  resizingTo = true;
+  await win.setSize(new LogicalSize(w, h)).catch(() => { /* not allowed */ });
+  setTimeout(() => { resizingTo = false; }, 300);
+}
+
+async function sizeFor(p: Page): Promise<void> {
+  const s = cfg().sizes[`size-${p}`] ?? SIZE_DEFAULT[p];
+  await resizeTo(s.w, s.h + (p === 'game' ? viewsHeight() : 0));
 }
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
@@ -85,18 +103,16 @@ window.addEventListener('resize', () => {
   render();
   if (!win || resizingTo) return;
   if (saveTimer) clearTimeout(saveTimer);
-  const v = view;
+  const p = page;
   saveTimer = setTimeout(() => {
-    settings.update((d) => { d.sizes[`size-${v}`] = { w: window.innerWidth, h: window.innerHeight }; });
+    const h = window.innerHeight - (p === 'game' ? viewsHeight() : 0);
+    settings.update((d) => { d.sizes[`size-${p}`] = { w: window.innerWidth, h: Math.max(28, h) }; });
   }, 600);
 });
-/** True while the app itself resizes for a view change, so that size is not saved as the user's. */
-let resizingTo = false;
-async function switchView(v: View): Promise<void> {
-  view = v;
-  resizingTo = true;
-  await sizeFor(v);
-  setTimeout(() => { resizingTo = false; }, 300);
+
+async function switchPage(p: Page): Promise<void> {
+  page = p;
+  await sizeFor(p);
   render();
 }
 
@@ -110,11 +126,14 @@ let haveLive = false;
 const flags = { sample: false, demo: false };
 
 async function loadSample(): Promise<void> {
-  // Dev builds only: the sample is not bundled into a release.
+  // Dev builds only: neither the sample nor the made-up draft is bundled into a release.
   if (!import.meta.env.DEV) return;
-  const mod = await import('../../fixtures/streamcv/state_finished_game.json');
+  const [game, mock] = await Promise.all([
+    import('../../fixtures/streamcv/state_finished_game.json'),
+    import('../../fixtures/dev/series_draft_mock.json'),
+  ]);
   if (haveLive && !flags.sample) return;
-  let s = adapt(mod.default);
+  let s = adapt({ ...game.default, ...mock.default });
   if (flags.demo) s = { ...s, status: 'in_game' };
   state = s;
   receivedAt = Date.now();
@@ -142,34 +161,46 @@ const source = new StateSource(DEFAULTS.endpoint, {
 let endpointError = false;
 let quitArmed: ReturnType<typeof setTimeout> | null = null;
 
-function controls(): string {
-  const quit = win ? `<button class="quit${quitArmed ? ' armed' : ''}" data-action="quit" title="${S.ui.quit}">${quitArmed ? S.ui.quitAgain : '✕'}</button>` : '';
-  return `<div class="controls"><button data-action="settings" title="${S.ui.settings}">⚙</button>${quit}</div>`;
+function layout(tabs: boolean, below: number): void {
+  document.body.classList.toggle('has-tabs', tabs);
+  document.body.style.setProperty('--tabs-h', `${tabs ? TAB_H : 0}px`);
+  document.body.style.setProperty('--below-h', `${below}px`);
 }
 
 function render(): void {
-  if (view === 'settings') {
+  if (page === 'settings') {
+    layout(false, 0);
+    belowEl.innerHTML = '';
     // Keep the endpoint field (and its caret) while the user types in it.
     if (document.activeElement?.matches('[data-input]') && app.querySelector('.settings')) return;
     app.dataset.tier = 'settings';
     app.innerHTML = settingsView(cfg(), S, endpointError);
     return;
   }
-  const tier = tierOf(window.innerHeight);
+  const open = cfg().views;
+  const vh = viewsHeight();
+  const tier = tierOf(window.innerHeight - vh);
   const c: ViewCtx = {
-    s: state, clock: clockNow(state, receivedAt, Date.now(), cfg().tickClock), show: cfg().show, gold: cfg().gold, S, conn, sample,
+    s: state, clock: clockNow(state, receivedAt, Date.now(), cfg().tickClock), show: cfg().show, gold: cfg().gold, S, lang, conn, sample, mock: sample,
   };
+  // The pill has no room for tabs or views.
+  const pill = tier === 'dot';
+  layout(!pill, pill ? 0 : vh);
   app.dataset.tier = tier;
-  const body = tier === 'dot' ? dotView(c) : tier === 'bar' ? barView(c) : mapView(c, window.innerWidth >= 300);
-  app.innerHTML = body + controls();
+  tabsEl.innerHTML = pill ? '' : tabsView(c, open, !!win, !!quitArmed);
+  const body = tier === 'dot' ? dotView(c) : tier === 'bar' ? barView(c) : mapView(c, window.innerWidth >= 320);
+  app.innerHTML = body;
+  const views: Record<ViewName, (c: ViewCtx) => string> = { draftGame: draftGameView, draftSeries: draftSeriesView };
+  belowEl.innerHTML = pill ? '' : VIEWS.filter((v) => open[v])
+    .map((v) => `<div class="drawer ${v}" style="height:${VIEW_H[v]}px">${views[v](c)}</div>`).join('');
 }
 
 // Countdowns move every second; the data itself changes every 5 s.
-setInterval(() => { if (view === 'game') render(); }, 1000);
+setInterval(() => { if (page === 'game') render(); }, 1000);
 
 // ---------- input ----------
 
-app.addEventListener('click', (e) => {
+function onClick(e: MouseEvent): void {
   const t = (e.target as HTMLElement).closest<HTMLElement>('button, input[type=checkbox]');
   if (!t) return;
   const action = t.dataset.action;
@@ -178,14 +209,18 @@ app.addEventListener('click', (e) => {
     setPath(path, value);
   } else if (t.dataset.toggle) {
     setPath(t.dataset.toggle, (t as HTMLInputElement).checked);
-  } else if (action === 'settings') void switchView('settings');
-  else if (action === 'done') { (document.activeElement as HTMLElement | null)?.blur(); void switchView('game'); }
+  } else if (t.dataset.view) {
+    const v = t.dataset.view as ViewName;
+    settings.update((d) => { d.views[v] = !d.views[v]; });
+  } else if (action === 'settings') void switchPage('settings');
+  else if (action === 'done') { (document.activeElement as HTMLElement | null)?.blur(); void switchPage('game'); }
   else if (action === 'quit') {
     if (quitArmed) { void win?.close(); return; }
     quitArmed = setTimeout(() => { quitArmed = null; render(); }, 3000);
     render();
   }
-});
+}
+for (const el of [app, tabsEl]) el.addEventListener('click', onClick);
 
 function commitEndpoint(input: HTMLInputElement): void {
   const v = input.value.trim();
@@ -205,10 +240,12 @@ app.addEventListener('focusout', (e) => {
 });
 
 if (win) {
-  app.addEventListener('mousedown', (e) => {
-    if (e.button !== 0 || (e.target as HTMLElement).closest('button, input, label, .body')) return;
-    void win.startDragging();
-  });
+  for (const el of [app, tabsEl, belowEl]) {
+    el.addEventListener('mousedown', (e) => {
+      if (e.button !== 0 || (e.target as HTMLElement).closest('button, input, label, .body')) return;
+      void win.startDragging();
+    });
+  }
   document.getElementById('grip')!.addEventListener('mousedown', (e) => {
     e.preventDefault();
     void win.startResizeDragging('SouthEast');
@@ -217,13 +254,16 @@ if (win) {
     const m = e.payload;
     if (m === 'solid' || m === 'semi' || m === 'clear') settings.update((d) => { d.background = m; });
   });
-  void listen('open-settings', () => void switchView('settings'));
+  void listen('open-settings', () => void switchPage('settings'));
 }
 
 function onSettings(now: Settings, before: Settings): void {
   if (now.language !== before.language) applyLanguage();
   if (now.background !== before.background) applyBackground();
   if (now.endpoint !== before.endpoint && !flags.sample) { haveLive = false; source.setUrl(now.endpoint); }
+  // A view opened or closed: the window grows or shrinks by its height, the game keeps its size.
+  const dh = viewsHeight(now) - viewsHeight(before);
+  if (dh !== 0 && page === 'game') void resizeTo(window.innerWidth, window.innerHeight + dh);
   render();
 }
 
@@ -242,16 +282,16 @@ async function start(): Promise<void> {
   settings = await SettingsStore.open(backend, () => DEFAULTS);
   // A checking run changes nothing on disk.
   settings.persist = !checking;
-  settings.subscribe(onSettings);
   for (const pair of (q.get('set') ?? '').split(',').filter(Boolean)) {
     const i = pair.indexOf(':');
     const path = pair.slice(0, i), raw = pair.slice(i + 1);
     if (i > 0) setPath(path, raw === 'true' ? true : raw === 'false' ? false : raw);
   }
+  settings.subscribe(onSettings);
   applyLanguage();
   applyBackground();
   if (flags.sample) void loadSample();
   else { source.setUrl(cfg().endpoint); source.start(); }
-  await switchView(q.has('settings') ? 'settings' : 'game');
+  await switchPage(q.has('settings') ? 'settings' : 'game');
 }
 void start();

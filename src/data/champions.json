@@ -1,0 +1,870 @@
+{
+ "source": "Data Dragon 16.20.1",
+ "names": {
+  "Aatrox": {
+   "zh-Hant": "厄薩斯",
+   "en": "Aatrox",
+   "key": "266"
+  },
+  "Ahri": {
+   "zh-Hant": "阿璃",
+   "en": "Ahri",
+   "key": "103"
+  },
+  "Akali": {
+   "zh-Hant": "阿卡莉",
+   "en": "Akali",
+   "key": "84"
+  },
+  "Akshan": {
+   "zh-Hant": "埃可尚",
+   "en": "Akshan",
+   "key": "166"
+  },
+  "Alistar": {
+   "zh-Hant": "亞歷斯塔",
+   "en": "Alistar",
+   "key": "12"
+  },
+  "Ambessa": {
+   "zh-Hant": "安比薩",
+   "en": "Ambessa",
+   "key": "799"
+  },
+  "Amumu": {
+   "zh-Hant": "阿姆姆",
+   "en": "Amumu",
+   "key": "32"
+  },
+  "Anivia": {
+   "zh-Hant": "艾妮維亞",
+   "en": "Anivia",
+   "key": "34"
+  },
+  "Annie": {
+   "zh-Hant": "安妮",
+   "en": "Annie",
+   "key": "1"
+  },
+  "Aphelios": {
+   "zh-Hant": "亞菲利歐",
+   "en": "Aphelios",
+   "key": "523"
+  },
+  "Ashe": {
+   "zh-Hant": "艾希",
+   "en": "Ashe",
+   "key": "22"
+  },
+  "AurelionSol": {
+   "zh-Hant": "翱銳龍獸",
+   "en": "Aurelion Sol",
+   "key": "136"
+  },
+  "Aurora": {
+   "zh-Hant": "歐羅拉",
+   "en": "Aurora",
+   "key": "893"
+  },
+  "Azir": {
+   "zh-Hant": "阿祈爾",
+   "en": "Azir",
+   "key": "268"
+  },
+  "Bard": {
+   "zh-Hant": "巴德",
+   "en": "Bard",
+   "key": "432"
+  },
+  "Belveth": {
+   "zh-Hant": "貝爾薇斯",
+   "en": "Bel'Veth",
+   "key": "200"
+  },
+  "Blitzcrank": {
+   "zh-Hant": "布里茨",
+   "en": "Blitzcrank",
+   "key": "53"
+  },
+  "Brand": {
+   "zh-Hant": "布蘭德",
+   "en": "Brand",
+   "key": "63"
+  },
+  "Braum": {
+   "zh-Hant": "布郎姆",
+   "en": "Braum",
+   "key": "201"
+  },
+  "Briar": {
+   "zh-Hant": "布蕾爾",
+   "en": "Briar",
+   "key": "233"
+  },
+  "Caitlyn": {
+   "zh-Hant": "凱特琳",
+   "en": "Caitlyn",
+   "key": "51"
+  },
+  "Camille": {
+   "zh-Hant": "卡蜜兒",
+   "en": "Camille",
+   "key": "164"
+  },
+  "Cassiopeia": {
+   "zh-Hant": "卡莎碧雅",
+   "en": "Cassiopeia",
+   "key": "69"
+  },
+  "Chogath": {
+   "zh-Hant": "科加斯",
+   "en": "Cho'Gath",
+   "key": "31"
+  },
+  "Corki": {
+   "zh-Hant": "庫奇",
+   "en": "Corki",
+   "key": "42"
+  },
+  "Darius": {
+   "zh-Hant": "達瑞斯",
+   "en": "Darius",
+   "key": "122"
+  },
+  "Diana": {
+   "zh-Hant": "黛安娜",
+   "en": "Diana",
+   "key": "131"
+  },
+  "DrMundo": {
+   "zh-Hant": "蒙多醫生",
+   "en": "Dr. Mundo",
+   "key": "36"
+  },
+  "Draven": {
+   "zh-Hant": "達瑞文",
+   "en": "Draven",
+   "key": "119"
+  },
+  "Ekko": {
+   "zh-Hant": "艾克",
+   "en": "Ekko",
+   "key": "245"
+  },
+  "Elise": {
+   "zh-Hant": "伊莉絲",
+   "en": "Elise",
+   "key": "60"
+  },
+  "Evelynn": {
+   "zh-Hant": "伊芙琳",
+   "en": "Evelynn",
+   "key": "28"
+  },
+  "Ezreal": {
+   "zh-Hant": "伊澤瑞爾",
+   "en": "Ezreal",
+   "key": "81"
+  },
+  "Fiddlesticks": {
+   "zh-Hant": "費德提克",
+   "en": "Fiddlesticks",
+   "key": "9"
+  },
+  "Fiora": {
+   "zh-Hant": "菲歐拉",
+   "en": "Fiora",
+   "key": "114"
+  },
+  "Fizz": {
+   "zh-Hant": "飛斯",
+   "en": "Fizz",
+   "key": "105"
+  },
+  "Galio": {
+   "zh-Hant": "加里歐",
+   "en": "Galio",
+   "key": "3"
+  },
+  "Gangplank": {
+   "zh-Hant": "剛普朗克",
+   "en": "Gangplank",
+   "key": "41"
+  },
+  "Garen": {
+   "zh-Hant": "蓋倫",
+   "en": "Garen",
+   "key": "86"
+  },
+  "Gnar": {
+   "zh-Hant": "吶兒",
+   "en": "Gnar",
+   "key": "150"
+  },
+  "Gragas": {
+   "zh-Hant": "古拉格斯",
+   "en": "Gragas",
+   "key": "79"
+  },
+  "Graves": {
+   "zh-Hant": "葛雷夫",
+   "en": "Graves",
+   "key": "104"
+  },
+  "Gwen": {
+   "zh-Hant": "關",
+   "en": "Gwen",
+   "key": "887"
+  },
+  "Hecarim": {
+   "zh-Hant": "赫克林",
+   "en": "Hecarim",
+   "key": "120"
+  },
+  "Heimerdinger": {
+   "zh-Hant": "漢默丁格",
+   "en": "Heimerdinger",
+   "key": "74"
+  },
+  "Hwei": {
+   "zh-Hant": "赫威",
+   "en": "Hwei",
+   "key": "910"
+  },
+  "Illaoi": {
+   "zh-Hant": "伊羅旖",
+   "en": "Illaoi",
+   "key": "420"
+  },
+  "Irelia": {
+   "zh-Hant": "伊瑞莉雅",
+   "en": "Irelia",
+   "key": "39"
+  },
+  "Ivern": {
+   "zh-Hant": "埃爾文",
+   "en": "Ivern",
+   "key": "427"
+  },
+  "Janna": {
+   "zh-Hant": "珍娜",
+   "en": "Janna",
+   "key": "40"
+  },
+  "JarvanIV": {
+   "zh-Hant": "嘉文四世",
+   "en": "Jarvan IV",
+   "key": "59"
+  },
+  "Jax": {
+   "zh-Hant": "賈克斯",
+   "en": "Jax",
+   "key": "24"
+  },
+  "Jayce": {
+   "zh-Hant": "杰西",
+   "en": "Jayce",
+   "key": "126"
+  },
+  "Jhin": {
+   "zh-Hant": "燼",
+   "en": "Jhin",
+   "key": "202"
+  },
+  "Jinx": {
+   "zh-Hant": "吉茵珂絲",
+   "en": "Jinx",
+   "key": "222"
+  },
+  "KSante": {
+   "zh-Hant": "卡桑帝",
+   "en": "K'Sante",
+   "key": "897"
+  },
+  "Kaisa": {
+   "zh-Hant": "凱莎",
+   "en": "Kai'Sa",
+   "key": "145"
+  },
+  "Kalista": {
+   "zh-Hant": "克黎思妲",
+   "en": "Kalista",
+   "key": "429"
+  },
+  "Karma": {
+   "zh-Hant": "卡瑪",
+   "en": "Karma",
+   "key": "43"
+  },
+  "Karthus": {
+   "zh-Hant": "卡爾瑟斯",
+   "en": "Karthus",
+   "key": "30"
+  },
+  "Kassadin": {
+   "zh-Hant": "卡薩丁",
+   "en": "Kassadin",
+   "key": "38"
+  },
+  "Katarina": {
+   "zh-Hant": "卡特蓮娜",
+   "en": "Katarina",
+   "key": "55"
+  },
+  "Kayle": {
+   "zh-Hant": "凱爾",
+   "en": "Kayle",
+   "key": "10"
+  },
+  "Kayn": {
+   "zh-Hant": "慨影",
+   "en": "Kayn",
+   "key": "141"
+  },
+  "Kennen": {
+   "zh-Hant": "凱能",
+   "en": "Kennen",
+   "key": "85"
+  },
+  "Khazix": {
+   "zh-Hant": "卡力斯",
+   "en": "Kha'Zix",
+   "key": "121"
+  },
+  "Kindred": {
+   "zh-Hant": "鏡爪",
+   "en": "Kindred",
+   "key": "203"
+  },
+  "Kled": {
+   "zh-Hant": "克雷德",
+   "en": "Kled",
+   "key": "240"
+  },
+  "KogMaw": {
+   "zh-Hant": "寇格魔",
+   "en": "Kog'Maw",
+   "key": "96"
+  },
+  "Leblanc": {
+   "zh-Hant": "勒布朗",
+   "en": "LeBlanc",
+   "key": "7"
+  },
+  "LeeSin": {
+   "zh-Hant": "李星",
+   "en": "Lee Sin",
+   "key": "64"
+  },
+  "Leona": {
+   "zh-Hant": "雷歐娜",
+   "en": "Leona",
+   "key": "89"
+  },
+  "Lillia": {
+   "zh-Hant": "莉莉亞",
+   "en": "Lillia",
+   "key": "876"
+  },
+  "Lissandra": {
+   "zh-Hant": "麗珊卓",
+   "en": "Lissandra",
+   "key": "127"
+  },
+  "Locke": {
+   "zh-Hant": "洛克",
+   "en": "Locke",
+   "key": "805"
+  },
+  "Lucian": {
+   "zh-Hant": "路西恩",
+   "en": "Lucian",
+   "key": "236"
+  },
+  "Lulu": {
+   "zh-Hant": "露璐",
+   "en": "Lulu",
+   "key": "117"
+  },
+  "Lux": {
+   "zh-Hant": "拉克絲",
+   "en": "Lux",
+   "key": "99"
+  },
+  "Malphite": {
+   "zh-Hant": "墨菲特",
+   "en": "Malphite",
+   "key": "54"
+  },
+  "Malzahar": {
+   "zh-Hant": "馬爾札哈",
+   "en": "Malzahar",
+   "key": "90"
+  },
+  "Maokai": {
+   "zh-Hant": "茂凱",
+   "en": "Maokai",
+   "key": "57"
+  },
+  "MasterYi": {
+   "zh-Hant": "易大師",
+   "en": "Master Yi",
+   "key": "11"
+  },
+  "Mel": {
+   "zh-Hant": "梅爾",
+   "en": "Mel",
+   "key": "800"
+  },
+  "Milio": {
+   "zh-Hant": "米里歐",
+   "en": "Milio",
+   "key": "902"
+  },
+  "MissFortune": {
+   "zh-Hant": "好運姐",
+   "en": "Miss Fortune",
+   "key": "21"
+  },
+  "MonkeyKing": {
+   "zh-Hant": "悟空",
+   "en": "Wukong",
+   "key": "62"
+  },
+  "Mordekaiser": {
+   "zh-Hant": "魔鬥凱薩",
+   "en": "Mordekaiser",
+   "key": "82"
+  },
+  "Morgana": {
+   "zh-Hant": "魔甘娜",
+   "en": "Morgana",
+   "key": "25"
+  },
+  "Naafiri": {
+   "zh-Hant": "娜菲芮",
+   "en": "Naafiri",
+   "key": "950"
+  },
+  "Nami": {
+   "zh-Hant": "娜米",
+   "en": "Nami",
+   "key": "267"
+  },
+  "Nasus": {
+   "zh-Hant": "納瑟斯",
+   "en": "Nasus",
+   "key": "75"
+  },
+  "Nautilus": {
+   "zh-Hant": "納帝魯斯",
+   "en": "Nautilus",
+   "key": "111"
+  },
+  "Neeko": {
+   "zh-Hant": "妮可",
+   "en": "Neeko",
+   "key": "518"
+  },
+  "Nidalee": {
+   "zh-Hant": "奈德麗",
+   "en": "Nidalee",
+   "key": "76"
+  },
+  "Nilah": {
+   "zh-Hant": "淣菈",
+   "en": "Nilah",
+   "key": "895"
+  },
+  "Nocturne": {
+   "zh-Hant": "夜曲",
+   "en": "Nocturne",
+   "key": "56"
+  },
+  "Nunu": {
+   "zh-Hant": "努努和威朗普",
+   "en": "Nunu & Willump",
+   "key": "20"
+  },
+  "Olaf": {
+   "zh-Hant": "歐拉夫",
+   "en": "Olaf",
+   "key": "2"
+  },
+  "Orianna": {
+   "zh-Hant": "奧莉安娜",
+   "en": "Orianna",
+   "key": "61"
+  },
+  "Ornn": {
+   "zh-Hant": "鄂爾",
+   "en": "Ornn",
+   "key": "516"
+  },
+  "Pantheon": {
+   "zh-Hant": "潘森",
+   "en": "Pantheon",
+   "key": "80"
+  },
+  "Poppy": {
+   "zh-Hant": "波比",
+   "en": "Poppy",
+   "key": "78"
+  },
+  "Pyke": {
+   "zh-Hant": "派克",
+   "en": "Pyke",
+   "key": "555"
+  },
+  "Qiyana": {
+   "zh-Hant": "姬亞娜",
+   "en": "Qiyana",
+   "key": "246"
+  },
+  "Quinn": {
+   "zh-Hant": "葵恩",
+   "en": "Quinn",
+   "key": "133"
+  },
+  "Rakan": {
+   "zh-Hant": "銳空",
+   "en": "Rakan",
+   "key": "497"
+  },
+  "Rammus": {
+   "zh-Hant": "拉姆斯",
+   "en": "Rammus",
+   "key": "33"
+  },
+  "RekSai": {
+   "zh-Hant": "雷珂煞",
+   "en": "Rek'Sai",
+   "key": "421"
+  },
+  "Rell": {
+   "zh-Hant": "銳兒",
+   "en": "Rell",
+   "key": "526"
+  },
+  "Renata": {
+   "zh-Hant": "睿娜妲‧格萊斯克",
+   "en": "Renata Glasc",
+   "key": "888"
+  },
+  "Renekton": {
+   "zh-Hant": "雷尼克頓",
+   "en": "Renekton",
+   "key": "58"
+  },
+  "Rengar": {
+   "zh-Hant": "雷葛爾",
+   "en": "Rengar",
+   "key": "107"
+  },
+  "Riven": {
+   "zh-Hant": "雷玟",
+   "en": "Riven",
+   "key": "92"
+  },
+  "Rumble": {
+   "zh-Hant": "藍寶",
+   "en": "Rumble",
+   "key": "68"
+  },
+  "Ryze": {
+   "zh-Hant": "雷茲",
+   "en": "Ryze",
+   "key": "13"
+  },
+  "Samira": {
+   "zh-Hant": "煞蜜拉",
+   "en": "Samira",
+   "key": "360"
+  },
+  "Sejuani": {
+   "zh-Hant": "史瓦妮",
+   "en": "Sejuani",
+   "key": "113"
+  },
+  "Senna": {
+   "zh-Hant": "姍娜",
+   "en": "Senna",
+   "key": "235"
+  },
+  "Seraphine": {
+   "zh-Hant": "瑟菈紛",
+   "en": "Seraphine",
+   "key": "147"
+  },
+  "Sett": {
+   "zh-Hant": "賽特",
+   "en": "Sett",
+   "key": "875"
+  },
+  "Shaco": {
+   "zh-Hant": "薩科",
+   "en": "Shaco",
+   "key": "35"
+  },
+  "Shen": {
+   "zh-Hant": "慎",
+   "en": "Shen",
+   "key": "98"
+  },
+  "Shyvana": {
+   "zh-Hant": "希瓦娜",
+   "en": "Shyvana",
+   "key": "102"
+  },
+  "Singed": {
+   "zh-Hant": "辛吉德",
+   "en": "Singed",
+   "key": "27"
+  },
+  "Sion": {
+   "zh-Hant": "賽恩",
+   "en": "Sion",
+   "key": "14"
+  },
+  "Sivir": {
+   "zh-Hant": "希維爾",
+   "en": "Sivir",
+   "key": "15"
+  },
+  "Skarner": {
+   "zh-Hant": "史加納",
+   "en": "Skarner",
+   "key": "72"
+  },
+  "Smolder": {
+   "zh-Hant": "史矛德",
+   "en": "Smolder",
+   "key": "901"
+  },
+  "Sona": {
+   "zh-Hant": "索娜",
+   "en": "Sona",
+   "key": "37"
+  },
+  "Soraka": {
+   "zh-Hant": "索拉卡",
+   "en": "Soraka",
+   "key": "16"
+  },
+  "Swain": {
+   "zh-Hant": "斯溫",
+   "en": "Swain",
+   "key": "50"
+  },
+  "Sylas": {
+   "zh-Hant": "賽勒斯",
+   "en": "Sylas",
+   "key": "517"
+  },
+  "Syndra": {
+   "zh-Hant": "星朵拉",
+   "en": "Syndra",
+   "key": "134"
+  },
+  "TahmKench": {
+   "zh-Hant": "貪啃奇",
+   "en": "Tahm Kench",
+   "key": "223"
+  },
+  "Taliyah": {
+   "zh-Hant": "塔莉雅",
+   "en": "Taliyah",
+   "key": "163"
+  },
+  "Talon": {
+   "zh-Hant": "塔隆",
+   "en": "Talon",
+   "key": "91"
+  },
+  "Taric": {
+   "zh-Hant": "塔里克",
+   "en": "Taric",
+   "key": "44"
+  },
+  "Teemo": {
+   "zh-Hant": "提摩",
+   "en": "Teemo",
+   "key": "17"
+  },
+  "Thresh": {
+   "zh-Hant": "瑟雷西",
+   "en": "Thresh",
+   "key": "412"
+  },
+  "Tristana": {
+   "zh-Hant": "崔絲塔娜",
+   "en": "Tristana",
+   "key": "18"
+  },
+  "Trundle": {
+   "zh-Hant": "特朗德",
+   "en": "Trundle",
+   "key": "48"
+  },
+  "Tryndamere": {
+   "zh-Hant": "泰達米爾",
+   "en": "Tryndamere",
+   "key": "23"
+  },
+  "TwistedFate": {
+   "zh-Hant": "逆命",
+   "en": "Twisted Fate",
+   "key": "4"
+  },
+  "Twitch": {
+   "zh-Hant": "圖奇",
+   "en": "Twitch",
+   "key": "29"
+  },
+  "Udyr": {
+   "zh-Hant": "烏迪爾",
+   "en": "Udyr",
+   "key": "77"
+  },
+  "Urgot": {
+   "zh-Hant": "烏爾加特",
+   "en": "Urgot",
+   "key": "6"
+  },
+  "Varus": {
+   "zh-Hant": "法洛士",
+   "en": "Varus",
+   "key": "110"
+  },
+  "Vayne": {
+   "zh-Hant": "汎",
+   "en": "Vayne",
+   "key": "67"
+  },
+  "Veigar": {
+   "zh-Hant": "維迦",
+   "en": "Veigar",
+   "key": "45"
+  },
+  "Velkoz": {
+   "zh-Hant": "威寇茲",
+   "en": "Vel'Koz",
+   "key": "161"
+  },
+  "Vex": {
+   "zh-Hant": "薇可絲",
+   "en": "Vex",
+   "key": "711"
+  },
+  "Vi": {
+   "zh-Hant": "菲艾",
+   "en": "Vi",
+   "key": "254"
+  },
+  "Viego": {
+   "zh-Hant": "維爾戈",
+   "en": "Viego",
+   "key": "234"
+  },
+  "Viktor": {
+   "zh-Hant": "維克特",
+   "en": "Viktor",
+   "key": "112"
+  },
+  "Vladimir": {
+   "zh-Hant": "弗拉迪米爾",
+   "en": "Vladimir",
+   "key": "8"
+  },
+  "Volibear": {
+   "zh-Hant": "弗力貝爾",
+   "en": "Volibear",
+   "key": "106"
+  },
+  "Warwick": {
+   "zh-Hant": "沃維克",
+   "en": "Warwick",
+   "key": "19"
+  },
+  "Xayah": {
+   "zh-Hant": "剎雅",
+   "en": "Xayah",
+   "key": "498"
+  },
+  "Xerath": {
+   "zh-Hant": "齊勒斯",
+   "en": "Xerath",
+   "key": "101"
+  },
+  "XinZhao": {
+   "zh-Hant": "趙信",
+   "en": "Xin Zhao",
+   "key": "5"
+  },
+  "Yasuo": {
+   "zh-Hant": "犽宿",
+   "en": "Yasuo",
+   "key": "157"
+  },
+  "Yone": {
+   "zh-Hant": "犽凝",
+   "en": "Yone",
+   "key": "777"
+  },
+  "Yorick": {
+   "zh-Hant": "約瑞科",
+   "en": "Yorick",
+   "key": "83"
+  },
+  "Yunara": {
+   "zh-Hant": "尤娜拉",
+   "en": "Yunara",
+   "key": "804"
+  },
+  "Yuumi": {
+   "zh-Hant": "悠咪",
+   "en": "Yuumi",
+   "key": "350"
+  },
+  "Zaahen": {
+   "zh-Hant": "薩亨",
+   "en": "Zaahen",
+   "key": "904"
+  },
+  "Zac": {
+   "zh-Hant": "札克",
+   "en": "Zac",
+   "key": "154"
+  },
+  "Zed": {
+   "zh-Hant": "劫",
+   "en": "Zed",
+   "key": "238"
+  },
+  "Zeri": {
+   "zh-Hant": "婕莉",
+   "en": "Zeri",
+   "key": "221"
+  },
+  "Ziggs": {
+   "zh-Hant": "希格斯",
+   "en": "Ziggs",
+   "key": "115"
+  },
+  "Zilean": {
+   "zh-Hant": "極靈",
+   "en": "Zilean",
+   "key": "26"
+  },
+  "Zoe": {
+   "zh-Hant": "柔依",
+   "en": "Zoe",
+   "key": "142"
+  },
+  "Zyra": {
+   "zh-Hant": "枷蘿",
+   "en": "Zyra",
+   "key": "143"
+  }
+ }
+}

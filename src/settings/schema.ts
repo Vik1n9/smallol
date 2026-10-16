@@ -17,8 +17,13 @@ export const FEATURES = [
   'towers', 'nexusTimers', 'inhibitors',
   'dragons', 'soul', 'nextDragon',
   'barons', 'nextBaron', 'buffs',
+  'series',
 ] as const;
 export type Feature = (typeof FEATURES)[number];
+
+/** Views that open under the game, each on its own. */
+export const VIEWS = ['draftGame', 'draftSeries'] as const;
+export type ViewName = (typeof VIEWS)[number];
 
 export interface Settings {
   version: typeof SETTINGS_VERSION;
@@ -31,6 +36,8 @@ export interface Settings {
   gold: GoldView;
   /** Keep the clock and countdowns moving between the service's 5-second updates. */
   tickClock: boolean;
+  /** Which views under the game are open. */
+  views: Record<ViewName, boolean>;
   /** Window sizes per view ('size-game', 'size-settings'). */
   sizes: Record<string, Size>;
 }
@@ -44,6 +51,7 @@ export const DEFAULTS: Settings = {
   show: Object.fromEntries(FEATURES.map((f) => [f, true])) as Record<Feature, boolean>,
   gold: 'diff',
   tickClock: true,
+  views: { draftGame: false, draftSeries: false },
   sizes: {},
 };
 
@@ -72,7 +80,7 @@ function size(v: unknown): Size | undefined {
 export function normalize(raw: unknown): Settings {
   const o = obj(raw);
   const d = DEFAULTS;
-  const show = obj(o.show);
+  const show = obj(o.show), views = obj(o.views);
   const sizes: Record<string, Size> = {};
   for (const [k, v] of Object.entries(obj(o.sizes))) {
     const s = size(v);
@@ -86,6 +94,7 @@ export function normalize(raw: unknown): Settings {
     show: Object.fromEntries(FEATURES.map((f) => [f, bool(show[f], d.show[f])])) as Record<Feature, boolean>,
     gold: oneOf(o.gold, ['diff', 'totals'], d.gold),
     tickClock: bool(o.tickClock, d.tickClock),
+    views: Object.fromEntries(VIEWS.map((v) => [v, bool(views[v], d.views[v])])) as Record<ViewName, boolean>,
     sizes,
   };
 }

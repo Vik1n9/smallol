@@ -114,3 +114,33 @@ describe('Stream CV adapter, damaged input', () => {
     expect(parseClock(90)).toBeNull();
   });
 });
+
+describe('Stream CV adapter, series and draft (proposed fields, docs/CONTRACT_PROPOSAL.md)', () => {
+  it('v0 has neither: both stay null', () => {
+    const s = adapt(sample);
+    expect(s.series).toBeNull();
+    expect(s.draft).toBeNull();
+  });
+
+  it('reads series and draft when the service sends them', () => {
+    const s = adapt({
+      status: 'in_game',
+      series: { bestOf: 5, game: 3, teams: { B: { code: 'T1', wins: 1 }, R: { code: 'GEN', wins: 1 } } },
+      draft: {
+        current: { game: 3, B: { team: 'T1', bans: ['Azir', null, 'bad name!'], picks: [] }, R: { team: 'GEN', bans: [], picks: ['Rell'] }, turn: { side: 'B', kind: 'pick', slot: 0 } },
+        earlier: [{ game: 2, B: { team: 'GEN', picks: ['Vi'] }, R: { team: 'T1', picks: ['Jax'] } }, { game: 1, B: { team: 'T1' }, R: { team: 'GEN' } }, { game: 4, B: { team: 'T1' }, R: { team: 'GEN' } }],
+      },
+    });
+    expect(s.series).toEqual({ bestOf: 5, game: 3, teams: { B: { code: 'T1', wins: 1 }, R: { code: 'GEN', wins: 1 } } });
+    expect(s.draft!.current!.sides.B.bans).toEqual(['Azir', null, null, null, null]);
+    expect(s.draft!.current!.sides.R.picks).toEqual(['Rell', null, null, null, null]);
+    expect(s.draft!.current!.turn).toEqual({ side: 'B', kind: 'pick', slot: 0 });
+    // Earlier games in order; a "later" game than the current one is dropped.
+    expect(s.draft!.earlier.map((g) => g.game)).toEqual([1, 2]);
+  });
+
+  it('drops a series that does not add up', () => {
+    expect(adapt({ status: 'in_game', series: { bestOf: 3, game: 4, teams: { B: { code: 'A' }, R: { code: 'B' } } } }).series).toBeNull();
+    expect(adapt({ status: 'in_game', series: { bestOf: 3, game: 1, teams: { B: { code: 'way too long' }, R: { code: 'B' } } } }).series).toBeNull();
+  });
+});
