@@ -3,7 +3,7 @@ import { adapt, parseClock } from '../src/data/streamcv/adapter.ts';
 import { TOWER_SITES } from '../src/model/types.ts';
 import { knownChampion } from '../src/data/champions.ts';
 import sample from '../fixtures/streamcv/state_v03_mvk_fur_g3.json' with { type: 'json' };
-import day2 from '../fixtures/streamcv/state_v04_kc_mvk_g2.json' with { type: 'json' };
+import day2 from '../fixtures/streamcv/state_v05_kc_mvk_g2.json' with { type: 'json' };
 import day2draft from '../fixtures/streamcv/state_v04_kc_mvk_g2_waiting.json' with { type: 'json' };
 
 const downSites = (s: ReturnType<typeof adapt>, t: 'B' | 'R') => TOWER_SITES.filter((x) => s.teams[t].towers[x].down);
@@ -188,7 +188,7 @@ describe('Stream CV adapter, contract v0.4 (Day 2, KC vs MVK game 2, real sample
   it('reads voidgrubs, the top pit and the herald off the broadcast', () => {
     expect(s.voidgrubs).toEqual({ B: 1, R: 2 });
     expect(s.pitNext).toBe('baron');
-    expect(s.herald).toEqual({ status: 'taken', at: 955 });
+    expect(s.herald).toEqual({ status: 'taken', at: 959, team: 'B' });
     expect(s.nextDragon).toEqual({ elder: false, element: 'chemtech', elementSource: 'broadcast', at: 2011 });
   });
 

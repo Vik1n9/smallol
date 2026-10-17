@@ -12,7 +12,7 @@ import {
 } from '../src/ui/views.ts';
 import { settingsView } from '../src/ui/settings-view.ts';
 import sample from '../fixtures/streamcv/state_v03_mvk_fur_g3.json' with { type: 'json' };
-import day2 from '../fixtures/streamcv/state_v04_kc_mvk_g2.json' with { type: 'json' };
+import day2 from '../fixtures/streamcv/state_v05_kc_mvk_g2.json' with { type: 'json' };
 import day2draft from '../fixtures/streamcv/state_v04_kc_mvk_g2_waiting.json' with { type: 'json' };
 import mock from '../fixtures/dev/series_draft_mock.json' with { type: 'json' };
 
@@ -322,12 +322,22 @@ describe('views, contract v0.4', () => {
   });
 
   it('herald: a countdown to 15:00 while it is the pit\'s next, nothing once it is taken', () => {
-    const early = { ...live2, pitNext: 'herald' as const, herald: { status: 'upcoming' as const, at: null } };
+    const early = { ...live2, pitNext: 'herald' as const, herald: { status: 'upcoming' as const, at: null, team: null } };
     expect(mapView(ctx({ s: early, clock: 14 * 60 }), true)).toContain('預示者</span><span class="mono">1:00');
     expect(mapView(ctx({ s: early, clock: 16 * 60 }), true)).toContain(STRINGS['zh-Hant'].ui.heraldMaybeUp);
     // While the pit's next is the herald, the baron countdown waits.
     expect(mapView(ctx({ s: early, clock: 14 * 60 }), true)).not.toContain('巴龍</span><span class="mono">');
-    expect(mapView(ctx({ s: live2, clock: at2 }), true)).not.toContain('預示者');
+  });
+
+  it('herald taken (v0.5): the team that took it says so; unknown taker, nothing', () => {
+    const html = mapView(ctx({ s: live2, clock: at2 }), true);
+    expect(html.match(/預示者/g)).toHaveLength(2); // the label and its tooltip "預示者 15:59", once
+    const rows = html.split('class="row team"');
+    expect(rows[1]).toContain('預示者');
+    expect(rows[2]).not.toContain('預示者');
+    const unknown = { ...live2, herald: { ...live2.herald!, team: null } };
+    expect(mapView(ctx({ s: unknown, clock: at2 }), true)).not.toContain('預示者');
+    expect(mapView(ctx({ s: live2, clock: at2, show: { ...DEFAULTS.show, herald: false } }), true)).not.toContain('預示者');
   });
 
   it('marks a next-dragon element worked out from the rules', () => {

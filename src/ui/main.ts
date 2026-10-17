@@ -128,7 +128,7 @@ async function loadSample(): Promise<void> {
   // Dev builds only: the sample is not bundled into a release.
   if (!import.meta.env.DEV) return;
   // Day 2, KC vs MVK game 2 (contract v0.4): towers, bans, players, voidgrubs, herald. --sample=draft: the same game mid-draft.
-  const game = flags.draft ? await import('../../fixtures/streamcv/state_v04_kc_mvk_g2_waiting.json') : await import('../../fixtures/streamcv/state_v04_kc_mvk_g2.json');
+  const game = flags.draft ? await import('../../fixtures/streamcv/state_v04_kc_mvk_g2_waiting.json') : await import('../../fixtures/streamcv/state_v05_kc_mvk_g2.json');
   if (haveLive && !flags.sample) return;
   let s = adapt(game.default);
   if (flags.demo && s.status === 'finished') s = { ...s, status: 'in_game' };

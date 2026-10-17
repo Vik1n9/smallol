@@ -234,5 +234,5 @@ function readObjectiveBox(raw: Record<string, unknown>, s: MatchState): void {
   }
   s.pitNext = (PIT as readonly unknown[]).includes(raw.pitNext) ? (raw.pitNext as PitNext) : null;
   const h = obj(raw.herald);
-  if ((HERALD as readonly unknown[]).includes(h.status)) s.herald = { status: h.status as HeraldState['status'], at: time(h.sec, h.at) };
+  if ((HERALD as readonly unknown[]).includes(h.status)) s.herald = { status: h.status as HeraldState['status'], at: time(h.sec, h.at), team: team(h.team) };
 }

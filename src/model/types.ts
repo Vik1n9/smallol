@@ -79,6 +79,8 @@ export interface HeraldState {
   status: 'upcoming' | 'alive_or_upcoming' | 'taken' | 'taken_or_despawned';
   /** When it was taken (±5 s). */
   at: number | null;
+  /** Who took it, from the kill announcement on screen (v0.5); null when the service did not see one. */
+  team: Team | null;
 }
 
 /** The series this game belongs to (service contract v0.1, "系列賽與 BP"). */
@@ -178,6 +180,5 @@ export interface MatchState {
   /** Voidgrubs each team has taken (0–3), from the broadcast; null when the service did not read them. */
   voidgrubs: Record<Team, number | null> | null;
   pitNext: PitNext | null;
-  /** Who took it is not supported yet (the service sends team: null). */
   herald: HeraldState | null;
 }
