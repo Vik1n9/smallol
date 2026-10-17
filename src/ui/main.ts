@@ -16,6 +16,8 @@ import { Poller, StateSource, type Connection } from '../data/streamcv/source.ts
 import { adaptSchedule, nextMatch, scheduleUrl } from '../data/streamcv/schedule.ts';
 import { adaptPlayers, adaptTeams, historyUrl } from '../data/streamcv/history.ts';
 import type { History } from '../model/history.ts';
+import { adaptRoster, rosterUrl } from '../data/streamcv/roster.ts';
+import type { RosterTeam } from '../model/roster.ts';
 import type { Schedule } from '../model/schedule.ts';
 import { scheduleView } from './schedule-views.ts';
 import { adapt, emptyState } from '../data/streamcv/adapter.ts';
@@ -175,6 +177,9 @@ const history: History = { teams: null, players: null };
 const HISTORY_MS = 3 * 60_000;
 const teamsPoller = new Poller(historyUrl(DEFAULTS.endpoint, 'teams'), adaptTeams, HISTORY_MS, { onData(t) { history.teams = t; render(); } });
 const playersPoller = new Poller(historyUrl(DEFAULTS.endpoint, 'players'), adaptPlayers, HISTORY_MS, { onData(p) { history.players = p; render(); } });
+// The event's teams (seeds, rosters, coaches): every 30 minutes, it hardly changes.
+let roster: Record<string, RosterTeam> | null = null;
+const rosterPoller = new Poller(rosterUrl(DEFAULTS.endpoint), adaptRoster, 30 * 60_000, { onData(r) { roster = r; render(); } });
 /** The match picked in the schedule view (not saved). */
 let pickedMatch: string | null = null;
 
@@ -204,7 +209,7 @@ function render(): void {
   const tier = tierOf(window.innerHeight - vh);
   const c: ViewCtx = {
     s: state, clock: clockNow(state, receivedAt, Date.now(), cfg().tickClock), show: cfg().show, gold: cfg().gold, S, lang, conn, sample,
-    schedule, now: Date.now(), spoilerFree: cfg().spoilerFree, history, pickedMatch,
+    schedule, now: Date.now(), spoilerFree: cfg().spoilerFree, history, pickedMatch, roster,
   };
   // The pill has no room for tabs or views.
   const pill = tier === 'dot';
@@ -311,6 +316,7 @@ function onSettings(now: Settings, before: Settings): void {
     schedulePoller.setUrl(scheduleUrl(now.endpoint));
     teamsPoller.setUrl(historyUrl(now.endpoint, 'teams'));
     playersPoller.setUrl(historyUrl(now.endpoint, 'players'));
+    rosterPoller.setUrl(rosterUrl(now.endpoint));
   }
   // A view opened or closed: the window grows or shrinks by its height, the game keeps its size.
   const dh = viewsHeight(now) - viewsHeight(before);
@@ -352,6 +358,8 @@ async function start(): Promise<void> {
   teamsPoller.start();
   playersPoller.setUrl(historyUrl(cfg().endpoint, 'players'));
   playersPoller.start();
+  rosterPoller.setUrl(rosterUrl(cfg().endpoint));
+  rosterPoller.start();
   await switchPage(q.has('settings') ? 'settings' : 'game');
 }
 void start();

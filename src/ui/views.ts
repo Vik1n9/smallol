@@ -15,6 +15,9 @@ import { mapSvg, TEAM_COLOUR } from '../render/map-svg.ts';
 import type { Schedule } from '../model/schedule.ts';
 import type { History } from '../model/history.ts';
 import { findPlayer, kda, tally } from '../data/streamcv/history.ts';
+import type { RosterTeam } from '../model/roster.ts';
+import { rosterPlayer } from '../data/streamcv/roster.ts';
+import { playerCard, teamCard } from './roster-text.ts';
 import { nextMatchCard, nextMatchLine, type ScheduleCtx } from './schedule-views.ts';
 import type { Element } from '../model/types.ts';
 
@@ -55,12 +58,14 @@ export interface ViewCtx {
   history: History;
   /** The match picked in the schedule view, to show both teams. */
   pickedMatch: string | null;
+  /** The event's teams by code (seeds, rosters, coaches); null until read. */
+  roster: Record<string, RosterTeam> | null;
   /** For tests: the time zone to show times in. */
   timeZone?: string;
 }
 
 export const schedCtx = (c: ViewCtx): ScheduleCtx => ({
-  schedule: c.schedule, now: c.now, spoilerFree: c.spoilerFree, S: c.S, lang: c.lang, history: c.history, picked: c.pickedMatch,
+  schedule: c.schedule, now: c.now, spoilerFree: c.spoilerFree, S: c.S, lang: c.lang, history: c.history, picked: c.pickedMatch, roster: c.roster,
   ...(c.timeZone ? { timeZone: c.timeZone } : {}),
 });
 
@@ -68,7 +73,11 @@ export const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '
 const dot = (t: Team) => `<i class="dot" style="background:${TEAM_COLOUR[t]}"></i>`;
 /** The team's code when the series is known ("T1"), else its side ("藍方"). */
 const teamName = (c: ViewCtx, t: Team) => c.s.series?.teams[t].code ?? c.S.team[t];
-const teamText = (c: ViewCtx, t: Team) => `<b class="tn" style="color:${TEAM_COLOUR[t]}">${esc(teamName(c, t))}</b>`;
+/** A team's card on hover: name, seed, how it qualified, coaches. */
+const teamTip = (c: ViewCtx, code: string) => { const r = c.roster?.[code]; return r ? ` title="${esc(teamCard(c.S, r))}"` : ''; };
+const teamText = (c: ViewCtx, t: Team) => `<b class="tn" style="color:${TEAM_COLOUR[t]}"${teamTip(c, teamName(c, t))}>${esc(teamName(c, t))}</b>`;
+/** "LEC #3" next to a team where there is room. */
+const seedTag = (c: ViewCtx, code: string) => { const s = c.roster?.[code]?.seedLabel; return s ? `<span class="seed">${esc(s)}</span>` : ''; };
 
 /** 59398 -> "59.4k". */
 export function fmtGold(n: number): string {
@@ -314,7 +323,7 @@ export function draftGameView(c: ViewCtx): string {
   };
   const tend = (t: Team) => (c.show.tendencies ? tendencyLines(c, g.sides[t].team) : '');
   return `<header><b>${esc(c.S.view.draftGame)}</b><span class="muted">${esc(c.S.gameNo(g.game))}</span>${sidesFlag(c)}</header>
-    <div class="dgrid${c.show.tendencies ? ' tend' : ''}">${TEAMS.map((t) => `<div class="dteam">${dot(t)}<b class="tn" style="color:${TEAM_COLOUR[t]}">${esc(g.sides[t].team)}</b></div>
+    <div class="dgrid${c.show.tendencies ? ' tend' : ''}">${TEAMS.map((t) => `<div class="dteam">${dot(t)}<span class="dtn"><b class="tn" style="color:${TEAM_COLOUR[t]}"${teamTip(c, g.sides[t].team)}>${esc(g.sides[t].team)}</b>${seedTag(c, g.sides[t].team)}</span></div>
       <div class="dline">${line(t, 'ban')}</div><div class="dline">${line(t, 'pick')}</div>${tend(t)}`).join('')}</div>`;
 }
 
@@ -370,6 +379,9 @@ export function draftSeriesView(c: ViewCtx): string {
 // ---------- players: position, champion, KDA, CS, gold, health, items ----------
 
 function playerRow(c: ViewCtx, p: Player, t: Team, withItems: boolean): string {
+  const rp = rosterPlayer(c.roster, teamName(c, t), p.name);
+  const card = rp ? playerCard(c.S, rp) : '';
+  const sub = rp && !rp.starter ? `<span class="subtag">${esc(c.S.ui.substitute)}</span>` : '';
   const pool = poolTitle(c, teamName(c, t), p.name, p.champion);
   const n = (v: number | null) => (v === null ? '–' : String(v));
   const kda = `${n(p.kills)}/${n(p.deaths)}/${n(p.assists)}`;
@@ -377,7 +389,7 @@ function playerRow(c: ViewCtx, p: Player, t: Team, withItems: boolean): string {
   const champName = p.champion ? championName(p.champion, c.lang) : '–';
   const items = p.items?.filter((i) => !minorItem(i)).map((i) => itemName(i, c.lang)) ?? null;
   const line1 = `<span class="role k">${p.role ? esc(c.S.role[p.role]) : ''}</span>`
-    + `<b class="pn" title="${esc(p.name)}">${esc(p.name)}</b>`
+    + `<b class="pn${card ? ' has-card' : ''}" title="${esc(card || p.name)}">${esc(p.name)}${sub}</b>`
     + `<span class="pc${pool ? ' has-pool' : ''}" title="${esc(pool || champName)}">${esc(champName)}</span>`
     + `<span class="lv mono"><span class="k">${esc(c.S.ui.level)}</span>${n(p.level)}</span>`
     + `<span class="hp" title="${esc(c.S.ui.hp)}">${hp === null ? '' : `<i style="width:${hp}%"></i>`}</span>`
@@ -394,6 +406,6 @@ export function playersView(c: ViewCtx): string {
   const head = `<header><b>${esc(c.S.view.players)}</b></header>`;
   if (!ps) return `${head}<p class="empty-note muted">${esc(c.S.ui.noPlayers)}</p>`;
   const withItems = c.show.playerItems;
-  return head + TEAMS.map((t) => `<div class="pteam">${dot(t)}${teamText(c, t)}</div>`
+  return head + TEAMS.map((t) => `<div class="pteam">${dot(t)}${teamText(c, t)}${seedTag(c, teamName(c, t))}</div>`
     + ps[t].map((p) => playerRow(c, p, t, withItems)).join('')).join('');
 }

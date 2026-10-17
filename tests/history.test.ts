@@ -68,7 +68,7 @@ describe('history adapters', () => {
 const live = adapt(day2);
 const ctx = (over: Partial<ViewCtx> = {}): ViewCtx => ({
   s: live, clock: live.clock, show: { ...DEFAULTS.show }, gold: 'diff', S: STRINGS['zh-Hant'], lang: 'zh-Hant', conn: 'ok', sample: false,
-  schedule: null, now: 0, spoilerFree: true, history, pickedMatch: null, ...over,
+  schedule: null, now: 0, spoilerFree: true, history, pickedMatch: null, roster: null, ...over,
 });
 
 describe('draft view: this event', () => {
@@ -115,7 +115,7 @@ describe('schedule: pick a match to see both teams', () => {
   const sched = adaptSchedule({ matches: [
     { matchId: 'm1', start: '2026-10-18T18:00:00Z', state: 'unstarted', stage: 'Play-Ins', bestOf: 5, teams: [{ code: 'TBD', name: 'TBD' }, { code: 'KC', name: 'Karmine Corp' }], result: null },
   ] });
-  const sc = (over: Partial<ScheduleCtx> = {}): ScheduleCtx => ({ schedule: sched, now: 0, spoilerFree: true, S: STRINGS['zh-Hant'], lang: 'zh-Hant', timeZone: 'Asia/Taipei', history, picked: null, ...over });
+  const sc = (over: Partial<ScheduleCtx> = {}): ScheduleCtx => ({ schedule: sched, now: 0, spoilerFree: true, S: STRINGS['zh-Hant'], lang: 'zh-Hant', timeZone: 'Asia/Taipei', history, picked: null, roster: null, ...over });
 
   it('rows can be picked', () => {
     expect(scheduleView(sc())).toContain('data-match="m1"');

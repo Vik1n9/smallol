@@ -24,7 +24,7 @@ const raw = {
 };
 const sched = adaptSchedule(raw);
 const NOW = Date.parse('2026-10-17T04:04:00Z');
-const c = (over: Partial<ScheduleCtx> = {}): ScheduleCtx => ({ schedule: sched, now: NOW, spoilerFree: true, S: STRINGS['zh-Hant'], lang: 'zh-Hant', timeZone: 'Asia/Taipei', history: { teams: null, players: null }, picked: null, ...over });
+const c = (over: Partial<ScheduleCtx> = {}): ScheduleCtx => ({ schedule: sched, now: NOW, spoilerFree: true, S: STRINGS['zh-Hant'], lang: 'zh-Hant', timeZone: 'Asia/Taipei', history: { teams: null, players: null }, picked: null, roster: null, ...over });
 
 describe('schedule', () => {
   it('reads the matches in time order and drops a broken one', () => {
@@ -98,7 +98,7 @@ describe('schedule', () => {
   it('the widget shows the next match when no game is on, once the service answered', () => {
     const v = (over: Partial<ViewCtx>): ViewCtx => ({
       s: adapt({ status: 'idle' }), clock: null, show: { ...DEFAULTS.show }, gold: 'diff', S: STRINGS['zh-Hant'], lang: 'zh-Hant',
-      conn: 'ok', sample: false, schedule: sched, now: NOW, spoilerFree: true, timeZone: 'Asia/Taipei', history: { teams: null, players: null }, pickedMatch: null, ...over,
+      conn: 'ok', sample: false, schedule: sched, now: NOW, spoilerFree: true, timeZone: 'Asia/Taipei', history: { teams: null, players: null }, pickedMatch: null, roster: null, ...over,
     });
     expect(mapView(v({}), true)).toContain('class="next-match"');
     expect(dotView(v({}))).toContain('還有 13 小時 56 分');

@@ -206,7 +206,13 @@ button.srow2.next:hover { background: color-mix(in srgb, var(--accent) 20%, var(
 .tchip { padding: 0 5px; border-radius: 5px; box-shadow: inset 0 0 0 1px var(--border); }
 .tchip i, .tpool i { font-style: normal; font-size: 10px; color: var(--muted); margin-left: 2px; font-family: var(--mono); }
 .tpool i { margin-right: 8px; }
-.tblock .tp { display: grid; grid-template-columns: 14px 78px 1fr; gap: 6px; font-size: 11px; align-items: center; white-space: nowrap; }
+.tblock .tp { display: grid; grid-template-columns: 14px 78px 54px 1fr; gap: 6px; font-size: 11px; align-items: center; white-space: nowrap; }
+.tblock .pshort { font-size: 10px; }
+.seed { margin-left: 5px; font-size: 10px; color: var(--muted); font-weight: 400; font-family: var(--font); white-space: nowrap; }
+.dtn { display: inline-flex; flex-direction: column; line-height: 1.15; }
+.dtn .seed { margin-left: 0; }
+.has-card { cursor: help; text-decoration: underline dotted color-mix(in srgb, var(--muted) 55%, transparent); text-underline-offset: 3px; }
+.subtag { margin-left: 4px; font-size: 9px; font-weight: 400; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent); border-radius: 3px; padding: 0 3px; }
 .tblock .tp > * { overflow: hidden; text-overflow: ellipsis; }
 
 #grip { position: fixed; right: 0; bottom: 0; width: 14px; height: 14px; cursor: nwse-resize; z-index: 10; }

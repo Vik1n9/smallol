@@ -8,6 +8,10 @@ import type { Lang, Strings } from '../i18n/index.ts';
 import type { History } from '../model/history.ts';
 import { tally, teamPlayers } from '../data/streamcv/history.ts';
 import { championName } from '../data/champions.ts';
+import type { RosterTeam } from '../model/roster.ts';
+import { starters } from '../data/streamcv/roster.ts';
+import { findPlayer } from '../data/streamcv/history.ts';
+import { playerCard, playerShort, teamCard } from './roster-text.ts';
 import { esc } from './views.ts';
 
 export interface ScheduleCtx {
@@ -19,6 +23,7 @@ export interface ScheduleCtx {
   history: History;
   /** The match picked in the list, to show both teams this event. */
   picked: string | null;
+  roster: Record<string, RosterTeam> | null;
   /** For tests: the time zone to show times in (default: this computer's). */
   timeZone?: string;
 }
@@ -53,7 +58,8 @@ export function nextMatchCard(c: ScheduleCtx): string {
   const [a, b] = m.teams;
   const on = m.state === 'inProgress';
   const head = `<b>${esc(on ? c.S.ui.onNow : c.S.ui.nextMatch)}</b><span class="muted">${esc(stageOf(c, m))}${m.bestOf ? ` · ${esc(c.S.bo(m.bestOf))}` : ''}</span>`;
-  const names = [a, b].filter((t) => t.code !== 'TBD' && t.name !== t.code).map((t) => esc(t.name)).join(' · ');
+  const names = [a, b].filter((t) => t.code !== 'TBD' && t.name !== t.code)
+    .map((t) => { const seed = c.roster?.[t.code]?.seedLabel; return `${esc(t.name)}${seed ? `<span class="seed">${esc(seed)}</span>` : ''}`; }).join(' · ');
   const when = `<span class="mono">${esc(fmtStart(m.start, c.lang, c.timeZone))}</span>${on ? '' : `<span class="until">${esc(c.S.until(m.start - c.now))}</span>`}`;
   return `<div class="next-match">
     <div class="nm-head">${head}</div>
@@ -104,19 +110,29 @@ const champList = (c: ScheduleCtx, list: [string, number][]) =>
 function teamBlock(c: ScheduleCtx, code: string): string {
   if (code === 'TBD') return `<div class="tblock"><div class="th"><span class="muted">${esc(c.S.ui.tbd)}</span></div></div>`;
   const games = c.history.teams?.[code] ?? [];
-  const head = `<div class="th"><b>${esc(code)}</b><span class="muted">${esc(games.length ? c.S.eventGames(games.length) : c.S.ui.noHistory)}</span></div>`;
-  if (!games.length) return `<div class="tblock">${head}</div>`;
-  const players = teamPlayers(c.history.players, code).map((p) => {
-    const short = p.name.startsWith(`${code} `) ? p.name.slice(code.length + 1) : p.name;
-    const pool = p.pool.slice(0, 3).map((e) => `${esc(championName(e.champion, c.lang))}<i>${e.games}</i>`).join(' ');
+  const r = c.roster?.[code];
+  const tip = r ? ` title="${esc(teamCard(c.S, r))}"` : '';
+  const head = `<div class="th"><b${tip}>${esc(code)}</b>${r?.seedLabel ? `<span class="seed">${esc(r.seedLabel)}</span>` : ''}`
+    + `<span class="muted">${esc(games.length ? c.S.eventGames(games.length) : c.S.ui.noHistory)}</span></div>`;
+  const pool = (name: string) => {
+    const p = findPlayer(c.history.players, code, name);
+    if (!p) return '';
     const more = p.pool.length > 3 ? `<span class="muted"> +${p.pool.length - 3}</span>` : '';
-    return `<div class="tp"><span class="k">${p.role ? esc(c.S.role[p.role]) : ''}</span><b>${esc(short)}</b><span class="tpool">${pool}${more}</span></div>`;
-  }).join('');
-  return `<div class="tblock">${head}
-    <div class="tl"><span class="k">${esc(c.S.ui.tendBans)}</span>${champList(c, tally(games, 'bans'))}</div>
-    <div class="tl"><span class="k">${esc(c.S.ui.tendPicks)}</span>${champList(c, tally(games, 'picks'))}</div>
-    ${players}
-  </div>`;
+    return p.pool.slice(0, 3).map((e) => `${esc(championName(e.champion, c.lang))}<i>${e.games}</i>`).join(' ') + more;
+  };
+  // The five starters from the roster (nationality and age), with this event's most played when known.
+  const rows = r
+    ? starters(r).map((p) => `<div class="tp"><span class="k">${p.role ? esc(c.S.role[p.role]) : ''}</span>`
+      + `<b class="has-card" title="${esc(playerCard(c.S, p))}">${esc(p.id)}</b><span class="muted pshort">${esc(playerShort(c.S, p))}</span><span class="tpool">${pool(p.id)}</span></div>`).join('')
+    : teamPlayers(c.history.players, code).map((p) => {
+      const short = p.name.startsWith(`${code} `) ? p.name.slice(code.length + 1) : p.name;
+      return `<div class="tp"><span class="k">${p.role ? esc(c.S.role[p.role]) : ''}</span><b>${esc(short)}</b><span></span><span class="tpool">${pool(short)}</span></div>`;
+    }).join('');
+  const tend = games.length
+    ? `<div class="tl"><span class="k">${esc(c.S.ui.tendBans)}</span>${champList(c, tally(games, 'bans'))}</div>
+    <div class="tl"><span class="k">${esc(c.S.ui.tendPicks)}</span>${champList(c, tally(games, 'picks'))}</div>`
+    : '';
+  return `<div class="tblock">${head}${tend}${rows}</div>`;
 }
 
 /** Both teams of a match: this event's most banned and picked, and each player's most played. No wins. */
