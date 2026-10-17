@@ -188,7 +188,7 @@ function render(): void {
   const tier = tierOf(window.innerHeight - vh);
   const c: ViewCtx = {
     s: state, clock: clockNow(state, receivedAt, Date.now(), cfg().tickClock), show: cfg().show, gold: cfg().gold, S, lang, conn, sample,
-    schedule, now: Date.now(), spoilerFree: cfg().spoilerFree,
+    schedule, now: Date.now(), spoiler: cfg().spoiler,
   };
   // The pill has no room for tabs or views.
   const pill = tier === 'dot';
@@ -231,8 +231,6 @@ function onClick(e: MouseEvent): void {
     setPath(path, value);
   } else if (t.dataset.toggle) {
     setPath(t.dataset.toggle, (t as HTMLInputElement).checked);
-  } else if ('toggleSpoiler' in t.dataset) {
-    settings.update((d) => { d.spoilerFree = !d.spoilerFree; });
   } else if (t.dataset.view) {
     const v = t.dataset.view as ViewName;
     settings.update((d) => { d.views[v] = !d.views[v]; });

@@ -3,7 +3,7 @@
 
 import type { Element, GameStatus, Role, Team } from '../model/types.ts';
 import type { MatchStage } from '../model/schedule.ts';
-import type { Feature, ViewName } from '../settings/schema.ts';
+import type { Feature, SpoilerLevel, ViewName } from '../settings/schema.ts';
 import type { Connection } from '../data/streamcv/source.ts';
 
 export type Lang = 'zh-Hant' | 'en';
@@ -28,6 +28,7 @@ export interface Strings {
   /** One character (or letter) per position. */
   role: Record<Role, string>;
   view: Record<ViewName, string>;
+  spoilerLevel: Record<SpoilerLevel, string>;
   stage: Record<MatchStage, string>;
   ui: Record<
     | 'sample' | 'sampleShort' | 'sampleHint' | 'baron' | 'baronUp' | 'baronBuff' | 'elderBuff' | 'dragon' | 'dragonUp' | 'elderNext' | 'unknownElement'
@@ -36,12 +37,12 @@ export interface Strings {
     | 'next' | 'elder' | 'noSeries' | 'bans' | 'picks' | 'fearless' | 'noDraft' | 'noEarlier' | 'turn'
     | 'vs' | 'winsUnknown' | 'bansUnsupported' | 'picksAtStart' | 'noPlayers' | 'level' | 'cs' | 'kda' | 'hp' | 'itemsUnknown' | 'bansMissing'
     | 'grubs' | 'herald' | 'heraldMaybeUp' | 'sidesUnconfirmed' | 'sidesUnconfirmedHint' | 'elementByRules'
-    | 'nextMatch' | 'onNow' | 'tbd' | 'finished' | 'showScores' | 'hideScores' | 'noSchedule' | 'seasonOver' | 'spoilerOn',
+    | 'nextMatch' | 'onNow' | 'tbd' | 'finished' | 'noSchedule' | 'seasonOver' | 'spoilerOn' | 'teamsHidden' | 'teamsHiddenHint',
     string
   >;
   set: Record<
     | 'title' | 'language' | 'auto' | 'background' | 'solid' | 'semi' | 'clear' | 'show' | 'goldView' | 'goldDiff' | 'goldTotals'
-    | 'tickClock' | 'endpoint' | 'endpointBad' | 'endpointNote' | 'views' | 'about' | 'aboutText' | 'spoilerFree',
+    | 'tickClock' | 'endpoint' | 'endpointBad' | 'endpointNote' | 'views' | 'about' | 'aboutText' | 'spoiler' | 'spoilerNote',
     string
   >;
   /** "+2 not yet identified" next to a team's map corner. */
@@ -78,6 +79,7 @@ const zh: Strings = {
   },
   role: { top: '上', jungle: '野', mid: '中', bot: '下', support: '輔' },
   view: { draftGame: '本局 BP', draftSeries: '全場 BP', players: '選手', schedule: '賽程' },
+  spoilerLevel: { off: '顯示比分', scores: '藏比分', matchups: '連對戰都藏' },
   stage: { 'Play-Ins': '入圍賽', Swiss: '瑞士輪', Quarterfinals: '八強', Semifinals: '四強', Finals: '決賽' },
   ui: {
     sample: '樣本資料', sampleShort: '樣本', sampleHint: '連不到 Stream CV 服務，顯示的是樣本資料（開發模式）',
@@ -93,8 +95,9 @@ const zh: Strings = {
     vs: 'vs', winsUnknown: '不知道本局開始前的勝場', bansUnsupported: '尚未支援（服務還讀不到禁用）', picksAtStart: '開局後才會有',
     noPlayers: '沒有選手資料（開局後才有）', itemsUnknown: '裝備資料暫缺', bansMissing: '這局沒有禁用資料（服務沒看到這局的 BP 畫面）',
     grubs: '三蟲', herald: '預示者', heraldMaybeUp: '可能在場', sidesUnconfirmed: '藍紅待確認',
-    nextMatch: '下一場', onNow: '進行中', tbd: '待定', finished: '已結束', showScores: '顯示比分', hideScores: '隱藏比分',
-    noSchedule: '讀不到賽程', seasonOver: '本季賽程已結束', spoilerOn: '不爆雷',
+    nextMatch: '下一場', onNow: '進行中', tbd: '待定', finished: '已結束',
+    noSchedule: '讀不到賽程', seasonOver: '本季賽程已結束', spoilerOn: '不爆雷', teamsHidden: '隊伍隱藏',
+    teamsHiddenHint: '這場的對戰組合會透露先前的結果（官方的防雷標記），所以隱藏',
     sidesUnconfirmedHint: '開打前官方資料的藍紅方常是反的，畫面也還判斷不出來：隊伍名可能對調', elementByRules: '屬性依規則推算（轉播畫面讀不到）', level: 'Lv', cs: '補刀', kda: '擊殺／死亡／助攻', hp: '血量',
   },
   set: {
@@ -102,7 +105,7 @@ const zh: Strings = {
     show: '顯示項目', goldView: '經濟', goldDiff: '只顯示差距', goldTotals: '雙方總額',
     tickClock: '兩次更新之間時鐘繼續走', endpoint: '資料來源', endpointBad: '網址格式不對，沒有儲存',
     endpointNote: 'Stream CV 服務的 state.json，每 5 秒讀一次。',
-    views: '下方視圖', spoilerFree: '不爆雷：賽程不顯示比分與勝負',
+    views: '下方視圖', spoiler: '不爆雷', spoilerNote: '「連對戰都藏」：對戰組合會透露先前結果的場次（官方的防雷標記），隊伍也不顯示；主畫面的下一場可能只剩時間。',
     about: '關於',
     aboutText: '非官方工具，與 Riot Games 無關。龍、巴龍、水晶、擊殺、經濟來自官方數據；「哪一座塔」來自畫面辨識，可能延遲或缺漏。英雄名稱取自 Data Dragon。',
   },
@@ -139,6 +142,7 @@ const en: Strings = {
   },
   role: { top: 'T', jungle: 'J', mid: 'M', bot: 'B', support: 'S' },
   view: { draftGame: 'Draft', draftSeries: 'Series draft', players: 'Players', schedule: 'Schedule' },
+  spoilerLevel: { off: 'Show scores', scores: 'Hide scores', matchups: 'Hide matchups too' },
   stage: { 'Play-Ins': 'Play-Ins', Swiss: 'Swiss', Quarterfinals: 'Quarterfinals', Semifinals: 'Semifinals', Finals: 'Finals' },
   ui: {
     sample: 'Sample data', sampleShort: 'Sample', sampleHint: "Can't reach the Stream CV service; showing sample data (dev mode)",
@@ -154,8 +158,9 @@ const en: Strings = {
     vs: 'vs', winsUnknown: 'Series score before this game is unknown', bansUnsupported: 'Not supported yet (the service cannot read bans)', picksAtStart: 'Shown once the game starts',
     noPlayers: 'No player data (it comes once the game starts)', itemsUnknown: 'Items not available right now', bansMissing: 'No bans for this game (the service did not see its draft)',
     grubs: 'Grubs', herald: 'Herald', heraldMaybeUp: 'maybe up', sidesUnconfirmed: 'Sides unconfirmed',
-    nextMatch: 'Next match', onNow: 'On now', tbd: 'TBD', finished: 'Done', showScores: 'Show scores', hideScores: 'Hide scores',
-    noSchedule: "Can't read the schedule", seasonOver: 'No more matches this season', spoilerOn: 'Spoiler-free',
+    nextMatch: 'Next match', onNow: 'On now', tbd: 'TBD', finished: 'Done',
+    noSchedule: "Can't read the schedule", seasonOver: 'No more matches this season', spoilerOn: 'Spoiler-free', teamsHidden: 'Teams hidden',
+    teamsHiddenHint: "This pairing gives an earlier result away (the official spoiler flag), so it is hidden",
     sidesUnconfirmedHint: 'Before a game the official sides are often swapped, and the broadcast could not tell yet: team names may be on the wrong side', elementByRules: 'Element worked out from the rules (not read from the broadcast)', level: 'Lv', cs: 'CS', kda: 'Kills / deaths / assists', hp: 'Health',
   },
   set: {
@@ -163,7 +168,7 @@ const en: Strings = {
     show: 'Show', goldView: 'Gold', goldDiff: 'Lead only', goldTotals: 'Both totals',
     tickClock: 'Keep the clock running between updates', endpoint: 'Data source', endpointBad: "That address doesn't look right; not saved",
     endpointNote: "The Stream CV service's state.json, read every 5 seconds.",
-    views: 'Views below', spoilerFree: 'Spoiler-free: no scores or winners in the schedule',
+    views: 'Views below', spoiler: 'Spoilers', spoilerNote: '"Hide matchups too": matches whose pairing gives an earlier result away (the official spoiler flag) show no teams; the next match may show only its time.',
     about: 'About',
     aboutText: 'Unofficial; not affiliated with Riot Games. Dragons, barons, inhibitors, kills and gold come from the official feed; which tower fell is read from the broadcast and can be late or missing. Champion names from Data Dragon.',
   },

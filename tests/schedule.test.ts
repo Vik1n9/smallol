@@ -12,11 +12,11 @@ const raw = {
   updated: '2026-10-17T04:00:00Z',
   matches: [
     { matchId: '2', start: '2026-10-16T23:00:00Z', state: 'completed', stage: 'Play-Ins', bestOf: 5,
-      teams: [{ code: 'FUR', name: 'FURIA', image: 'http://x/logo.png' }, { code: 'C9', name: 'Cloud9 Kia' }], result: { wins: [3, 1], winner: 'FUR' } },
+      teams: [{ code: 'FUR', name: 'FURIA', image: 'http://x/logo.png' }, { code: 'C9', name: 'Cloud9 Kia' }], teamsSpoiler: true, result: { wins: [3, 1], winner: 'FUR' } },
     { matchId: '1', start: '2026-10-15T18:00:00Z', state: 'completed', stage: 'Play-Ins', bestOf: 5,
-      teams: [{ code: 'KC', name: 'Karmine Corp' }, { code: 'C9', name: 'Cloud9 Kia' }], result: { wins: [3, 2], winner: 'KC' } },
+      teams: [{ code: 'KC', name: 'Karmine Corp' }, { code: 'C9', name: 'Cloud9 Kia' }], teamsSpoiler: false, result: { wins: [3, 2], winner: 'KC' } },
     { matchId: '3', start: '2026-10-17T18:00:00Z', state: 'unstarted', stage: 'Play-Ins', bestOf: 5,
-      teams: [{ code: 'MVK', name: 'MVK Esports' }, { code: 'FUR', name: 'FURIA' }], result: null },
+      teams: [{ code: 'MVK', name: 'MVK Esports' }, { code: 'FUR', name: 'FURIA' }], teamsSpoiler: true, result: null },
     { matchId: '4', start: '2026-10-23T17:00:00Z', state: 'unstarted', stage: 'Swiss', bestOf: 1,
       teams: [{ code: 'TBD', name: 'TBD' }, { code: 'TBD', name: 'TBD' }], result: null },
     { matchId: 'bad', start: 'soon', state: 'unstarted', teams: [] },
@@ -24,7 +24,7 @@ const raw = {
 };
 const sched = adaptSchedule(raw);
 const NOW = Date.parse('2026-10-17T04:04:00Z');
-const c = (over: Partial<ScheduleCtx> = {}): ScheduleCtx => ({ schedule: sched, now: NOW, spoilerFree: true, S: STRINGS['zh-Hant'], lang: 'zh-Hant', timeZone: 'Asia/Taipei', ...over });
+const c = (over: Partial<ScheduleCtx> = {}): ScheduleCtx => ({ schedule: sched, now: NOW, spoiler: 'scores', S: STRINGS['zh-Hant'], lang: 'zh-Hant', timeZone: 'Asia/Taipei', ...over });
 
 describe('schedule', () => {
   it('reads the matches in time order and drops a broken one', () => {
@@ -68,24 +68,47 @@ describe('schedule', () => {
     expect(nextMatchCard(c({ schedule: null }))).toContain(STRINGS['zh-Hant'].ui.noSchedule);
   });
 
-  it('spoiler-free (default): no score and no winner anywhere', () => {
-    expect(DEFAULTS.spoilerFree).toBe(true);
-    expect(normalize({ spoilerFree: 'no' }).spoilerFree).toBe(true);
-    expect(normalize({ spoilerFree: false }).spoilerFree).toBe(false);
+  it('spoiler level: hide scores by default; the old true/false setting carries over', () => {
+    expect(DEFAULTS.spoiler).toBe('scores');
+    expect(normalize({ spoiler: 'matchups' }).spoiler).toBe('matchups');
+    expect(normalize({ spoiler: 'loud' }).spoiler).toBe('scores');
+    expect(normalize({ spoilerFree: false }).spoiler).toBe('off');
+    expect(normalize({ spoilerFree: true }).spoiler).toBe('scores');
+    expect(normalize({ spoilerFree: 'no' }).spoiler).toBe('scores');
+    expect(sched.matches.map((m) => m.teamsSpoiler)).toEqual([false, true, true, null]);
+  });
+
+  it('hide scores (default): no score and no winner anywhere, teams still shown', () => {
     const html = scheduleView(c());
     expect(html).not.toMatch(/3–[12]/);
     expect(html).not.toContain('class="win"');
     expect(html.match(/已結束/g)).toHaveLength(2);
     expect(html).toContain('不爆雷');
+    expect(html).toContain('>MVK<');
+  });
+
+  it('hide matchups too: flagged pairings show no teams, here or on the next-match card', () => {
+    const m = c({ spoiler: 'matchups' });
+    const html = scheduleView(m);
+    expect(html.match(/隊伍隱藏/g)).toHaveLength(2); // FUR vs C9 and MVK vs FUR; KC vs C9 is not flagged
+    expect(html).not.toContain('>FUR<');
+    expect(html).toContain('>KC<');
+    expect(html).not.toMatch(/3–[12]/);
+    const card = nextMatchCard(m);
+    expect(card).toContain('隊伍隱藏');
+    expect(card).not.toContain('MVK');
+    expect(card).not.toContain('FURIA');
+    expect(card).toContain('10/18（日）02:00');
+    expect(nextMatchLine(m)).not.toContain('MVK');
   });
 
   it('with spoilers: scores, and the winner in bold', () => {
-    const html = scheduleView(c({ spoilerFree: false }));
+    const html = scheduleView(c({ spoiler: 'off' }));
     expect(html).toContain('3–2');
     expect(html).toContain('3–1');
     expect(html).toContain('<span class="win">KC</span>');
     expect(html).toContain('<span class="win">FUR</span>');
-    expect(html).toContain(STRINGS['zh-Hant'].ui.hideScores);
+    expect(html).toContain('data-set="spoiler:off" aria-pressed="true"');
   });
 
   it('marks the next match and writes TBD as 待定', () => {
@@ -98,7 +121,7 @@ describe('schedule', () => {
   it('the widget shows the next match when no game is on, once the service answered', () => {
     const v = (over: Partial<ViewCtx>): ViewCtx => ({
       s: adapt({ status: 'idle' }), clock: null, show: { ...DEFAULTS.show }, gold: 'diff', S: STRINGS['zh-Hant'], lang: 'zh-Hant',
-      conn: 'ok', sample: false, schedule: sched, now: NOW, spoilerFree: true, timeZone: 'Asia/Taipei', ...over,
+      conn: 'ok', sample: false, schedule: sched, now: NOW, spoiler: 'scores', timeZone: 'Asia/Taipei', ...over,
     });
     expect(mapView(v({}), true)).toContain('class="next-match"');
     expect(dotView(v({}))).toContain('還有 13 小時 56 分');

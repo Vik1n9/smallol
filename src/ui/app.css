@@ -174,8 +174,10 @@ body:hover #tabs .controls { opacity: 1; pointer-events: auto; }
 .pill b, .nmline b { font-family: var(--mono); }
 
 /* ---------- the schedule under the game ---------- */
-.drawer.schedule header .spoiler { height: 20px; padding: 0 9px; border-radius: 10px; background: var(--border); color: var(--muted); font-size: 11px; }
-.drawer.schedule header .spoiler:hover { color: var(--text); }
+.drawer.schedule header .seg { padding: 1px; }
+.drawer.schedule header .seg button { height: 18px; padding: 0 7px; font-size: 11px; }
+.hidden-teams { font-family: var(--font); font-style: italic; font-size: 12px; }
+.nm-teams .hidden-teams { font-size: 16px; }
 .slist { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
 .srow2 { display: grid; grid-template-columns: 122px 74px 1fr auto; column-gap: 8px; align-items: center; height: 22px; flex: 0 0 22px; padding: 0 8px; border-radius: 6px; font-size: 12px; white-space: nowrap; }
 .srow2 > * { overflow: hidden; text-overflow: ellipsis; }

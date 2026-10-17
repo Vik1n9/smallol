@@ -19,6 +19,11 @@ export interface ScheduleMatch {
   stageText: string;
   bestOf: number | null;
   teams: [ScheduleTeam, ScheduleTeam];
+  /**
+   * The pairing itself gives away an earlier result (lolesports' own isSpoiler flag, via the
+   * service). null when the service did not say.
+   */
+  teamsSpoiler: boolean | null;
   /** Spoiler: series score and winner. null before the match. */
   result: { wins: [number, number]; winner: string | null } | null;
 }

@@ -31,7 +31,8 @@ const SHOTS = [
   ['idle-bar-zh', '?set=language:zh-Hant', 480, 90],
   ['idle-dot-zh', '?set=language:zh-Hant', 420, 30],
   ['schedule-zh', '?set=language:zh-Hant,views.schedule:true', 480, 236 + 214],
-  ['schedule-spoilers-zh', '?set=language:zh-Hant,views.schedule:true,spoilerFree:false', 480, 236 + 214],
+  ['schedule-spoilers-zh', '?set=language:zh-Hant,views.schedule:true,spoiler:off', 480, 236 + 214],
+  ['schedule-matchups-zh', '?set=language:zh-Hant,views.schedule:true,spoiler:matchups', 480, 236 + 214],
 ];
 
 mkdirSync(OUT, { recursive: true });
