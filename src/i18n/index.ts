@@ -36,7 +36,8 @@ export interface Strings {
     | 'next' | 'elder' | 'noSeries' | 'bans' | 'picks' | 'fearless' | 'noDraft' | 'noEarlier' | 'turn'
     | 'vs' | 'winsUnknown' | 'bansUnsupported' | 'picksAtStart' | 'noPlayers' | 'level' | 'cs' | 'kda' | 'hp' | 'itemsUnknown' | 'bansMissing'
     | 'grubs' | 'herald' | 'heraldMaybeUp' | 'sidesUnconfirmed' | 'sidesUnconfirmedHint' | 'elementByRules'
-    | 'nextMatch' | 'onNow' | 'tbd' | 'finished' | 'showScores' | 'hideScores' | 'noSchedule' | 'seasonOver' | 'spoilerOn',
+    | 'nextMatch' | 'onNow' | 'tbd' | 'finished' | 'showScores' | 'hideScores' | 'noSchedule' | 'seasonOver' | 'spoilerOn'
+    | 'tendBans' | 'tendPicks' | 'noHistory' | 'historyScope' | 'backToSchedule' | 'thisEvent' | 'pool',
     string
   >;
   set: Record<
@@ -55,6 +56,10 @@ export interface Strings {
   /** "還有 3 小時 12 分". */
   until(ms: number): string;
   bo(n: number): string;
+  /** "2 場", or "2 場 1 勝" when scores may be shown. */
+  games(n: number, wins: number | null): string;
+  /** "本屆 8 局". */
+  eventGames(n: number): string;
 }
 
 const zh: Strings = {
@@ -74,7 +79,7 @@ const zh: Strings = {
     barons: '巴龍次數', nextBaron: '巴龍重生倒數', buffs: '巴龍／遠古龍增益倒數',
     voidgrubs: '三蟲數', herald: '預示者',
     series: '上方標籤：BO 幾、第幾局', playerItems: '選手視圖：裝備名稱',
-    nextMatch: '沒有比賽時：下一場與倒數',
+    nextMatch: '沒有比賽時：下一場與倒數', tendencies: '本局 BP：本屆常禁／常選',
   },
   role: { top: '上', jungle: '野', mid: '中', bot: '下', support: '輔' },
   view: { draftGame: '本局 BP', draftSeries: '全場 BP', players: '選手', schedule: '賽程' },
@@ -95,6 +100,8 @@ const zh: Strings = {
     grubs: '三蟲', herald: '預示者', heraldMaybeUp: '可能在場', sidesUnconfirmed: '藍紅待確認',
     nextMatch: '下一場', onNow: '進行中', tbd: '待定', finished: '已結束', showScores: '顯示比分', hideScores: '隱藏比分',
     noSchedule: '讀不到賽程', seasonOver: '本季賽程已結束', spoilerOn: '不爆雷',
+    tendBans: '常禁', tendPicks: '常選', noHistory: '本屆還沒有記錄', historyScope: '只含本服務有記錄的 Worlds 2026 小局',
+    backToSchedule: '← 賽程', thisEvent: '本屆', pool: '本屆英雄',
     sidesUnconfirmedHint: '開打前官方資料的藍紅方常是反的，畫面也還判斷不出來：隊伍名可能對調', elementByRules: '屬性依規則推算（轉播畫面讀不到）', level: 'Lv', cs: '補刀', kda: '擊殺／死亡／助攻', hp: '血量',
   },
   set: {
@@ -118,6 +125,8 @@ const zh: Strings = {
     return d ? `還有 ${d} 天 ${h} 小時` : h ? `還有 ${h} 小時 ${mm} 分` : `還有 ${mm} 分`;
   },
   bo: (n) => `BO${n}`,
+  games: (n, w) => (w === null ? `${n} 場` : `${n} 場 ${w} 勝`),
+  eventGames: (n) => `本屆 ${n} 局`,
 };
 
 const en: Strings = {
@@ -135,7 +144,7 @@ const en: Strings = {
     barons: 'Baron count', nextBaron: 'Baron timer', buffs: 'Baron / Elder buff timers',
     voidgrubs: 'Voidgrubs taken', herald: 'Rift Herald',
     series: 'Top tab: best of, game number', playerItems: 'Players view: item names',
-    nextMatch: 'No game on: next match and countdown',
+    nextMatch: 'No game on: next match and countdown', tendencies: 'Draft: most banned / picked this event',
   },
   role: { top: 'T', jungle: 'J', mid: 'M', bot: 'B', support: 'S' },
   view: { draftGame: 'Draft', draftSeries: 'Series draft', players: 'Players', schedule: 'Schedule' },
@@ -156,6 +165,8 @@ const en: Strings = {
     grubs: 'Grubs', herald: 'Herald', heraldMaybeUp: 'maybe up', sidesUnconfirmed: 'Sides unconfirmed',
     nextMatch: 'Next match', onNow: 'On now', tbd: 'TBD', finished: 'Done', showScores: 'Show scores', hideScores: 'Hide scores',
     noSchedule: "Can't read the schedule", seasonOver: 'No more matches this season', spoilerOn: 'Spoiler-free',
+    tendBans: 'Bans', tendPicks: 'Picks', noHistory: 'No games recorded yet', historyScope: 'Only Worlds 2026 games the service recorded',
+    backToSchedule: '← Schedule', thisEvent: 'This event', pool: 'Champions this event',
     sidesUnconfirmedHint: 'Before a game the official sides are often swapped, and the broadcast could not tell yet: team names may be on the wrong side', elementByRules: 'Element worked out from the rules (not read from the broadcast)', level: 'Lv', cs: 'CS', kda: 'Kills / deaths / assists', hp: 'Health',
   },
   set: {
@@ -179,6 +190,8 @@ const en: Strings = {
     return d ? `in ${d}d ${h}h` : h ? `in ${h}h ${mm}m` : `in ${mm}m`;
   },
   bo: (n) => `Bo${n}`,
+  games: (n, w) => (w === null ? `${n} game${n === 1 ? '' : 's'}` : `${n} game${n === 1 ? '' : 's'}, ${w} won`),
+  eventGames: (n) => `${n} game${n === 1 ? '' : 's'} this event`,
 };
 
 export const STRINGS: Record<Lang, Strings> = { 'zh-Hant': zh, en };

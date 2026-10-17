@@ -5,6 +5,9 @@
 import type { Schedule, ScheduleMatch } from '../model/schedule.ts';
 import { listWindow, nextMatch } from '../data/streamcv/schedule.ts';
 import type { Lang, Strings } from '../i18n/index.ts';
+import type { History } from '../model/history.ts';
+import { tally, teamPlayers } from '../data/streamcv/history.ts';
+import { championName } from '../data/champions.ts';
 import { esc } from './views.ts';
 
 export interface ScheduleCtx {
@@ -13,6 +16,9 @@ export interface ScheduleCtx {
   spoilerFree: boolean;
   S: Strings;
   lang: Lang;
+  history: History;
+  /** The match picked in the list, to show both teams this event. */
+  picked: string | null;
   /** For tests: the time zone to show times in (default: this computer's). */
   timeZone?: string;
 }
@@ -71,6 +77,8 @@ export function scheduleView(c: ScheduleCtx): string {
   const toggle = `<button class="spoiler" data-toggle-spoiler aria-pressed="${!c.spoilerFree}">${esc(c.spoilerFree ? c.S.ui.showScores : c.S.ui.hideScores)}</button>`;
   const head = `<header><b>${esc(c.S.view.schedule)}</b>${c.spoilerFree ? `<span class="tag">${esc(c.S.ui.spoilerOn)}</span>` : ''}<span class="grow"></span>${toggle}</header>`;
   if (!c.schedule) return `${head}<p class="empty-note muted">${esc(c.S.ui.noSchedule)}</p>`;
+  const picked = c.picked ? c.schedule.matches.find((m) => m.matchId === c.picked) : undefined;
+  if (picked) return matchDetail(c, picked, toggle);
   const next = nextMatch(c.schedule, c.now);
   const rows = listWindow(c.schedule).map((m) => {
     const [a, b] = m.teams;
@@ -78,12 +86,42 @@ export function scheduleView(c: ScheduleCtx): string {
     const team = (t: string) => (t === 'TBD' ? `<span class="muted">${esc(c.S.ui.tbd)}</span>` : `<span class="${won(t) ? 'win' : ''}">${esc(t)}</span>`);
     const right = m.state === 'completed' ? (score(c, m) || `<span class="muted">${esc(c.S.ui.finished)}</span>`)
       : m.state === 'inProgress' ? `<span class="status">${esc(c.S.ui.onNow)}</span>${score(c, m)}` : '';
-    return `<div class="srow2${m === next ? ' next' : ''}${m.state === 'completed' ? ' done' : ''}">
+    return `<button class="srow2${m === next ? ' next' : ''}${m.state === 'completed' ? ' done' : ''}" data-match="${esc(m.matchId)}">
       <span class="when mono">${esc(fmtStart(m.start, c.lang, c.timeZone))}</span>
       <span class="stg muted">${esc(stageOf(c, m))}${m.bestOf ? ` ${esc(c.S.bo(m.bestOf))}` : ''}</span>
       <span class="vsx">${team(a.code)}<span class="muted">vs</span>${team(b.code)}</span>
       <span class="res">${right}</span>
-    </div>`;
+    </button>`;
   }).join('');
   return `${head}<div class="slist">${rows}</div>`;
+}
+
+// ---------- one match picked: both teams this event ----------
+
+const champList = (c: ScheduleCtx, list: [string, number][]) =>
+  list.map(([id, n]) => `<span class="tchip">${esc(championName(id, c.lang))}<i>×${n}</i></span>`).join('');
+
+function teamBlock(c: ScheduleCtx, code: string): string {
+  if (code === 'TBD') return `<div class="tblock"><div class="th"><span class="muted">${esc(c.S.ui.tbd)}</span></div></div>`;
+  const games = c.history.teams?.[code] ?? [];
+  const head = `<div class="th"><b>${esc(code)}</b><span class="muted">${esc(games.length ? c.S.eventGames(games.length) : c.S.ui.noHistory)}</span></div>`;
+  if (!games.length) return `<div class="tblock">${head}</div>`;
+  const players = teamPlayers(c.history.players, code).map((p) => {
+    const short = p.name.startsWith(`${code} `) ? p.name.slice(code.length + 1) : p.name;
+    const pool = p.pool.slice(0, 3).map((e) => `${esc(championName(e.champion, c.lang))}<i>${e.games}</i>`).join(' ');
+    const more = p.pool.length > 3 ? `<span class="muted"> +${p.pool.length - 3}</span>` : '';
+    return `<div class="tp"><span class="k">${p.role ? esc(c.S.role[p.role]) : ''}</span><b>${esc(short)}</b><span class="tpool">${pool}${more}</span></div>`;
+  }).join('');
+  return `<div class="tblock">${head}
+    <div class="tl"><span class="k">${esc(c.S.ui.tendBans)}</span>${champList(c, tally(games, 'bans'))}</div>
+    <div class="tl"><span class="k">${esc(c.S.ui.tendPicks)}</span>${champList(c, tally(games, 'picks'))}</div>
+    ${players}
+  </div>`;
+}
+
+/** Both teams of a match: this event's most banned and picked, and each player's most played. No wins. */
+function matchDetail(c: ScheduleCtx, m: ScheduleMatch, toggle: string): string {
+  const head = `<header><button class="back" data-action="schedule-back">${esc(c.S.ui.backToSchedule)}</button>`
+    + `<span class="mono muted">${esc(fmtStart(m.start, c.lang, c.timeZone))}</span><span class="muted">${esc(stageOf(c, m))}${m.bestOf ? ` ${esc(c.S.bo(m.bestOf))}` : ''}</span><span class="grow"></span>${toggle}</header>`;
+  return `${head}<div class="slist detail">${teamBlock(c, m.teams[0].code)}${teamBlock(c, m.teams[1].code)}<p class="note muted">${esc(c.S.ui.historyScope)}</p></div>`;
 }

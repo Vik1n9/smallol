@@ -5,6 +5,7 @@
 //   --sample       show the bundled sample instead of asking the service (dev builds only)
 //   --demo         with the sample: treat it as a game in progress, so countdowns run
 //   --settings     open the settings page
+//   --pick=next    open the schedule's next match (both teams this event)
 //   --set=path:value,...  change settings in memory (e.g. language:en,views.draftGame:true)
 
 import { getCurrentWindow } from '@tauri-apps/api/window';
@@ -12,7 +13,9 @@ import { LogicalSize } from '@tauri-apps/api/dpi';
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
 import { Poller, StateSource, type Connection } from '../data/streamcv/source.ts';
-import { adaptSchedule, scheduleUrl } from '../data/streamcv/schedule.ts';
+import { adaptSchedule, nextMatch, scheduleUrl } from '../data/streamcv/schedule.ts';
+import { adaptPlayers, adaptTeams, historyUrl } from '../data/streamcv/history.ts';
+import type { History } from '../model/history.ts';
 import type { Schedule } from '../model/schedule.ts';
 import { scheduleView } from './schedule-views.ts';
 import { adapt, emptyState } from '../data/streamcv/adapter.ts';
@@ -159,8 +162,21 @@ const source = new StateSource(DEFAULTS.endpoint, {
 // The schedule: every 5 minutes, the same as the service's own cache of it.
 let schedule: Schedule | null = null;
 const schedulePoller = new Poller<Schedule>(scheduleUrl(DEFAULTS.endpoint), adaptSchedule, 5 * 60_000, {
-  onData(s) { schedule = s; render(); },
+  onData(s) {
+    schedule = s;
+    // --pick=next, once there is a schedule to pick from.
+    if (pickedMatch === 'next') pickedMatch = nextMatch(s, Date.now())?.matchId ?? null;
+    render();
+  },
 });
+
+// This event's history: every 3 minutes (the service rebuilds it about 2 minutes after each game).
+const history: History = { teams: null, players: null };
+const HISTORY_MS = 3 * 60_000;
+const teamsPoller = new Poller(historyUrl(DEFAULTS.endpoint, 'teams'), adaptTeams, HISTORY_MS, { onData(t) { history.teams = t; render(); } });
+const playersPoller = new Poller(historyUrl(DEFAULTS.endpoint, 'players'), adaptPlayers, HISTORY_MS, { onData(p) { history.players = p; render(); } });
+/** The match picked in the schedule view (not saved). */
+let pickedMatch: string | null = null;
 
 // ---------- drawing ----------
 
@@ -188,7 +204,7 @@ function render(): void {
   const tier = tierOf(window.innerHeight - vh);
   const c: ViewCtx = {
     s: state, clock: clockNow(state, receivedAt, Date.now(), cfg().tickClock), show: cfg().show, gold: cfg().gold, S, lang, conn, sample,
-    schedule, now: Date.now(), spoilerFree: cfg().spoilerFree,
+    schedule, now: Date.now(), spoilerFree: cfg().spoilerFree, history, pickedMatch,
   };
   // The pill has no room for tabs or views.
   const pill = tier === 'dot';
@@ -231,6 +247,12 @@ function onClick(e: MouseEvent): void {
     setPath(path, value);
   } else if (t.dataset.toggle) {
     setPath(t.dataset.toggle, (t as HTMLInputElement).checked);
+  } else if (t.dataset.match) {
+    pickedMatch = t.dataset.match;
+    render();
+  } else if (action === 'schedule-back') {
+    pickedMatch = null;
+    render();
   } else if ('toggleSpoiler' in t.dataset) {
     settings.update((d) => { d.spoilerFree = !d.spoilerFree; });
   } else if (t.dataset.view) {
@@ -285,7 +307,11 @@ function onSettings(now: Settings, before: Settings): void {
   if (now.language !== before.language) applyLanguage();
   if (now.background !== before.background) applyBackground();
   if (now.endpoint !== before.endpoint && !flags.sample) { haveLive = false; source.setUrl(now.endpoint); }
-  if (now.endpoint !== before.endpoint) schedulePoller.setUrl(scheduleUrl(now.endpoint));
+  if (now.endpoint !== before.endpoint) {
+    schedulePoller.setUrl(scheduleUrl(now.endpoint));
+    teamsPoller.setUrl(historyUrl(now.endpoint, 'teams'));
+    playersPoller.setUrl(historyUrl(now.endpoint, 'players'));
+  }
   // A view opened or closed: the window grows or shrinks by its height, the game keeps its size.
   const dh = viewsHeight(now) - viewsHeight(before);
   if (dh !== 0 && page === 'game') void resizeTo(window.innerWidth, window.innerHeight + dh);
@@ -296,7 +322,7 @@ async function start(): Promise<void> {
   const q = new URLSearchParams(location.search);
   if (inTauri) {
     for (const a of await invoke<string[]>('launch_args').catch(() => [] as string[])) {
-      const m = /^--(set|sample)=(.+)$/.exec(a);
+      const m = /^--(set|sample|pick)=(.+)$/.exec(a);
       if (m) q.set(m[1]!, m[2]!);
       for (const flag of ['sample', 'demo', 'settings']) if (a === `--${flag}`) q.set(flag, '1');
     }
@@ -304,7 +330,8 @@ async function start(): Promise<void> {
   flags.sample = q.has('sample');
   flags.demo = q.has('demo');
   flags.draft = q.get('sample') === 'draft';
-  const checking = ['sample', 'demo', 'settings', 'set'].some((k) => q.has(k));
+  if (q.has('pick')) pickedMatch = q.get('pick');
+  const checking = ['sample', 'demo', 'settings', 'set', 'pick'].some((k) => q.has(k));
   settings = await SettingsStore.open(backend, () => DEFAULTS);
   // A checking run changes nothing on disk.
   settings.persist = !checking;
@@ -321,6 +348,10 @@ async function start(): Promise<void> {
   // The schedule comes from the service even with the sample, when the service is there.
   schedulePoller.setUrl(scheduleUrl(cfg().endpoint));
   schedulePoller.start();
+  teamsPoller.setUrl(historyUrl(cfg().endpoint, 'teams'));
+  teamsPoller.start();
+  playersPoller.setUrl(historyUrl(cfg().endpoint, 'players'));
+  playersPoller.start();
   await switchPage(q.has('settings') ? 'settings' : 'game');
 }
 void start();

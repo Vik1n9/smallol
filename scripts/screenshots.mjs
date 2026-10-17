@@ -31,6 +31,8 @@ const SHOTS = [
   ['idle-bar-zh', '?set=language:zh-Hant', 480, 90],
   ['idle-dot-zh', '?set=language:zh-Hant', 420, 30],
   ['schedule-zh', '?set=language:zh-Hant,views.schedule:true', 480, 236 + 214],
+  ['schedule-pick-zh', '?set=language:zh-Hant,views.schedule:true&pick=next', 480, 236 + 240],
+  ['draft-tend-zh', '?sample=1&demo=1&set=language:zh-Hant,views.draftGame:true', 480, 236 + 234],
   ['schedule-spoilers-zh', '?set=language:zh-Hant,views.schedule:true,spoilerFree:false', 480, 236 + 214],
 ];
 

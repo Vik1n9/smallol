@@ -19,7 +19,7 @@ export const FEATURES = [
   'barons', 'nextBaron', 'buffs',
   'voidgrubs', 'herald',
   'series', 'playerItems',
-  'nextMatch',
+  'nextMatch', 'tendencies',
 ] as const;
 export type Feature = (typeof FEATURES)[number];
 

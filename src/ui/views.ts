@@ -13,6 +13,8 @@ import type { Feature, GoldView, ViewName } from '../settings/schema.ts';
 import { ELEMENT_COLOUR } from '../render/dragons.ts';
 import { mapSvg, TEAM_COLOUR } from '../render/map-svg.ts';
 import type { Schedule } from '../model/schedule.ts';
+import type { History } from '../model/history.ts';
+import { findPlayer, kda, tally } from '../data/streamcv/history.ts';
 import { nextMatchCard, nextMatchLine, type ScheduleCtx } from './schedule-views.ts';
 import type { Element } from '../model/types.ts';
 
@@ -20,10 +22,12 @@ export type Tier = 'dot' | 'bar' | 'map';
 
 /** Height of the tab strip above the game, and of each view under it. */
 export const TAB_H = 22;
-const VIEW_H: Record<ViewName, number> = { draftGame: 134, draftSeries: 152, players: 0, schedule: 210 };
-/** Players: two lines a player with item names, one without. */
+const VIEW_H: Record<ViewName, number> = { draftGame: 134, draftSeries: 152, players: 0, schedule: 236 };
+/** Players: two lines a player with item names, one without. Draft: two more lines a team with this event's tendencies. */
 export function viewHeight(v: ViewName, show: Record<Feature, boolean>): number {
-  return v === 'players' ? (show.playerItems ? 420 : 290) : VIEW_H[v];
+  if (v === 'players') return show.playerItems ? 420 : 290;
+  if (v === 'draftGame') return show.tendencies ? 230 : VIEW_H.draftGame;
+  return VIEW_H[v];
 }
 
 /** The window minus the views under it picks the level of detail, as in Basesmall. */
@@ -47,11 +51,18 @@ export interface ViewCtx {
   /** Wall-clock time now (ms), for countdowns to the next match. */
   now: number;
   spoilerFree: boolean;
+  /** This event's finished games, per team and player; null parts until read. */
+  history: History;
+  /** The match picked in the schedule view, to show both teams. */
+  pickedMatch: string | null;
   /** For tests: the time zone to show times in. */
   timeZone?: string;
 }
 
-export const schedCtx = (c: ViewCtx): ScheduleCtx => ({ schedule: c.schedule, now: c.now, spoilerFree: c.spoilerFree, S: c.S, lang: c.lang, ...(c.timeZone ? { timeZone: c.timeZone } : {}) });
+export const schedCtx = (c: ViewCtx): ScheduleCtx => ({
+  schedule: c.schedule, now: c.now, spoilerFree: c.spoilerFree, S: c.S, lang: c.lang, history: c.history, picked: c.pickedMatch,
+  ...(c.timeZone ? { timeZone: c.timeZone } : {}),
+});
 
 export const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 const dot = (t: Team) => `<i class="dot" style="background:${TEAM_COLOUR[t]}"></i>`;
@@ -301,9 +312,38 @@ export function draftGameView(c: ViewCtx): string {
     // Positions are not marked here; they are in the players view (maintainer, 2026-10-16).
     return label + list.map((id, i) => champ(c, id, kind, t, now(i))).join('');
   };
+  const tend = (t: Team) => (c.show.tendencies ? tendencyLines(c, g.sides[t].team) : '');
   return `<header><b>${esc(c.S.view.draftGame)}</b><span class="muted">${esc(c.S.gameNo(g.game))}</span>${sidesFlag(c)}</header>
-    <div class="dgrid">${TEAMS.map((t) => `<div class="dteam">${dot(t)}<b class="tn" style="color:${TEAM_COLOUR[t]}">${esc(g.sides[t].team)}</b></div>
-      <div class="dline">${line(t, 'ban')}</div><div class="dline">${line(t, 'pick')}</div>`).join('')}</div>`;
+    <div class="dgrid${c.show.tendencies ? ' tend' : ''}">${TEAMS.map((t) => `<div class="dteam">${dot(t)}<b class="tn" style="color:${TEAM_COLOUR[t]}">${esc(g.sides[t].team)}</b></div>
+      <div class="dline">${line(t, 'ban')}</div><div class="dline">${line(t, 'pick')}</div>${tend(t)}`).join('')}</div>`;
+}
+
+/** A champion with how often: "夜曲×5". */
+const tendChip = (c: ViewCtx, id: string, n: number) => {
+  const name = championName(id, c.lang);
+  return `<span class="ch tendc" title="${esc(name)}">${esc(name)}<i>×${n}</i></span>`;
+};
+
+/** "常禁 夜曲×5 …" and "常選 …" for one team, this event (the service's recorded games only). */
+export function tendencyLines(c: ViewCtx, code: string): string {
+  const games = c.history.teams?.[code];
+  if (!c.history.teams) return '';
+  if (!games?.length) return `<div class="dline tend span2"><span class="muted" title="${esc(c.S.ui.historyScope)}">${esc(c.S.ui.noHistory)}</span></div>`;
+  const row = (what: 'bans' | 'picks', label: string) =>
+    `<div class="dline tend"><span class="k" title="${esc(`${c.S.eventGames(games.length)} · ${c.S.ui.historyScope}`)}">${esc(label)}</span>${tally(games, what).map(([id, n]) => tendChip(c, id, n)).join('')}</div>`;
+  return row('bans', c.S.ui.tendBans) + row('picks', c.S.ui.tendPicks);
+}
+
+/** "本屆 薩亨 2 場 1 勝 · KDA 3.5" and the rest of the pool, for a tooltip. Wins only when scores may show. */
+export function poolTitle(c: ViewCtx, code: string | null, shortName: string, champion: string | null): string {
+  const p = findPlayer(c.history.players, code, shortName);
+  if (!p) return '';
+  const w = (x: number | null) => (c.spoilerFree ? null : x);
+  const lines: string[] = [];
+  const here = champion ? p.pool.find((e) => e.champion === champion) : undefined;
+  if (here && champion) lines.push(`${c.S.ui.thisEvent} ${championName(champion, c.lang)}：${c.S.games(here.games, w(here.wins))} · KDA ${kda(here).toFixed(1)}`);
+  lines.push(`${c.S.ui.pool}（${c.S.eventGames(p.games)}）：${p.pool.map((e) => `${championName(e.champion, c.lang)} ${c.S.games(e.games, w(e.wins))}`).join('、')}`);
+  return lines.join('\n');
 }
 
 /**
@@ -330,6 +370,7 @@ export function draftSeriesView(c: ViewCtx): string {
 // ---------- players: position, champion, KDA, CS, gold, health, items ----------
 
 function playerRow(c: ViewCtx, p: Player, t: Team, withItems: boolean): string {
+  const pool = poolTitle(c, teamName(c, t), p.name, p.champion);
   const n = (v: number | null) => (v === null ? '–' : String(v));
   const kda = `${n(p.kills)}/${n(p.deaths)}/${n(p.assists)}`;
   const hp = p.hp !== null && p.maxHp ? Math.max(0, Math.min(100, Math.round((p.hp / p.maxHp) * 100))) : null;
@@ -337,7 +378,7 @@ function playerRow(c: ViewCtx, p: Player, t: Team, withItems: boolean): string {
   const items = p.items?.filter((i) => !minorItem(i)).map((i) => itemName(i, c.lang)) ?? null;
   const line1 = `<span class="role k">${p.role ? esc(c.S.role[p.role]) : ''}</span>`
     + `<b class="pn" title="${esc(p.name)}">${esc(p.name)}</b>`
-    + `<span class="pc" title="${esc(champName)}">${esc(champName)}</span>`
+    + `<span class="pc${pool ? ' has-pool' : ''}" title="${esc(pool || champName)}">${esc(champName)}</span>`
     + `<span class="lv mono"><span class="k">${esc(c.S.ui.level)}</span>${n(p.level)}</span>`
     + `<span class="hp" title="${esc(c.S.ui.hp)}">${hp === null ? '' : `<i style="width:${hp}%"></i>`}</span>`
     + `<span class="kda mono" title="${esc(c.S.ui.kda)}">${kda}</span>`
