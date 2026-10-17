@@ -133,7 +133,7 @@ describe('schedule: pick a match to see both teams', () => {
   });
 });
 
-// ---------- the service's real history (StreamCV 5e3fe0b): Worlds 2026 Play-In, 15 games ----------
+// ---------- the service's real history (StreamCV 2ecdf40, 2026-10-17 22:45 UTC): 19 games through Day 3 ----------
 import realTeams from '../fixtures/streamcv/history_teams.json' with { type: 'json' };
 import realPlayers from '../fixtures/streamcv/history_players.json' with { type: 'json' };
 import realGame from '../fixtures/streamcv/history_game.json' with { type: 'json' };
@@ -143,9 +143,9 @@ describe('real history samples, checked against each other and the live sample',
   const P = adaptPlayers(realPlayers);
   const state = adapt(day2);
 
-  it('covers 15 games, 4 teams, 21 players', () => {
+  it('covers 19 games, 4 teams, 21 players', () => {
     expect(Object.keys(T).sort()).toEqual(['C9', 'FUR', 'KC', 'MVK']);
-    expect(new Set(Object.values(T).flat().map((x) => x.gameId)).size).toBe(15);
+    expect(new Set(Object.values(T).flat().map((x) => x.gameId)).size).toBe(19);
     expect(Object.keys(P)).toHaveLength(21);
   });
 
@@ -172,9 +172,10 @@ describe('real history samples, checked against each other and the live sample',
     expect(state.herald!.team).toBe('B');
   });
 
-  it('names are trimmed the same way everywhere (the service sent "C9 Loki ")', () => {
-    expect(Object.keys(realPlayers.players)).toContain('C9 Loki ');
-    expect(P['C9 Loki']).toBeDefined();
+  it('names are trimmed the same way everywhere (the service once sent "C9 Loki ")', () => {
+    const loose = adaptPlayers({ players: { 'C9 Loki ': { team: 'C9', role: 'mid', games: [{}], pool: { Ahri: { games: 1, wins: 0, k: 1, d: 1, a: 1 } } } } });
+    expect(Object.keys(loose)).toEqual(['C9 Loki']);
+    expect(findPlayer(loose, 'C9', 'Loki')!.name).toBe('C9 Loki');
     expect(findPlayer(P, 'C9', 'Loki')!.name).toBe('C9 Loki');
   });
 

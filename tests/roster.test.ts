@@ -9,7 +9,7 @@ import { DEFAULTS } from '../src/settings/schema.ts';
 import { playerCard, playerShort, teamCard } from '../src/ui/roster-text.ts';
 import { draftGameView, playersView, type ViewCtx } from '../src/ui/views.ts';
 import { scheduleView } from '../src/ui/schedule-views.ts';
-// The service's real /teams.json (StreamCV 5bd04c8, contract v0.7) and its history samples (5e3fe0b).
+// The service's real /teams.json and history, one point in time (StreamCV 2ecdf40, 2026-10-17 22:45 UTC).
 import teamsSample from '../fixtures/streamcv/teams.json' with { type: 'json' };
 import historyTeams from '../fixtures/streamcv/history_teams.json' with { type: 'json' };
 import historyPlayers from '../fixtures/streamcv/history_players.json' with { type: 'json' };
@@ -42,26 +42,18 @@ describe('teams.json (real sample)', () => {
     expect(rosterPlayer(R, null, 'Canna')).toBeNull();
   });
 
-  it("games this event agree with the history sample's, player by player", () => {
-    // The history sample is from 04:10 UTC on 10-17, teams.json from 22:35: MVK vs FUR (2 games)
-    // was played in between, so those players are up to 2 games ahead (a substitute may not have
-    // played them). Everyone else: the same number.
-    const later: Record<string, number> = { MVK: 2, FUR: 2 };
+  it("games this event are the history's, player by player (same point in time)", () => {
     const H = adaptPlayers(historyPlayers);
-    let checked = 0, ahead = 0;
+    let checked = 0;
     for (const t of Object.values(R)) {
       for (const p of t.players) {
         const h = H[`${t.code} ${p.id}`];
         if (!h) { expect(p.gamesThisWorlds).toBeNull(); continue; }
-        const d = p.gamesThisWorlds! - h.games;
-        expect(d).toBeGreaterThanOrEqual(0);
-        expect(d).toBeLessThanOrEqual(later[t.code] ?? 0);
-        if (d) ahead++;
+        expect(p.gamesThisWorlds).toBe(h.games);
         checked++;
       }
     }
     expect(checked).toBe(21);
-    expect(ahead).toBe(10); // the ten MVK and FUR players who played those two games
   });
 });
 
