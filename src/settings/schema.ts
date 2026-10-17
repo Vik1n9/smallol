@@ -17,6 +17,7 @@ export const FEATURES = [
   'towers', 'nexusTimers', 'inhibitors',
   'dragons', 'soul', 'nextDragon',
   'barons', 'nextBaron', 'buffs',
+  'voidgrubs', 'herald',
   'series', 'playerItems',
 ] as const;
 export type Feature = (typeof FEATURES)[number];

@@ -3,7 +3,7 @@
 
 import {
   ELEMENTS, LANES, TEAMS, TOWER_SITES, other, isNexusTurret,
-  ROLES, type Buff, type Champion, type Player, type Role, type DraftGame, type DraftSide, type Element, type GameStatus, type InhibitorDown, type Lane, type MatchState, type Team, type TeamState, type Tower, type TowerSite,
+  ROLES, type Buff, type HeraldState, type PitNext, type Champion, type Player, type Role, type DraftGame, type DraftSide, type Element, type GameStatus, type InhibitorDown, type Lane, type MatchState, type Team, type TeamState, type Tower, type TowerSite,
 } from '../../model/types.ts';
 import type { RawState } from './contract.ts';
 
@@ -35,7 +35,7 @@ function emptyTeam(): TeamState {
 export function emptyState(status: GameStatus = 'idle'): MatchState {
   return {
     status, gameId: null, updated: null, clock: null, teams: { B: emptyTeam(), R: emptyTeam() }, towersKnown: false,
-    riftElement: null, soul: null, nextDragon: null, nextBaron: null, buffs: [], series: null, draft: null, players: null, playersAsOf: null,
+    riftElement: null, soul: null, nextDragon: null, nextBaron: null, buffs: [], series: null, draft: null, players: null, playersAsOf: null, voidgrubs: null, pitNext: null, herald: null,
   };
 }
 
@@ -111,7 +111,8 @@ export function adapt(input: unknown): MatchState {
 
   const nd = obj(timers.nextDragon);
   const ndAt = time(nd.sec, nd.spawnAt);
-  if (ndAt !== null) s.nextDragon = { elder: nd.kind === 'elder', element: element(nd.element), at: ndAt };
+  const elementSource = nd.elementSource === 'broadcast' || nd.elementSource === 'rules' ? nd.elementSource : null;
+  if (ndAt !== null) s.nextDragon = { elder: nd.kind === 'elder', element: element(nd.element), elementSource, at: ndAt };
   const nb = obj(timers.nextBaron);
   const nbAt = time(nb.sec, nb.spawnAt);
   if (nbAt !== null) s.nextBaron = { at: nbAt };
@@ -128,6 +129,7 @@ export function adapt(input: unknown): MatchState {
   s.soul = soulTeam && soulEl ? { team: soulTeam, element: soulEl } : null;
   readSeriesAndDraft(raw, s);
   readPlayers(raw, s);
+  readObjectiveBox(raw, s);
   return s;
 }
 
@@ -164,7 +166,9 @@ function readSeriesAndDraft(raw: Record<string, unknown>, s: MatchState): void {
   const b = side('B'), r = side('R');
   const text = (v: unknown) => (typeof v === 'string' && v.length <= 300 ? v : null);
   if (bestOf && game && game <= bestOf && b && r) {
-    s.series = { bestOf, game, matchId: text(series.matchId), teams: { B: b, R: r }, winsNote: text(series.winsNote) };
+    const ss = series.sidesSource;
+    const sidesSource = ss === 'api' || ss === 'broadcast' || ss === 'api_unconfirmed' ? ss : null;
+    s.series = { bestOf, game, matchId: text(series.matchId), teams: { B: b, R: r }, winsNote: text(series.winsNote), sidesSource };
   }
 
   const draft = obj(raw.draft);
@@ -215,4 +219,20 @@ function readPlayers(raw: Record<string, unknown>, s: MatchState): void {
   }
   s.players = out;
   s.playersAsOf = typeof ps.asOf === 'string' && ps.asOf.length <= 40 ? ps.asOf : null;
+}
+
+// ---------- the broadcast's objective box: contract v0.4 ("轉播畫面物件") ----------
+
+const HERALD: readonly HeraldState['status'][] = ['upcoming', 'alive_or_upcoming', 'taken', 'taken_or_despawned'];
+const PIT: readonly PitNext[] = ['grubs', 'herald', 'baron'];
+
+function readObjectiveBox(raw: Record<string, unknown>, s: MatchState): void {
+  const vg = obj(raw.voidgrubs);
+  if ('B' in vg || 'R' in vg) {
+    const grubs = (v: unknown) => { const n = count(v); return n !== null && n <= 3 ? n : null; };
+    s.voidgrubs = { B: grubs(vg.B), R: grubs(vg.R) };
+  }
+  s.pitNext = (PIT as readonly unknown[]).includes(raw.pitNext) ? (raw.pitNext as PitNext) : null;
+  const h = obj(raw.herald);
+  if ((HERALD as readonly unknown[]).includes(h.status)) s.herald = { status: h.status as HeraldState['status'], at: time(h.sec, h.at) };
 }

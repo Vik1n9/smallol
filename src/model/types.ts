@@ -66,7 +66,19 @@ export interface NextDragon {
   elder: boolean;
   /** null while it cannot be known yet (before the rift element is set). */
   element: Element | null;
+  /** v0.4: read from the broadcast's objective box, or worked out from the rules. */
+  elementSource: 'broadcast' | 'rules' | null;
   at: number;
+}
+
+/** The top pit's next monster, as the broadcast's objective box shows it (v0.4). */
+export type PitNext = 'grubs' | 'herald' | 'baron';
+
+export interface HeraldState {
+  /** taken: killed before 19:40; taken_or_despawned: gone after 19:40, killed or despawned. */
+  status: 'upcoming' | 'alive_or_upcoming' | 'taken' | 'taken_or_despawned';
+  /** When it was taken (±5 s). */
+  at: number | null;
 }
 
 /** The series this game belongs to (service contract v0.1, "系列賽與 BP"). */
@@ -79,6 +91,11 @@ export interface SeriesInfo {
   teams: Record<Team, { code: string; wins: number | null }>;
   /** Why the wins are unknown, from the service. */
   winsNote: string | null;
+  /**
+   * What the blue/red sides rest on (v0.4). Before a game the official API often has them the wrong
+   * way round; 'api_unconfirmed' means the team names on each side may be swapped.
+   */
+  sidesSource: 'api' | 'broadcast' | 'api_unconfirmed' | null;
 }
 
 /** A champion by its Data Dragon id ("KSante"); names come from src/data/champions.ts. */
@@ -158,4 +175,9 @@ export interface MatchState {
   players: Record<Team, Player[]> | null;
   /** The feed moment the players were read at (0–10 s behind the newest feed frame). */
   playersAsOf: string | null;
+  /** Voidgrubs each team has taken (0–3), from the broadcast; null when the service did not read them. */
+  voidgrubs: Record<Team, number | null> | null;
+  pitNext: PitNext | null;
+  /** Who took it is not supported yet (the service sends team: null). */
+  herald: HeraldState | null;
 }

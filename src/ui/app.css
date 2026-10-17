@@ -34,6 +34,7 @@ button { font: inherit; color: inherit; border: 0; background: transparent; curs
 /* A dragon: a small coloured tile with one character, like a game piece seen from above. */
 .el { display: inline-grid; place-items: center; min-width: 17px; height: 17px; padding: 0 2px; border-radius: 5px; flex: 0 0 auto; white-space: nowrap; font-size: 10px; font-weight: 700; color: #111;
   background: linear-gradient(180deg, color-mix(in srgb, var(--c) 100%, #fff 18%), var(--c)); box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .28), 0 1px 2px rgba(0, 0, 0, .4); }
+.el.slot { min-width: 8px; width: 8px; padding: 0; }
 .el.empty { background: transparent; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--muted) 35%, transparent); color: var(--muted); }
 .tiles { display: inline-flex; gap: 3px; }
 
@@ -66,7 +67,8 @@ button { font: inherit; color: inherit; border: 0; background: transparent; curs
 
 /* ---------- map tier: the 2.5D tower map left, capsules right ---------- */
 .game { flex: 1; display: flex; gap: 8px; padding: 8px; min-height: 0; }
-.mapwrap { flex: 0 0 auto; height: 100%; aspect-ratio: 102 / 78.2; min-width: 0; }
+/* The map gives up width before the capsules do: at most 46% of the window. */
+.mapwrap { flex: 0 1 auto; height: 100%; max-width: 46%; aspect-ratio: 102 / 78.2; min-width: 0; align-self: center; }
 .mapwrap svg { width: 100%; height: 100%; display: block; overflow: visible; }
 .map .unnamed { fill: var(--accent); font-family: var(--mono); font-weight: 600; }
 .map .tag text { fill: var(--text); font-family: var(--mono); font-weight: 600; }
@@ -75,7 +77,9 @@ button { font: inherit; color: inherit; border: 0; background: transparent; curs
 .row.l1 { gap: 8px; }
 .count { display: inline-flex; align-items: baseline; gap: 3px; font: 600 12px var(--mono); }
 .count .k { font-family: var(--font); font-weight: 400; }
-.count.push { margin-left: auto; }
+.counts { display: inline-flex; gap: 8px; }
+.counts.push, .count.push { margin-left: auto; }
+.guess .el { box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .45); outline: 1px dashed var(--muted); outline-offset: 1px; }
 .soul { display: inline-flex; align-items: center; font-size: 10px; padding: 0 6px; height: 17px; border-radius: 9px; font-weight: 600;
   color: var(--c); border: 1px solid color-mix(in srgb, var(--c) 60%, transparent); }
 .nextrow { gap: 12px; }

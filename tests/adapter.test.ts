@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { adapt, parseClock } from '../src/data/streamcv/adapter.ts';
 import { TOWER_SITES } from '../src/model/types.ts';
 import { knownChampion } from '../src/data/champions.ts';
-import sample from '../fixtures/streamcv/state_finished_game.json' with { type: 'json' };
+import sample from '../fixtures/streamcv/state_v03_mvk_fur_g3.json' with { type: 'json' };
+import day2 from '../fixtures/streamcv/state_v04_kc_mvk_g2.json' with { type: 'json' };
+import day2draft from '../fixtures/streamcv/state_v04_kc_mvk_g2_waiting.json' with { type: 'json' };
 
 const downSites = (s: ReturnType<typeof adapt>, t: 'B' | 'R') => TOWER_SITES.filter((x) => s.teams[t].towers[x].down);
 
@@ -48,7 +50,7 @@ describe('Stream CV adapter, real sample (Worlds 2026 Play-In MVK vs FUR G3, fin
   });
 
   it('reads the objective timers', () => {
-    expect(s.nextDragon).toEqual({ elder: false, element: 'chemtech', at: 1868 });
+    expect(s.nextDragon).toEqual({ elder: false, element: 'chemtech', elementSource: null, at: 1868 });
     expect(s.nextBaron).toEqual({ at: 1711 });
     expect(s.buffs).toEqual([]);
   });
@@ -83,7 +85,7 @@ describe('Stream CV adapter, damaged input', () => {
     expect(s.teams.B.dragons).toEqual(['ocean', 'infernal']);
     expect(s.teams.B.towers.top_outer).toMatchObject({ down: true, lostAt: 600 });
     expect(s.buffs).toEqual([{ kind: 'baron', team: 'R', until: 1500 }]);
-    expect(s.nextDragon).toEqual({ elder: true, element: null, at: 35 * 60 + 10 });
+    expect(s.nextDragon).toEqual({ elder: true, element: null, elementSource: null, at: 35 * 60 + 10 });
     expect(s.soul).toBeNull();
   });
 
@@ -164,7 +166,7 @@ describe('Stream CV adapter, series and draft (contract v0.1)', () => {
         earlier: [{ game: 2, B: { team: 'GEN', picks: ['Vi'] }, R: { team: 'T1', picks: ['Jax'] } }, { game: 1, B: { team: 'T1' }, R: { team: 'GEN' } }, { game: 4, B: { team: 'T1' }, R: { team: 'GEN' } }],
       },
     });
-    expect(s.series).toEqual({ bestOf: 5, game: 3, matchId: null, teams: { B: { code: 'T1', wins: 1 }, R: { code: 'GEN', wins: 1 } }, winsNote: null });
+    expect(s.series).toEqual({ bestOf: 5, game: 3, matchId: null, teams: { B: { code: 'T1', wins: 1 }, R: { code: 'GEN', wins: 1 } }, winsNote: null, sidesSource: null });
     // Without the v0.1 flags: the proposal's reading.
     expect(s.draft).toMatchObject({ picksOrder: 'draft', bansSupported: true, turnSupported: true });
     expect(s.draft!.current!.sides.B.bans).toEqual(['Azir', null, null, null, null]);
@@ -177,5 +179,49 @@ describe('Stream CV adapter, series and draft (contract v0.1)', () => {
   it('drops a series that does not add up', () => {
     expect(adapt({ status: 'in_game', series: { bestOf: 3, game: 4, teams: { B: { code: 'A' }, R: { code: 'B' } } } }).series).toBeNull();
     expect(adapt({ status: 'in_game', series: { bestOf: 3, game: 1, teams: { B: { code: 'way too long' }, R: { code: 'B' } } } }).series).toBeNull();
+  });
+});
+
+describe('Stream CV adapter, contract v0.4 (Day 2, KC vs MVK game 2, real samples)', () => {
+  const s = adapt(day2);
+
+  it('reads voidgrubs, the top pit and the herald off the broadcast', () => {
+    expect(s.voidgrubs).toEqual({ B: 1, R: 2 });
+    expect(s.pitNext).toBe('baron');
+    expect(s.herald).toEqual({ status: 'taken', at: 955 });
+    expect(s.nextDragon).toEqual({ elder: false, element: 'chemtech', elementSource: 'broadcast', at: 2011 });
+  });
+
+  it('still agrees with the feed: named lost towers = towers the other side destroyed', () => {
+    for (const t of ['B', 'R'] as const) {
+      const named = TOWER_SITES.filter((x) => s.teams[t].towers[x].down).length;
+      expect(named + s.teams[t].unnamedLost).toBe(s.teams[t === 'B' ? 'R' : 'B'].towersDestroyed);
+    }
+    expect(s.series).toMatchObject({ bestOf: 5, game: 2, teams: { B: { code: 'KC', wins: 1 }, R: { code: 'MVK', wins: 0 } } });
+    for (const t of ['B', 'R'] as const) expect(s.players![t].reduce((a, p) => a + p.kills!, 0)).toBe(s.teams[t].kills);
+  });
+
+  it('mid-draft: sides from the broadcast, bans so far, no game yet', () => {
+    const w = adapt(day2draft);
+    expect(w.status).toBe('waiting');
+    expect(w.series!.sidesSource).toBe('broadcast');
+    expect(w.draft!.current!.sides.B).toMatchObject({ team: 'KC', bans: ['Olaf', 'Nocturne', 'Cassiopeia', 'MonkeyKing', null] });
+    expect(w.draft!.current!.sides.R.bans).toEqual(['Pantheon', 'Karma', 'Orianna', null, null]);
+    expect(w.draft!.current!.sides.B.picks).toEqual([null, null, null, null, null]);
+    expect(w.draft!.earlier.map((g) => g.game)).toEqual([1]);
+    expect(w.players).toBeNull();
+    expect(w.clock).toBeNull();
+    // What the finished game later showed: the draft so far is the start of the final bans.
+    const final = adapt(day2).draft!.current!;
+    expect(w.draft!.current!.sides.B.bans.slice(0, 4)).toEqual(final.sides.B.bans.slice(0, 4));
+    expect(w.draft!.current!.sides.R.bans.slice(0, 3)).toEqual(final.sides.R.bans.slice(0, 3));
+  });
+
+  it('drops unknown values in the new fields', () => {
+    const x = adapt({ status: 'in_game', voidgrubs: { B: 5, R: 'two' }, pitNext: 'dragon', herald: { status: 'gone' }, series: { bestOf: 3, game: 1, teams: { B: { code: 'A' }, R: { code: 'B' } }, sidesSource: 'guess' } });
+    expect(x.voidgrubs).toEqual({ B: null, R: null });
+    expect(x.pitNext).toBeNull();
+    expect(x.herald).toBeNull();
+    expect(x.series!.sidesSource).toBeNull();
   });
 });

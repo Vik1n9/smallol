@@ -122,15 +122,16 @@ let receivedAt = Date.now();
 let conn: Connection = 'connecting';
 let sample = false;
 let haveLive = false;
-const flags = { sample: false, demo: false };
+const flags = { sample: false, demo: false, draft: false };
 
 async function loadSample(): Promise<void> {
   // Dev builds only: the sample is not bundled into a release.
   if (!import.meta.env.DEV) return;
-  const game = await import('../../fixtures/streamcv/state_finished_game.json');
+  // Day 2, KC vs MVK game 2 (contract v0.4): towers, bans, players, voidgrubs, herald. --sample=draft: the same game mid-draft.
+  const game = flags.draft ? await import('../../fixtures/streamcv/state_v04_kc_mvk_g2_waiting.json') : await import('../../fixtures/streamcv/state_v04_kc_mvk_g2.json');
   if (haveLive && !flags.sample) return;
   let s = adapt(game.default);
-  if (flags.demo) s = { ...s, status: 'in_game' };
+  if (flags.demo && s.status === 'finished') s = { ...s, status: 'in_game' };
   state = s;
   receivedAt = Date.now();
   sample = true;
@@ -267,13 +268,14 @@ async function start(): Promise<void> {
   const q = new URLSearchParams(location.search);
   if (inTauri) {
     for (const a of await invoke<string[]>('launch_args').catch(() => [] as string[])) {
-      const m = /^--(set)=(.+)$/.exec(a);
+      const m = /^--(set|sample)=(.+)$/.exec(a);
       if (m) q.set(m[1]!, m[2]!);
       for (const flag of ['sample', 'demo', 'settings']) if (a === `--${flag}`) q.set(flag, '1');
     }
   }
   flags.sample = q.has('sample');
   flags.demo = q.has('demo');
+  flags.draft = q.get('sample') === 'draft';
   const checking = ['sample', 'demo', 'settings', 'set'].some((k) => q.has(k));
   settings = await SettingsStore.open(backend, () => DEFAULTS);
   // A checking run changes nothing on disk.

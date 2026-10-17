@@ -22,6 +22,7 @@ const SHOTS = [
   ['players-en', '?sample=1&demo=1&set=language:en,views.players:true', 480, 236 + 424],
   ['players-noitems-zh', '?sample=1&demo=1&set=language:zh-Hant,views.players:true,show.playerItems:false', 480, 236 + 294],
   ['draft-zh', '?sample=1&demo=1&set=language:zh-Hant,views.draftGame:true', 480, 236 + 138],
+  ['draft-waiting-zh', '?sample=draft&set=language:zh-Hant,views.draftGame:true,views.draftSeries:true', 480, 236 + 138 + 156],
   ['bar-live-zh', '?sample=1&demo=1&set=language:zh-Hant', 480, 90],
   ['dot-zh', '?sample=1&set=language:zh-Hant', 260, 30],
   ['settings-zh', '?sample=1&settings=1&set=language:zh-Hant', 440, 500],

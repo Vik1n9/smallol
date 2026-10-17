@@ -1,0 +1,614 @@
+{
+ "status": "finished",
+ "game": "115660588583171792",
+ "updated": "2026-10-17T01:23:22Z",
+ "videoLagSec": 31.0,
+ "series": {
+  "bestOf": 5,
+  "game": 2,
+  "matchId": "115660588583171790",
+  "teams": {
+   "B": {
+    "code": "KC",
+    "wins": 1
+   },
+   "R": {
+    "code": "MVK",
+    "wins": 0
+   }
+  }
+ },
+ "draft": {
+  "current": {
+   "game": 2,
+   "B": {
+    "team": "KC",
+    "bans": [
+     "Olaf",
+     "Nocturne",
+     "Cassiopeia",
+     "MonkeyKing",
+     "Yone"
+    ],
+    "picks": [
+     "Galio",
+     "LeeSin",
+     "Ahri",
+     "Ashe",
+     "Seraphine"
+    ]
+   },
+   "R": {
+    "team": "MVK",
+    "bans": [
+     "Pantheon",
+     "Karma",
+     "Orianna",
+     "Ryze",
+     "Jax"
+    ],
+    "picks": [
+     "TwistedFate",
+     "Qiyana",
+     "Rumble",
+     "Ezreal",
+     "Pyke"
+    ]
+   },
+   "turn": null
+  },
+  "earlier": [
+   {
+    "game": 1,
+    "B": {
+     "team": "KC",
+     "bans": [
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "picks": [
+      "Jayce",
+      "Vi",
+      "Syndra",
+      "Draven",
+      "Nautilus"
+     ]
+    },
+    "R": {
+     "team": "MVK",
+     "bans": [
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "picks": [
+      "Ambessa",
+      "Maokai",
+      "KSante",
+      "Tristana",
+      "Lulu"
+     ]
+    }
+   }
+  ],
+  "picksOrder": "role",
+  "bansSupported": true,
+  "bansOrder": "ban",
+  "turnSupported": false
+ },
+ "players": {
+  "B": [
+   {
+    "role": "top",
+    "name": "KC Canna",
+    "champion": "Galio",
+    "level": 18,
+    "kills": 1,
+    "deaths": 4,
+    "assists": 12,
+    "cs": 226,
+    "gold": 11224,
+    "hp": 1036,
+    "maxHp": 3157,
+    "items": [
+     3152,
+     3047,
+     3363,
+     4005,
+     3157
+    ]
+   },
+   {
+    "role": "jungle",
+    "name": "KC Yike",
+    "champion": "LeeSin",
+    "level": 17,
+    "kills": 5,
+    "deaths": 1,
+    "assists": 8,
+    "cs": 266,
+    "gold": 14799,
+    "hp": 2807,
+    "maxHp": 2807,
+    "items": [
+     6692,
+     3047,
+     3071,
+     6333,
+     2019,
+     2055
+    ]
+   },
+   {
+    "role": "mid",
+    "name": "KC kyeahoo",
+    "champion": "Ahri",
+    "level": 17,
+    "kills": 6,
+    "deaths": 1,
+    "assists": 6,
+    "cs": 306,
+    "gold": 14452,
+    "hp": 2339,
+    "maxHp": 2339,
+    "items": [
+     1082,
+     3364,
+     3118,
+     3089,
+     3157,
+     1058,
+     2139
+    ]
+   },
+   {
+    "role": "bottom",
+    "name": "KC Caliste",
+    "champion": "Ashe",
+    "level": 16,
+    "kills": 5,
+    "deaths": 3,
+    "assists": 10,
+    "cs": 339,
+    "gold": 18036,
+    "hp": 2221,
+    "maxHp": 2221,
+    "items": [
+     1086,
+     2523,
+     3046,
+     3363,
+     3031,
+     3036,
+     1038
+    ]
+   },
+   {
+    "role": "support",
+    "name": "KC Busio",
+    "champion": "Seraphine",
+    "level": 14,
+    "kills": 4,
+    "deaths": 2,
+    "assists": 14,
+    "cs": 40,
+    "gold": 10326,
+    "hp": 1533,
+    "maxHp": 2783,
+    "items": [
+     3364,
+     6620,
+     3222,
+     3158,
+     3109,
+     1028
+    ]
+   }
+  ],
+  "R": [
+   {
+    "role": "top",
+    "name": "MVK Kratos",
+    "champion": "TwistedFate",
+    "level": 17,
+    "kills": 3,
+    "deaths": 4,
+    "assists": 1,
+    "cs": 273,
+    "gold": 14247,
+    "hp": 2366,
+    "maxHp": 2366,
+    "items": [
+     6672,
+     3094,
+     3363,
+     3009,
+     2523,
+     3031,
+     2055
+    ]
+   },
+   {
+    "role": "jungle",
+    "name": "MVK SanSan",
+    "champion": "Qiyana",
+    "level": 16,
+    "kills": 3,
+    "deaths": 4,
+    "assists": 4,
+    "cs": 237,
+    "gold": 13576,
+    "hp": 2319,
+    "maxHp": 2319,
+    "items": [
+     3364,
+     2520,
+     3111,
+     6699,
+     6695,
+     3123,
+     1036
+    ]
+   },
+   {
+    "role": "mid",
+    "name": "MVK Chika",
+    "champion": "Rumble",
+    "level": 16,
+    "kills": 2,
+    "deaths": 6,
+    "assists": 2,
+    "cs": 239,
+    "gold": 10417,
+    "hp": 2924,
+    "maxHp": 2924,
+    "items": [
+     1082,
+     3363,
+     6653,
+     4633,
+     4632
+    ]
+   },
+   {
+    "role": "bottom",
+    "name": "MVK Harky",
+    "champion": "Ezreal",
+    "level": 17,
+    "kills": 2,
+    "deaths": 3,
+    "assists": 3,
+    "cs": 354,
+    "gold": 15163,
+    "hp": 2686,
+    "maxHp": 2686,
+    "items": [
+     1086,
+     3078,
+     3363,
+     3158,
+     3140,
+     2517,
+     3110
+    ]
+   },
+   {
+    "role": "support",
+    "name": "MVK SiuLoong",
+    "champion": "Pyke",
+    "level": 11,
+    "kills": 1,
+    "deaths": 4,
+    "assists": 3,
+    "cs": 43,
+    "gold": 8345,
+    "hp": 0,
+    "maxHp": 1635,
+    "items": [
+     3364,
+     3179,
+     3009,
+     3140,
+     3134,
+     1028,
+     2055,
+     2055
+    ]
+   }
+  ],
+  "asOf": "2026-10-16T19:34:26.012Z"
+ },
+ "clockSource": "feed 時間戳（未讀到計分列時鐘；與畫面時鐘可能差數十秒）",
+ "gameClock": "33:08",
+ "timers": {
+  "nextDragon": {
+   "kind": "elemental",
+   "element": "chemtech",
+   "elementNote": null,
+   "spawnAt": "33:31",
+   "sec": 2011,
+   "elementSource": "broadcast"
+  },
+  "nextBaron": {
+   "spawnAt": "38:03",
+   "sec": 2283
+  },
+  "activeBuffs": [
+   {
+    "buff": "baron",
+    "team": "B",
+    "until": "35:03",
+    "untilSec": 2103
+   }
+  ],
+  "inhibitorsDown": [
+   {
+    "teamLost": "R",
+    "respawnAt": "37:39"
+   }
+  ],
+  "grubsWindow": "8:00–14:45",
+  "heraldWindow": "15:00–19:45",
+  "note": "計時依規則表推算；下一條龍屬性、三蟲數、預示者狀態另由轉播畫面讀取（見 voidgrubs、herald、nextDragon.elementSource）"
+ },
+ "dragons": {
+  "B": [
+   "cloud",
+   "chemtech",
+   "chemtech"
+  ],
+  "R": [
+   "ocean",
+   "chemtech"
+  ]
+ },
+ "riftElement": "chemtech",
+ "soul": null,
+ "elderKills": {
+  "B": 0,
+  "R": 0
+ },
+ "barons": {
+  "B": 1,
+  "R": 1
+ },
+ "inhibitors": {
+  "B": 1,
+  "R": 0
+ },
+ "towersDestroyedBy": {
+  "B": 8,
+  "R": 4
+ },
+ "kills": {
+  "B": 21,
+  "R": 11
+ },
+ "gold": {
+  "B": 68837,
+  "R": 61748
+ },
+ "events": [
+  {
+   "type": "dragon",
+   "team": "B",
+   "element": "cloud",
+   "sec": 339,
+   "gameTime": "5:39"
+  },
+  {
+   "type": "dragon",
+   "team": "R",
+   "element": "ocean",
+   "sec": 655,
+   "gameTime": "10:55"
+  },
+  {
+   "type": "tower",
+   "team": "R",
+   "sec": 803,
+   "gameTime": "13:23"
+  },
+  {
+   "type": "tower",
+   "team": "R",
+   "sec": 888,
+   "gameTime": "14:48"
+  },
+  {
+   "type": "tower",
+   "team": "B",
+   "sec": 971,
+   "gameTime": "16:11"
+  },
+  {
+   "type": "dragon",
+   "team": "R",
+   "element": "chemtech",
+   "sec": 980,
+   "gameTime": "16:20"
+  },
+  {
+   "type": "tower",
+   "team": "B",
+   "sec": 1140,
+   "gameTime": "19:00"
+  },
+  {
+   "type": "tower",
+   "team": "B",
+   "sec": 1191,
+   "gameTime": "19:51"
+  },
+  {
+   "type": "dragon",
+   "team": "B",
+   "element": "chemtech",
+   "sec": 1395,
+   "gameTime": "23:15"
+  },
+  {
+   "type": "tower",
+   "team": "B",
+   "sec": 1431,
+   "gameTime": "23:51"
+  },
+  {
+   "type": "baron",
+   "team": "R",
+   "sec": 1548,
+   "gameTime": "25:48"
+  },
+  {
+   "type": "tower",
+   "team": "B",
+   "sec": 1549,
+   "gameTime": "25:49"
+  },
+  {
+   "type": "tower",
+   "team": "R",
+   "sec": 1650,
+   "gameTime": "27:30"
+  },
+  {
+   "type": "tower",
+   "team": "R",
+   "sec": 1696,
+   "gameTime": "28:16"
+  },
+  {
+   "type": "dragon",
+   "team": "B",
+   "element": "chemtech",
+   "sec": 1711,
+   "gameTime": "28:31"
+  },
+  {
+   "type": "baron",
+   "team": "B",
+   "sec": 1923,
+   "gameTime": "32:03"
+  },
+  {
+   "type": "tower",
+   "team": "B",
+   "sec": 1956,
+   "gameTime": "32:36"
+  },
+  {
+   "type": "inhibitor",
+   "team": "B",
+   "sec": 1959,
+   "gameTime": "32:39"
+  },
+  {
+   "type": "tower",
+   "team": "B",
+   "sec": 1973,
+   "gameTime": "32:53"
+  },
+  {
+   "type": "tower",
+   "team": "B",
+   "sec": 1978,
+   "gameTime": "32:58"
+  }
+ ],
+ "voidgrubs": {
+  "B": 1,
+  "R": 2
+ },
+ "herald": {
+  "status": "taken",
+  "at": "15:55",
+  "sec": 955,
+  "team": null,
+  "note": "時間為計時框換圖的前後兩次讀值中點（每 5 秒一張）；歸屬尚未支援"
+ },
+ "pitNext": "baron",
+ "towersLost": {
+  "R": [
+   {
+    "site": "top_outer",
+    "gameTime": "21:47",
+    "sec": 1307
+   },
+   {
+    "site": "mid_inner",
+    "gameTime": "24:18",
+    "sec": 1458
+   },
+   {
+    "site": "mid_outer",
+    "gameTime": "26:46",
+    "sec": 1606
+   },
+   {
+    "site": "bot_outer",
+    "gameTime": "28:27",
+    "sec": 1707
+   },
+   {
+    "site": "bot_inner",
+    "gameTime": "29:15",
+    "sec": 1755
+   },
+   {
+    "site": "mid_inhib_tower",
+    "gameTime": "32:50",
+    "sec": 1970
+   },
+   {
+    "site": "nexus_t1",
+    "gameTime": "33:18",
+    "sec": 1998
+   },
+   {
+    "site": "nexus_t2",
+    "gameTime": "33:18",
+    "sec": 1998
+   }
+  ],
+  "B": [
+   {
+    "site": "bot_outer",
+    "gameTime": "22:48",
+    "sec": 1368
+   },
+   {
+    "site": "top_outer",
+    "gameTime": "24:33",
+    "sec": 1473
+   },
+   {
+    "site": "mid_outer",
+    "gameTime": "27:57",
+    "sec": 1677
+   },
+   {
+    "site": "top_inner",
+    "gameTime": "31:25",
+    "sec": 1885
+   }
+  ],
+  "nexusTurretsDown": [
+   {
+    "teamLost": "R",
+    "site": "nexus_t1",
+    "respawnAt": "36:18"
+   },
+   {
+    "teamLost": "R",
+    "site": "nexus_t2",
+    "respawnAt": "36:18"
+   }
+  ],
+  "nexusRespawnsSeen": []
+ }
+}

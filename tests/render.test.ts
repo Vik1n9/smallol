@@ -11,7 +11,9 @@ import {
   barView, dotView, draftGameView, draftSeriesView, fmtGold, mapView, playersView, tabsView, tierOf, timerChips, viewHeight, type ViewCtx,
 } from '../src/ui/views.ts';
 import { settingsView } from '../src/ui/settings-view.ts';
-import sample from '../fixtures/streamcv/state_finished_game.json' with { type: 'json' };
+import sample from '../fixtures/streamcv/state_v03_mvk_fur_g3.json' with { type: 'json' };
+import day2 from '../fixtures/streamcv/state_v04_kc_mvk_g2.json' with { type: 'json' };
+import day2draft from '../fixtures/streamcv/state_v04_kc_mvk_g2_waiting.json' with { type: 'json' };
 import mock from '../fixtures/dev/series_draft_mock.json' with { type: 'json' };
 
 const finished = adapt(sample);
@@ -305,5 +307,51 @@ describe('players view', () => {
   it('says plainly when the service sends no players', () => {
     expect(playersView(ctx({ s: bare }))).toContain(STRINGS['zh-Hant'].ui.noPlayers);
     expect(playersView(ctx())).not.toContain(STRINGS['zh-Hant'].ui.noPlayers);
+  });
+});
+
+describe('views, contract v0.4', () => {
+  const live2 = { ...adapt(day2), status: 'in_game' as const };
+  const at2 = live2.clock!;
+
+  it('shows each team its voidgrubs and barons in words', () => {
+    const html = mapView(ctx({ s: live2, clock: at2 }), true);
+    expect(html).toContain('三蟲</span>1');
+    expect(html).toContain('三蟲</span>2');
+    expect(mapView(ctx({ s: live2, clock: at2, show: { ...DEFAULTS.show, voidgrubs: false } }), true)).not.toContain('三蟲');
+  });
+
+  it('herald: a countdown to 15:00 while it is the pit\'s next, nothing once it is taken', () => {
+    const early = { ...live2, pitNext: 'herald' as const, herald: { status: 'upcoming' as const, at: null } };
+    expect(mapView(ctx({ s: early, clock: 14 * 60 }), true)).toContain('預示者</span><span class="mono">1:00');
+    expect(mapView(ctx({ s: early, clock: 16 * 60 }), true)).toContain(STRINGS['zh-Hant'].ui.heraldMaybeUp);
+    // While the pit's next is the herald, the baron countdown waits.
+    expect(mapView(ctx({ s: early, clock: 14 * 60 }), true)).not.toContain('巴龍</span><span class="mono">');
+    expect(mapView(ctx({ s: live2, clock: at2 }), true)).not.toContain('預示者');
+  });
+
+  it('marks a next-dragon element worked out from the rules', () => {
+    const rules = { ...live2, nextDragon: { ...live2.nextDragon!, elementSource: 'rules' as const } };
+    expect(mapView(ctx({ s: rules, clock: at2 }), true)).toContain(`class="guess" title="${STRINGS['zh-Hant'].ui.elementByRules}"`);
+    expect(mapView(ctx({ s: live2, clock: at2 }), true)).not.toContain('class="guess"');
+  });
+
+  it('flags sides that may be swapped, on the tab and the draft', () => {
+    const w = adapt(day2draft);
+    expect(tabsView(ctx({ s: w }), DEFAULTS.views, true, false)).not.toContain(STRINGS['zh-Hant'].ui.sidesUnconfirmed);
+    const unsure = { ...w, series: { ...w.series!, sidesSource: 'api_unconfirmed' as const } };
+    expect(tabsView(ctx({ s: unsure }), DEFAULTS.views, true, false)).toContain(STRINGS['zh-Hant'].ui.sidesUnconfirmed);
+    expect(draftGameView(ctx({ s: unsure }))).toContain(STRINGS['zh-Hant'].ui.sidesUnconfirmed);
+  });
+
+  it('mid-draft (real): bans so far, empty slots for the rest, picks to come', () => {
+    const w = adapt(day2draft);
+    const html = draftGameView(ctx({ s: w }));
+    expect(html.match(/class="ch ban"/g)).toHaveLength(7);
+    expect(html.match(/class="ch empty/g)).toHaveLength(3);
+    expect(html.match(new RegExp(STRINGS['zh-Hant'].ui.picksAtStart, 'g'))).toHaveLength(2);
+    expect(html).not.toContain(STRINGS['zh-Hant'].ui.bansMissing);
+    expect(tabsView(ctx({ s: w }), DEFAULTS.views, true, false)).toContain('KC 1–0 MVK');
+    expect(mapView(ctx({ s: w, clock: null }), true)).toContain(STRINGS['zh-Hant'].status.waiting);
   });
 });

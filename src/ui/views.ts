@@ -95,14 +95,18 @@ export function teamLine(c: ViewCtx, t: Team, named = true): string {
   if (c.show.dragons) {
     const soulHere = c.show.soul && c.s.soul?.team === t;
     const slots = soulHere || team.dragons.length >= 4 ? 0 : 4 - team.dragons.length;
-    bits.push(`<span class="tiles">${team.dragons.map((e) => elementTile(c, e)).join('')}${'<span class="el empty"></span>'.repeat(slots)}</span>`);
+    bits.push(`<span class="tiles">${team.dragons.map((e) => elementTile(c, e)).join('')}${'<span class="el empty slot"></span>'.repeat(slots)}</span>`);
     if (team.elders) bits.push(`<span class="count"><span class="k">${esc(c.S.ui.elder)}</span>${team.elders}</span>`);
   }
   if (c.show.soul && c.s.soul?.team === t) {
     const el = c.s.soul.element;
     bits.push(`<span class="soul" style="--c:${ELEMENT_COLOUR[el]}">${esc(c.S.ui.soul)}·${esc(c.S.elementShort[el])}</span>`);
   }
-  if (c.show.barons && team.barons) bits.push(`<span class="count push"><span class="k">${esc(c.S.ui.baron)}</span>${team.barons}</span>`);
+  const grubs = c.s.voidgrubs?.[t];
+  const tail: string[] = [];
+  if (c.show.voidgrubs && grubs) tail.push(`<span class="count"><span class="k">${esc(c.S.ui.grubs)}</span>${grubs}</span>`);
+  if (c.show.barons && team.barons) tail.push(`<span class="count"><span class="k">${esc(c.S.ui.baron)}</span>${team.barons}</span>`);
+  if (tail.length) bits.push(`<span class="counts push">${tail.join('')}</span>`);
   return bits.join('');
 }
 
@@ -112,12 +116,20 @@ export function nextLine(c: ViewCtx): string {
   const out: string[] = [];
   const nd = c.s.nextDragon;
   if (c.show.nextDragon && nd) {
-    const mark = nd.elder ? elementTile(c, 'elder') : nd.element ? elementTile(c, nd.element) : `<span class="el empty" title="${esc(c.S.ui.unknownElement)}">?</span>`;
+    const guess = nd.elementSource === 'rules';
+    const tile = nd.elder ? elementTile(c, 'elder') : nd.element ? elementTile(c, nd.element) : `<span class="el empty" title="${esc(c.S.ui.unknownElement)}">?</span>`;
+    // Worked out from the rules, not read off the broadcast: a dashed outline, and the reason on hover.
+    const mark = guess && !nd.elder && nd.element ? `<span class="guess" title="${esc(c.S.ui.elementByRules)}">${tile}</span>` : tile;
     const l = left(nd.at, c.clock);
     out.push(`<span class="next"><span class="k">${esc(c.S.ui.next)}</span>${mark}<span class="mono">${l === null ? esc(c.S.ui.dragonUp) : fmtClock(l)}</span></span>`);
   }
+  // The top pit: grubs, then herald, then baron. The broadcast says which is next (v0.4).
+  if (c.show.herald && c.s.pitNext === 'herald' && c.s.herald && (c.s.herald.status === 'upcoming' || c.s.herald.status === 'alive_or_upcoming')) {
+    const l = left(15 * 60, c.clock);
+    out.push(`<span class="next"><span class="k">${esc(c.S.ui.herald)}</span><span class="mono">${l !== null ? fmtClock(l) : esc(c.S.ui.heraldMaybeUp)}</span></span>`);
+  }
   const nb = c.s.nextBaron;
-  if (c.show.nextBaron && nb) {
+  if (c.show.nextBaron && nb && c.s.pitNext !== 'grubs' && c.s.pitNext !== 'herald') {
     const l = left(nb.at, c.clock);
     out.push(`<span class="next"><span class="k">${esc(c.S.ui.baron)}</span><span class="mono">${l === null ? esc(c.S.ui.baronUp) : fmtClock(l)}</span></span>`);
   }
@@ -161,7 +173,8 @@ export function timerChips(c: ViewCtx, mapShown: boolean): string {
 }
 
 function idleView(c: ViewCtx): string {
-  const words = c.conn === 'retrying' ? c.S.connection.retrying : c.conn === 'connecting' ? c.S.connection.connecting : c.S.status[c.s.status];
+  // With data in hand (the service answered, or the sample), say where the game is; else the connection.
+  const words = c.sample || c.conn === 'ok' ? c.S.status[c.s.status] : c.conn === 'retrying' ? c.S.connection.retrying : c.S.connection.connecting;
   return `<div class="idle">${c.conn === 'retrying' ? '<i class="conn"></i>' : ''}<span class="muted">${esc(words)}</span></div>`;
 }
 
@@ -218,13 +231,18 @@ function seriesScore(c: ViewCtx): string {
   return `<span class="score mono"${title}>${dot('B')}${esc(b.code)}${mid}${esc(r.code)}${dot('R')}</span>`;
 }
 
+/** "藍紅待確認" while the sides may be swapped (v0.4 sidesSource api_unconfirmed). */
+function sidesFlag(c: ViewCtx): string {
+  return c.s.series?.sidesSource === 'api_unconfirmed' ? `<span class="tag" title="${esc(c.S.ui.sidesUnconfirmedHint)}">${esc(c.S.ui.sidesUnconfirmed)}</span>` : '';
+}
+
 /** Left: which game of the series. Right: the views under the game, settings, quit. */
 export function tabsView(c: ViewCtx, open: Record<ViewName, boolean>, canQuit: boolean, quitArmed: boolean): string {
   const se = c.s.series;
   let series = '';
   if (c.show.series) {
     series = se
-      ? `<span class="tab series"><b>${esc(c.S.seriesGame(se.bestOf, se.game))}</b>${seriesScore(c)}</span>`
+      ? `<span class="tab series"><b>${esc(c.S.seriesGame(se.bestOf, se.game))}</b>${seriesScore(c)}${sidesFlag(c)}</span>`
       : `<span class="tab series muted">${esc(c.S.ui.noSeries)}</span>`;
   }
   const toggle = (v: ViewName) => `<button class="vt" data-view="${v}" aria-pressed="${open[v]}">${esc(c.S.view[v])}</button>`;
@@ -262,7 +280,7 @@ export function draftGameView(c: ViewCtx): string {
     // Positions are not marked here; they are in the players view (maintainer, 2026-10-16).
     return label + list.map((id, i) => champ(c, id, kind, t, now(i))).join('');
   };
-  return `<header><b>${esc(c.S.view.draftGame)}</b><span class="muted">${esc(c.S.gameNo(g.game))}</span></header>
+  return `<header><b>${esc(c.S.view.draftGame)}</b><span class="muted">${esc(c.S.gameNo(g.game))}</span>${sidesFlag(c)}</header>
     <div class="dgrid">${TEAMS.map((t) => `<div class="dteam">${dot(t)}<b class="tn" style="color:${TEAM_COLOUR[t]}">${esc(g.sides[t].team)}</b></div>
       <div class="dline">${line(t, 'ban')}</div><div class="dline">${line(t, 'pick')}</div>`).join('')}</div>`;
 }
