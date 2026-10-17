@@ -12,13 +12,15 @@ import type { Lang, Strings } from '../i18n/index.ts';
 import type { Feature, GoldView, ViewName } from '../settings/schema.ts';
 import { ELEMENT_COLOUR } from '../render/dragons.ts';
 import { mapSvg, TEAM_COLOUR } from '../render/map-svg.ts';
+import type { Schedule } from '../model/schedule.ts';
+import { nextMatchCard, nextMatchLine, type ScheduleCtx } from './schedule-views.ts';
 import type { Element } from '../model/types.ts';
 
 export type Tier = 'dot' | 'bar' | 'map';
 
 /** Height of the tab strip above the game, and of each view under it. */
 export const TAB_H = 22;
-const VIEW_H: Record<ViewName, number> = { draftGame: 134, draftSeries: 152, players: 0 };
+const VIEW_H: Record<ViewName, number> = { draftGame: 134, draftSeries: 152, players: 0, schedule: 210 };
 /** Players: two lines a player with item names, one without. */
 export function viewHeight(v: ViewName, show: Record<Feature, boolean>): number {
   return v === 'players' ? (show.playerItems ? 420 : 290) : VIEW_H[v];
@@ -40,7 +42,16 @@ export interface ViewCtx {
   conn: Connection;
   /** Showing the bundled sample instead of the service (dev mode). */
   sample: boolean;
+  /** The season schedule, for when no game is on; null until read. */
+  schedule: Schedule | null;
+  /** Wall-clock time now (ms), for countdowns to the next match. */
+  now: number;
+  spoilerFree: boolean;
+  /** For tests: the time zone to show times in. */
+  timeZone?: string;
 }
+
+export const schedCtx = (c: ViewCtx): ScheduleCtx => ({ schedule: c.schedule, now: c.now, spoilerFree: c.spoilerFree, S: c.S, lang: c.lang, ...(c.timeZone ? { timeZone: c.timeZone } : {}) });
 
 export const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 const dot = (t: Team) => `<i class="dot" style="background:${TEAM_COLOUR[t]}"></i>`;
@@ -177,7 +188,11 @@ export function timerChips(c: ViewCtx, mapShown: boolean): string {
   return chips.sort((a, b) => a.at - b.at).map((x) => x.html).join('');
 }
 
-function idleView(c: ViewCtx): string {
+/** No game on: the next match (setting nextMatch), once the service has answered. */
+function idleView(c: ViewCtx, tier: Tier = 'map'): string {
+  if (c.s.status === 'idle' && c.show.nextMatch && (c.sample || c.conn === 'ok') && c.schedule) {
+    return tier === 'map' ? nextMatchCard(schedCtx(c)) : `<div class="${tier === 'dot' ? 'pill' : 'bar nmline'}">${nextMatchLine(schedCtx(c))}</div>`;
+  }
   // With data in hand (the service answered, or the sample), say where the game is; else the connection.
   const words = c.sample || c.conn === 'ok' ? c.S.status[c.s.status] : c.conn === 'retrying' ? c.S.connection.retrying : c.S.connection.connecting;
   return `<div class="idle">${c.conn === 'retrying' ? '<i class="conn"></i>' : ''}<span class="muted">${esc(words)}</span></div>`;
@@ -186,12 +201,12 @@ function idleView(c: ViewCtx): string {
 const hasGame = (c: ViewCtx) => c.s.status === 'in_game' || c.s.status === 'finished';
 
 export function dotView(c: ViewCtx): string {
-  if (!hasGame(c)) return idleView(c);
+  if (!hasGame(c)) return idleView(c, 'dot');
   return `<div class="pill">${killsHtml(c, false)}${clockHtml(c)}${goldHtml(c)}${flags(c, true)}</div>`;
 }
 
 export function barView(c: ViewCtx): string {
-  if (!hasGame(c)) return idleView(c);
+  if (!hasGame(c)) return idleView(c, 'bar');
   return `<div class="bar">
     <div class="l1">${killsHtml(c, true)}${clockHtml(c)}${goldHtml(c)}<span class="grow"></span>${flags(c)}</div>
     <div class="l2"><span class="side">${teamLine(c, 'B', false)}</span><span class="side">${teamLine(c, 'R', false)}</span><span class="grow"></span>${nextLine(c)}</div>
@@ -245,14 +260,15 @@ function sidesFlag(c: ViewCtx): string {
 export function tabsView(c: ViewCtx, open: Record<ViewName, boolean>, canQuit: boolean, quitArmed: boolean): string {
   const se = c.s.series;
   let series = '';
-  if (c.show.series) {
+  // No game on: the next match is on screen already, and "no series data" would only be noise.
+  if (c.show.series && c.s.status !== 'idle') {
     series = se
       ? `<span class="tab series"><b>${esc(c.S.seriesGame(se.bestOf, se.game))}</b>${seriesScore(c)}${sidesFlag(c)}</span>`
       : `<span class="tab series muted">${esc(c.S.ui.noSeries)}</span>`;
   }
   const toggle = (v: ViewName) => `<button class="vt" data-view="${v}" aria-pressed="${open[v]}">${esc(c.S.view[v])}</button>`;
   const quit = canQuit ? `<button class="quit${quitArmed ? ' armed' : ''}" data-action="quit" title="${esc(c.S.ui.quit)}">${quitArmed ? esc(c.S.ui.quitAgain) : '✕'}</button>` : '';
-  return `${series}<span class="grow"></span><span class="views">${toggle('draftGame')}${toggle('draftSeries')}${toggle('players')}</span>
+  return `${series}<span class="grow"></span><span class="views">${toggle('draftGame')}${toggle('draftSeries')}${toggle('players')}${toggle('schedule')}</span>
     <span class="controls"><button data-action="settings" title="${esc(c.S.ui.settings)}">⚙</button>${quit}</span>`;
 }
 

@@ -159,6 +159,34 @@ body:hover #tabs .controls { opacity: 1; pointer-events: auto; }
 .items.unknown { font-style: italic; }
 .items { font-size: 10px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 20px; height: 13px; line-height: 13px; }
 
+/* ---------- no game on: the next match ---------- */
+.next-match { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 6px; padding: 10px 14px; text-align: center; min-width: 0; }
+.nm-head { display: flex; gap: 8px; align-items: baseline; font-size: 12px; }
+.nm-head b { color: var(--accent); font-weight: 600; }
+.nm-teams { display: flex; align-items: baseline; gap: 12px; font: 600 26px var(--mono); }
+.nm-teams .vs { font: 400 13px var(--font); }
+.nm-teams .sc { font-size: 20px; }
+.nm-names { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.nm-when { display: flex; gap: 10px; font-size: 12px; align-items: baseline; }
+.until { color: var(--accent); font-size: 12px; white-space: nowrap; }
+.pill .k, .nmline .k { color: var(--accent); }
+.bar.nmline { flex-direction: row; align-items: center; justify-content: flex-start; gap: 8px; font-size: 13px; white-space: nowrap; overflow: hidden; }
+.pill b, .nmline b { font-family: var(--mono); }
+
+/* ---------- the schedule under the game ---------- */
+.drawer.schedule header .spoiler { height: 20px; padding: 0 9px; border-radius: 10px; background: var(--border); color: var(--muted); font-size: 11px; }
+.drawer.schedule header .spoiler:hover { color: var(--text); }
+.slist { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+.srow2 { display: grid; grid-template-columns: 122px 74px 1fr auto; column-gap: 8px; align-items: center; height: 22px; flex: 0 0 22px; padding: 0 8px; border-radius: 6px; font-size: 12px; white-space: nowrap; }
+.srow2 > * { overflow: hidden; text-overflow: ellipsis; }
+.srow2 .when { font-size: 11px; }
+.srow2 .stg { font-size: 11px; }
+.srow2 .vsx { display: inline-flex; gap: 6px; font-family: var(--mono); }
+.srow2 .win { font-weight: 700; color: var(--text); }
+.srow2.done { color: var(--muted); }
+.srow2.next { background: color-mix(in srgb, var(--accent) 14%, var(--panel)); box-shadow: inset 2px 0 0 var(--accent); }
+.srow2 .res { font-family: var(--mono); }
+
 #grip { position: fixed; right: 0; bottom: 0; width: 14px; height: 14px; cursor: nwse-resize; z-index: 10; }
 #grip::after { content: ''; position: absolute; right: 4px; bottom: 4px; width: 6px; height: 6px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); opacity: .45; }
 

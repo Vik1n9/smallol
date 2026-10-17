@@ -19,11 +19,12 @@ export const FEATURES = [
   'barons', 'nextBaron', 'buffs',
   'voidgrubs', 'herald',
   'series', 'playerItems',
+  'nextMatch',
 ] as const;
 export type Feature = (typeof FEATURES)[number];
 
 /** Views that open under the game, each on its own. */
-export const VIEWS = ['draftGame', 'draftSeries', 'players'] as const;
+export const VIEWS = ['draftGame', 'draftSeries', 'players', 'schedule'] as const;
 export type ViewName = (typeof VIEWS)[number];
 
 export interface Settings {
@@ -39,6 +40,8 @@ export interface Settings {
   tickClock: boolean;
   /** Which views under the game are open. */
   views: Record<ViewName, boolean>;
+  /** Hide series scores and winners (many watch the replay the next day). */
+  spoilerFree: boolean;
   /** Window sizes per view ('size-game', 'size-settings'). */
   sizes: Record<string, Size>;
 }
@@ -52,7 +55,8 @@ export const DEFAULTS: Settings = {
   show: Object.fromEntries(FEATURES.map((f) => [f, true])) as Record<Feature, boolean>,
   gold: 'diff',
   tickClock: true,
-  views: { draftGame: false, draftSeries: false, players: false },
+  views: { draftGame: false, draftSeries: false, players: false, schedule: false },
+  spoilerFree: true,
   sizes: {},
 };
 
@@ -96,6 +100,7 @@ export function normalize(raw: unknown): Settings {
     gold: oneOf(o.gold, ['diff', 'totals'], d.gold),
     tickClock: bool(o.tickClock, d.tickClock),
     views: Object.fromEntries(VIEWS.map((v) => [v, bool(views[v], d.views[v])])) as Record<ViewName, boolean>,
+    spoilerFree: bool(o.spoilerFree, d.spoilerFree),
     sizes,
   };
 }

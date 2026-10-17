@@ -2,6 +2,7 @@
 // record per language, so a key missing in either language fails the type check.
 
 import type { Element, GameStatus, Role, Team } from '../model/types.ts';
+import type { MatchStage } from '../model/schedule.ts';
 import type { Feature, ViewName } from '../settings/schema.ts';
 import type { Connection } from '../data/streamcv/source.ts';
 
@@ -27,18 +28,20 @@ export interface Strings {
   /** One character (or letter) per position. */
   role: Record<Role, string>;
   view: Record<ViewName, string>;
+  stage: Record<MatchStage, string>;
   ui: Record<
     | 'sample' | 'sampleShort' | 'sampleHint' | 'baron' | 'baronUp' | 'baronBuff' | 'elderBuff' | 'dragon' | 'dragonUp' | 'elderNext' | 'unknownElement'
     | 'soul' | 'inhibitor' | 'nexusTurret' | 'kills' | 'gold' | 'towersUnnamed' | 'towersUnknown'
     | 'settings' | 'done' | 'quit' | 'quitAgain' | 'noGame' | 'waiting'
     | 'next' | 'elder' | 'noSeries' | 'bans' | 'picks' | 'fearless' | 'noDraft' | 'noEarlier' | 'turn'
     | 'vs' | 'winsUnknown' | 'bansUnsupported' | 'picksAtStart' | 'noPlayers' | 'level' | 'cs' | 'kda' | 'hp' | 'itemsUnknown' | 'bansMissing'
-    | 'grubs' | 'herald' | 'heraldMaybeUp' | 'sidesUnconfirmed' | 'sidesUnconfirmedHint' | 'elementByRules',
+    | 'grubs' | 'herald' | 'heraldMaybeUp' | 'sidesUnconfirmed' | 'sidesUnconfirmedHint' | 'elementByRules'
+    | 'nextMatch' | 'onNow' | 'tbd' | 'finished' | 'showScores' | 'hideScores' | 'noSchedule' | 'seasonOver' | 'spoilerOn',
     string
   >;
   set: Record<
     | 'title' | 'language' | 'auto' | 'background' | 'solid' | 'semi' | 'clear' | 'show' | 'goldView' | 'goldDiff' | 'goldTotals'
-    | 'tickClock' | 'endpoint' | 'endpointBad' | 'endpointNote' | 'views' | 'about' | 'aboutText',
+    | 'tickClock' | 'endpoint' | 'endpointBad' | 'endpointNote' | 'views' | 'about' | 'aboutText' | 'spoilerFree',
     string
   >;
   /** "+2 not yet identified" next to a team's map corner. */
@@ -49,6 +52,9 @@ export interface Strings {
   locked(n: number): string;
   /** "紅方水晶" — whose building, in words. */
   whose(team: string, what: string): string;
+  /** "還有 3 小時 12 分". */
+  until(ms: number): string;
+  bo(n: number): string;
 }
 
 const zh: Strings = {
@@ -68,9 +74,11 @@ const zh: Strings = {
     barons: '巴龍次數', nextBaron: '巴龍重生倒數', buffs: '巴龍／遠古龍增益倒數',
     voidgrubs: '三蟲數', herald: '預示者',
     series: '上方標籤：BO 幾、第幾局', playerItems: '選手視圖：裝備名稱',
+    nextMatch: '沒有比賽時：下一場與倒數',
   },
   role: { top: '上', jungle: '野', mid: '中', bot: '下', support: '輔' },
-  view: { draftGame: '本局 BP', draftSeries: '全場 BP', players: '選手' },
+  view: { draftGame: '本局 BP', draftSeries: '全場 BP', players: '選手', schedule: '賽程' },
+  stage: { 'Play-Ins': '入圍賽', Swiss: '瑞士輪', Quarterfinals: '八強', Semifinals: '四強', Finals: '決賽' },
   ui: {
     sample: '樣本資料', sampleShort: '樣本', sampleHint: '連不到 Stream CV 服務，顯示的是樣本資料（開發模式）',
     baron: '巴龍', baronUp: '巴龍在場', baronBuff: '巴龍增益', elderBuff: '遠古龍增益',
@@ -85,6 +93,8 @@ const zh: Strings = {
     vs: 'vs', winsUnknown: '不知道本局開始前的勝場', bansUnsupported: '尚未支援（服務還讀不到禁用）', picksAtStart: '開局後才會有',
     noPlayers: '沒有選手資料（開局後才有）', itemsUnknown: '裝備資料暫缺', bansMissing: '這局沒有禁用資料（服務沒看到這局的 BP 畫面）',
     grubs: '三蟲', herald: '預示者', heraldMaybeUp: '可能在場', sidesUnconfirmed: '藍紅待確認',
+    nextMatch: '下一場', onNow: '進行中', tbd: '待定', finished: '已結束', showScores: '顯示比分', hideScores: '隱藏比分',
+    noSchedule: '讀不到賽程', seasonOver: '本季賽程已結束', spoilerOn: '不爆雷',
     sidesUnconfirmedHint: '開打前官方資料的藍紅方常是反的，畫面也還判斷不出來：隊伍名可能對調', elementByRules: '屬性依規則推算（轉播畫面讀不到）', level: 'Lv', cs: '補刀', kda: '擊殺／死亡／助攻', hp: '血量',
   },
   set: {
@@ -92,7 +102,7 @@ const zh: Strings = {
     show: '顯示項目', goldView: '經濟', goldDiff: '只顯示差距', goldTotals: '雙方總額',
     tickClock: '兩次更新之間時鐘繼續走', endpoint: '資料來源', endpointBad: '網址格式不對，沒有儲存',
     endpointNote: 'Stream CV 服務的 state.json，每 5 秒讀一次。',
-    views: '下方視圖',
+    views: '下方視圖', spoilerFree: '不爆雷：賽程不顯示比分與勝負',
     about: '關於',
     aboutText: '非官方工具，與 Riot Games 無關。龍、巴龍、水晶、擊殺、經濟來自官方數據；「哪一座塔」來自畫面辨識，可能延遲或缺漏。英雄名稱取自 Data Dragon。',
   },
@@ -101,6 +111,13 @@ const zh: Strings = {
   gameNo: (g) => `第 ${g} 局`,
   locked: (n) => `已鎖 ${n} 隻`,
   whose: (team, what) => `${team} ${what}`,
+  until(ms) {
+    const m = Math.max(0, Math.round(ms / 60000));
+    if (m < 1) return '即將開始';
+    const d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60), mm = m % 60;
+    return d ? `還有 ${d} 天 ${h} 小時` : h ? `還有 ${h} 小時 ${mm} 分` : `還有 ${mm} 分`;
+  },
+  bo: (n) => `BO${n}`,
 };
 
 const en: Strings = {
@@ -118,9 +135,11 @@ const en: Strings = {
     barons: 'Baron count', nextBaron: 'Baron timer', buffs: 'Baron / Elder buff timers',
     voidgrubs: 'Voidgrubs taken', herald: 'Rift Herald',
     series: 'Top tab: best of, game number', playerItems: 'Players view: item names',
+    nextMatch: 'No game on: next match and countdown',
   },
   role: { top: 'T', jungle: 'J', mid: 'M', bot: 'B', support: 'S' },
-  view: { draftGame: 'Draft', draftSeries: 'Series draft', players: 'Players' },
+  view: { draftGame: 'Draft', draftSeries: 'Series draft', players: 'Players', schedule: 'Schedule' },
+  stage: { 'Play-Ins': 'Play-Ins', Swiss: 'Swiss', Quarterfinals: 'Quarterfinals', Semifinals: 'Semifinals', Finals: 'Finals' },
   ui: {
     sample: 'Sample data', sampleShort: 'Sample', sampleHint: "Can't reach the Stream CV service; showing sample data (dev mode)",
     baron: 'Baron', baronUp: 'Baron up', baronBuff: 'Baron buff', elderBuff: 'Elder buff',
@@ -135,6 +154,8 @@ const en: Strings = {
     vs: 'vs', winsUnknown: 'Series score before this game is unknown', bansUnsupported: 'Not supported yet (the service cannot read bans)', picksAtStart: 'Shown once the game starts',
     noPlayers: 'No player data (it comes once the game starts)', itemsUnknown: 'Items not available right now', bansMissing: 'No bans for this game (the service did not see its draft)',
     grubs: 'Grubs', herald: 'Herald', heraldMaybeUp: 'maybe up', sidesUnconfirmed: 'Sides unconfirmed',
+    nextMatch: 'Next match', onNow: 'On now', tbd: 'TBD', finished: 'Done', showScores: 'Show scores', hideScores: 'Hide scores',
+    noSchedule: "Can't read the schedule", seasonOver: 'No more matches this season', spoilerOn: 'Spoiler-free',
     sidesUnconfirmedHint: 'Before a game the official sides are often swapped, and the broadcast could not tell yet: team names may be on the wrong side', elementByRules: 'Element worked out from the rules (not read from the broadcast)', level: 'Lv', cs: 'CS', kda: 'Kills / deaths / assists', hp: 'Health',
   },
   set: {
@@ -142,7 +163,7 @@ const en: Strings = {
     show: 'Show', goldView: 'Gold', goldDiff: 'Lead only', goldTotals: 'Both totals',
     tickClock: 'Keep the clock running between updates', endpoint: 'Data source', endpointBad: "That address doesn't look right; not saved",
     endpointNote: "The Stream CV service's state.json, read every 5 seconds.",
-    views: 'Views below',
+    views: 'Views below', spoilerFree: 'Spoiler-free: no scores or winners in the schedule',
     about: 'About',
     aboutText: 'Unofficial; not affiliated with Riot Games. Dragons, barons, inhibitors, kills and gold come from the official feed; which tower fell is read from the broadcast and can be late or missing. Champion names from Data Dragon.',
   },
@@ -151,6 +172,13 @@ const en: Strings = {
   gameNo: (g) => `Game ${g}`,
   locked: (n) => `${n} locked`,
   whose: (team, what) => `${team} ${what}`,
+  until(ms) {
+    const m = Math.max(0, Math.round(ms / 60000));
+    if (m < 1) return 'starting';
+    const d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60), mm = m % 60;
+    return d ? `in ${d}d ${h}h` : h ? `in ${h}h ${mm}m` : `in ${mm}m`;
+  },
+  bo: (n) => `Bo${n}`,
 };
 
 export const STRINGS: Record<Lang, Strings> = { 'zh-Hant': zh, en };

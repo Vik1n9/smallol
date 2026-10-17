@@ -11,14 +11,17 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 import { LogicalSize } from '@tauri-apps/api/dpi';
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
-import { StateSource, type Connection } from '../data/streamcv/source.ts';
+import { Poller, StateSource, type Connection } from '../data/streamcv/source.ts';
+import { adaptSchedule, scheduleUrl } from '../data/streamcv/schedule.ts';
+import type { Schedule } from '../model/schedule.ts';
+import { scheduleView } from './schedule-views.ts';
 import { adapt, emptyState } from '../data/streamcv/adapter.ts';
 import { clockNow } from '../model/clock.ts';
 import type { MatchState } from '../model/types.ts';
 import { detectLang, STRINGS, type Lang } from '../i18n/index.ts';
 import { DEFAULTS, normalize, VIEWS, type Settings, type Size, type ViewName } from '../settings/schema.ts';
 import { SettingsStore, type SettingsBackend } from '../settings/store.ts';
-import { barView, dotView, draftGameView, draftSeriesView, mapView, playersView, TAB_H, tabsView, tierOf, viewHeight, type ViewCtx } from './views.ts';
+import { barView, dotView, draftGameView, draftSeriesView, mapView, playersView, schedCtx, TAB_H, tabsView, tierOf, viewHeight, type ViewCtx } from './views.ts';
 import { settingsView } from './settings-view.ts';
 
 const inTauri = '__TAURI_INTERNALS__' in window;
@@ -153,6 +156,12 @@ const source = new StateSource(DEFAULTS.endpoint, {
   },
 });
 
+// The schedule: every 5 minutes, the same as the service's own cache of it.
+let schedule: Schedule | null = null;
+const schedulePoller = new Poller<Schedule>(scheduleUrl(DEFAULTS.endpoint), adaptSchedule, 5 * 60_000, {
+  onData(s) { schedule = s; render(); },
+});
+
 // ---------- drawing ----------
 
 let endpointError = false;
@@ -179,6 +188,7 @@ function render(): void {
   const tier = tierOf(window.innerHeight - vh);
   const c: ViewCtx = {
     s: state, clock: clockNow(state, receivedAt, Date.now(), cfg().tickClock), show: cfg().show, gold: cfg().gold, S, lang, conn, sample,
+    schedule, now: Date.now(), spoilerFree: cfg().spoilerFree,
   };
   // The pill has no room for tabs or views.
   const pill = tier === 'dot';
@@ -187,9 +197,24 @@ function render(): void {
   tabsEl.innerHTML = pill ? '' : tabsView(c, open, !!win, !!quitArmed);
   const body = tier === 'dot' ? dotView(c) : tier === 'bar' ? barView(c) : mapView(c, window.innerWidth >= 320);
   app.innerHTML = body;
-  const views: Record<ViewName, (c: ViewCtx) => string> = { draftGame: draftGameView, draftSeries: draftSeriesView, players: playersView };
-  belowEl.innerHTML = pill ? '' : VIEWS.filter((v) => open[v])
-    .map((v) => `<div class="drawer ${v}" style="height:${viewHeight(v, cfg().show)}px">${views[v](c)}</div>`).join('');
+  const views: Record<ViewName, (c: ViewCtx) => string> = { draftGame: draftGameView, draftSeries: draftSeriesView, players: playersView, schedule: (x) => scheduleView(schedCtx(x)) };
+  drawViews(pill ? [] : VIEWS.filter((v) => open[v]).map((v) => ({ v, h: viewHeight(v, cfg().show), html: views[v](c) })));
+}
+
+/**
+ * The views under the game. Each is redrawn only when its content changed: the page redraws every
+ * second for the countdowns, and redrawing a list that has not changed would reset its scrolling.
+ */
+function drawViews(list: { v: ViewName; h: number; html: string }[]): void {
+  const keep = new Set(list.map((x) => x.v));
+  for (const el of [...belowEl.children] as HTMLElement[]) if (!keep.has(el.dataset.view as ViewName)) el.remove();
+  for (const [i, x] of list.entries()) {
+    let el = belowEl.querySelector<HTMLElement>(`:scope > [data-view="${x.v}"]`);
+    if (!el) { el = document.createElement('div'); el.dataset.view = x.v; el.className = `drawer ${x.v}`; }
+    if (belowEl.children[i] !== el) belowEl.insertBefore(el, belowEl.children[i] ?? null);
+    el.style.height = `${x.h}px`;
+    if (el.dataset.html !== x.html) { el.innerHTML = x.html; el.dataset.html = x.html; }
+  }
 }
 
 // Countdowns move every second; the data itself changes every 5 s.
@@ -206,6 +231,8 @@ function onClick(e: MouseEvent): void {
     setPath(path, value);
   } else if (t.dataset.toggle) {
     setPath(t.dataset.toggle, (t as HTMLInputElement).checked);
+  } else if ('toggleSpoiler' in t.dataset) {
+    settings.update((d) => { d.spoilerFree = !d.spoilerFree; });
   } else if (t.dataset.view) {
     const v = t.dataset.view as ViewName;
     settings.update((d) => { d.views[v] = !d.views[v]; });
@@ -217,7 +244,7 @@ function onClick(e: MouseEvent): void {
     render();
   }
 }
-for (const el of [app, tabsEl]) el.addEventListener('click', onClick);
+for (const el of [app, tabsEl, belowEl]) el.addEventListener('click', onClick);
 
 function commitEndpoint(input: HTMLInputElement): void {
   const v = input.value.trim();
@@ -258,6 +285,7 @@ function onSettings(now: Settings, before: Settings): void {
   if (now.language !== before.language) applyLanguage();
   if (now.background !== before.background) applyBackground();
   if (now.endpoint !== before.endpoint && !flags.sample) { haveLive = false; source.setUrl(now.endpoint); }
+  if (now.endpoint !== before.endpoint) schedulePoller.setUrl(scheduleUrl(now.endpoint));
   // A view opened or closed: the window grows or shrinks by its height, the game keeps its size.
   const dh = viewsHeight(now) - viewsHeight(before);
   if (dh !== 0 && page === 'game') void resizeTo(window.innerWidth, window.innerHeight + dh);
@@ -290,6 +318,9 @@ async function start(): Promise<void> {
   applyBackground();
   if (flags.sample) void loadSample();
   else { source.setUrl(cfg().endpoint); source.start(); }
+  // The schedule comes from the service even with the sample, when the service is there.
+  schedulePoller.setUrl(scheduleUrl(cfg().endpoint));
+  schedulePoller.start();
   await switchPage(q.has('settings') ? 'settings' : 'game');
 }
 void start();

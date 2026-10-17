@@ -1,6 +1,6 @@
 // Screenshots of the UI at exact window sizes, through the DevTools protocol of a headless Edge
 // (plain `--screenshot` forces a ~500 px minimum width). Needs `npm run dev` running.
-// Usage: node scripts/screenshots.mjs [outDir]
+// Usage: [ONLY=word,word] node scripts/screenshots.mjs [outDir]
 
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
@@ -26,7 +26,12 @@ const SHOTS = [
   ['bar-live-zh', '?sample=1&demo=1&set=language:zh-Hant', 480, 90],
   ['dot-zh', '?sample=1&set=language:zh-Hant', 260, 30],
   ['settings-zh', '?sample=1&settings=1&set=language:zh-Hant', 440, 500],
-  ['service-idle-zh', '?set=language:zh-Hant', 480, 236],
+  ['idle-next-zh', '?set=language:zh-Hant', 480, 236],
+  ['idle-next-en', '?set=language:en', 480, 236],
+  ['idle-bar-zh', '?set=language:zh-Hant', 480, 90],
+  ['idle-dot-zh', '?set=language:zh-Hant', 420, 30],
+  ['schedule-zh', '?set=language:zh-Hant,views.schedule:true', 480, 236 + 214],
+  ['schedule-spoilers-zh', '?set=language:zh-Hant,views.schedule:true,spoilerFree:false', 480, 236 + 214],
 ];
 
 mkdirSync(OUT, { recursive: true });
@@ -70,7 +75,9 @@ try {
   const { send, close } = await session();
   await send('Page.enable');
   await send('Emulation.setDefaultBackgroundColorOverride', { color: { r: 0, g: 0, b: 0, a: 0 } });
-  for (const [name, query, w, h] of SHOTS) {
+  // ONLY=schedule,idle shoots just the names containing one of those words.
+  const only = (process.env.ONLY ?? '').split(',').filter(Boolean);
+  for (const [name, query, w, h] of SHOTS.filter(([n]) => !only.length || only.some((o) => n.includes(o)))) {
     await send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: 2, mobile: false });
     await send('Page.navigate', { url: BASE + query });
     await new Promise((r) => setTimeout(r, 2500));

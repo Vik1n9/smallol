@@ -24,6 +24,7 @@ export function settingsView(cfg: Settings, S: Strings, endpointError: boolean):
       <div class="chips">${VIEWS.map((v) => check(`views.${v}`, cfg.views[v], S.view[v])).join('')}</div>
       <div class="srow"><span class="k">${esc(t.goldView)}</span>${seg('gold', cfg.gold, [['diff', t.goldDiff], ['totals', t.goldTotals]])}</div>
       <div class="srow">${check('tickClock', cfg.tickClock, t.tickClock)}</div>
+      <div class="srow">${check('spoilerFree', cfg.spoilerFree, t.spoilerFree)}</div>
       <h3>${esc(t.endpoint)}</h3>
       <div class="srow"><input class="key" data-input="endpoint" value="${esc(cfg.endpoint)}" spellcheck="false"/></div>
       <p class="note">${esc(endpointError ? t.endpointBad : t.endpointNote)}</p>

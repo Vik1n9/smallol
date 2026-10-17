@@ -1,6 +1,7 @@
-// Polls the Stream CV service: one request at a time, every 5 s (the service's own update rate),
-// backing off with jitter when it fails. Never caches: a stale copy would put the widget behind
-// the broadcast (Basesmall measured 17 s -> 13 s with `cache: 'no-cache'`).
+// Polls the Stream CV service: one request at a time, every 5 s for the game (the service's own
+// update rate), every 5 min for the schedule; backing off with jitter when it fails. Never caches:
+// a stale copy would put the widget behind the broadcast (Basesmall measured 17 s -> 13 s with
+// `cache: 'no-cache'`).
 
 import { adapt } from './adapter.ts';
 import type { MatchState } from '../../model/types.ts';
@@ -25,23 +26,33 @@ export interface SourceEvents {
   onConnection(c: Connection, failures: number): void;
 }
 
+export interface PollerEvents<T> {
+  onData(data: T, receivedAt: number): void;
+  onConnection?(c: Connection, failures: number): void;
+}
+
 /** Delay before the next try after `failures` failures in a row: 5 s, 10 s, 20 s ... 60 s, ±20 %. */
 export function backoff(failures: number, random: () => number): number {
   const base = Math.min(MAX_BACKOFF_MS, INTERVAL_MS * 2 ** Math.max(0, failures - 1));
   return Math.round(base * (0.8 + 0.4 * random()));
 }
 
-export class StateSource {
+/** One JSON endpoint, polled politely. */
+export class Poller<T> {
   private url: string;
   private readonly deps: SourceDeps;
-  private readonly events: SourceEvents;
+  private readonly events: PollerEvents<T>;
+  private readonly parse: (raw: unknown) => T;
+  private readonly intervalMs: number;
   private timer: unknown = null;
   private inFlight = false;
   private running = false;
   private failures = 0;
 
-  constructor(url: string, events: SourceEvents, deps?: Partial<SourceDeps>) {
+  constructor(url: string, parse: (raw: unknown) => T, intervalMs: number, events: PollerEvents<T>, deps?: Partial<SourceDeps>) {
     this.url = url;
+    this.parse = parse;
+    this.intervalMs = intervalMs;
     this.events = events;
     this.deps = {
       fetch: (...a) => fetch(...a),
@@ -56,7 +67,7 @@ export class StateSource {
   start(): void {
     if (this.running) return;
     this.running = true;
-    this.events.onConnection('connecting', 0);
+    this.events.onConnection?.('connecting', 0);
     void this.tick();
   }
 
@@ -74,7 +85,7 @@ export class StateSource {
     if (!this.running) return;
     if (this.timer !== null) this.deps.clearTimeout(this.timer);
     this.timer = null;
-    this.events.onConnection('connecting', 0);
+    this.events.onConnection?.('connecting', 0);
     if (!this.inFlight) void this.tick();
   }
 
@@ -95,13 +106,13 @@ export class StateSource {
       const body: unknown = await res.json();
       if (url !== this.url) return;
       this.failures = 0;
-      this.events.onConnection('ok', 0);
-      this.events.onState(adapt(body), this.deps.now());
-      this.schedule(INTERVAL_MS);
+      this.events.onConnection?.('ok', 0);
+      this.events.onData(this.parse(body), this.deps.now());
+      this.schedule(this.intervalMs);
     } catch {
       if (url !== this.url) return;
       this.failures += 1;
-      this.events.onConnection('retrying', this.failures);
+      this.events.onConnection?.('retrying', this.failures);
       this.schedule(backoff(this.failures, this.deps.random));
     } finally {
       this.deps.clearTimeout(kill);
@@ -109,5 +120,12 @@ export class StateSource {
       // The endpoint changed while this request was out: ask the new one now.
       if (url !== this.url && this.running && this.timer === null) void this.tick();
     }
+  }
+}
+
+/** The game: state.json every 5 s. */
+export class StateSource extends Poller<MatchState> {
+  constructor(url: string, events: SourceEvents, deps?: Partial<SourceDeps>) {
+    super(url, adapt, INTERVAL_MS, { onData: (s, at) => events.onState(s, at), onConnection: (c, n) => events.onConnection(c, n) }, deps);
   }
 }

@@ -17,7 +17,7 @@ describe('settings schema', () => {
     expect(Object.keys(DEFAULTS.show)).toEqual([...FEATURES]);
     expect(Object.values(DEFAULTS.show).every(Boolean)).toBe(true);
     expect(DEFAULTS.endpoint).toBe('http://127.0.0.1:8787/state.json');
-    expect(DEFAULTS.views).toEqual({ draftGame: false, draftSeries: false, players: false });
+    expect(DEFAULTS.views).toEqual({ draftGame: false, draftSeries: false, players: false, schedule: false });
   });
 
   it('reads back exactly what it wrote', () => {
@@ -41,7 +41,7 @@ describe('settings schema', () => {
     expect(s.show.towers).toBe(false);
     expect(s.show.kills).toBe(true);
     expect('bogus' in s.show).toBe(false);
-    expect(s.views).toEqual({ draftGame: true, draftSeries: false, players: false });
+    expect(s.views).toEqual({ draftGame: true, draftSeries: false, players: false, schedule: false });
     expect(s.sizes).toEqual({ 'size-game': { w: 420, h: 214 } });
     expect('extra' in s).toBe(false);
   });
