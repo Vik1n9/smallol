@@ -9,8 +9,6 @@ export const SETTINGS_VERSION = 1;
 export type Background = 'solid' | 'semi' | 'clear';
 export type Language = 'auto' | 'zh-Hant' | 'en';
 export type GoldView = 'diff' | 'totals';
-/** off: show everything; scores: hide series scores and winners; matchups: also hide pairings that give results away. */
-export type SpoilerLevel = 'off' | 'scores' | 'matchups';
 export type Size = { w: number; h: number };
 
 /** Each piece of the widget can be turned off on its own. */
@@ -42,8 +40,8 @@ export interface Settings {
   tickClock: boolean;
   /** Which views under the game are open. */
   views: Record<ViewName, boolean>;
-  /** Spoiler-free schedule (many watch the replay the next day). */
-  spoiler: SpoilerLevel;
+  /** Hide series scores and winners (many watch the replay the next day). */
+  spoilerFree: boolean;
   /** Window sizes per view ('size-game', 'size-settings'). */
   sizes: Record<string, Size>;
 }
@@ -58,7 +56,7 @@ export const DEFAULTS: Settings = {
   gold: 'diff',
   tickClock: true,
   views: { draftGame: false, draftSeries: false, players: false, schedule: false },
-  spoiler: 'scores',
+  spoilerFree: true,
   sizes: {},
 };
 
@@ -102,8 +100,7 @@ export function normalize(raw: unknown): Settings {
     gold: oneOf(o.gold, ['diff', 'totals'], d.gold),
     tickClock: bool(o.tickClock, d.tickClock),
     views: Object.fromEntries(VIEWS.map((v) => [v, bool(views[v], d.views[v])])) as Record<ViewName, boolean>,
-    // Before there were two levels, the setting was spoilerFree: true/false.
-    spoiler: oneOf(o.spoiler, ['off', 'scores', 'matchups'], typeof o.spoilerFree === 'boolean' ? (o.spoilerFree ? 'scores' : 'off') : d.spoiler),
+    spoilerFree: bool(o.spoilerFree, d.spoilerFree),
     sizes,
   };
 }

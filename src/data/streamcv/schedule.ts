@@ -38,8 +38,7 @@ function match(v: unknown): ScheduleMatch | null {
   return {
     matchId, start, state,
     stage: (STAGES as readonly string[]).includes(stageText) ? (stageText as MatchStage) : null, stageText,
-    bestOf: count(o.bestOf), teams: [teams[0], teams[1]],
-    teamsSpoiler: typeof o.teamsSpoiler === 'boolean' ? o.teamsSpoiler : null, result,
+    bestOf: count(o.bestOf), teams: [teams[0], teams[1]], result,
   };
 }
 

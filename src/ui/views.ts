@@ -9,7 +9,7 @@ import type { Connection } from '../data/streamcv/source.ts';
 import { championName } from '../data/champions.ts';
 import { itemName, minorItem } from '../data/items.ts';
 import type { Lang, Strings } from '../i18n/index.ts';
-import type { Feature, GoldView, SpoilerLevel, ViewName } from '../settings/schema.ts';
+import type { Feature, GoldView, ViewName } from '../settings/schema.ts';
 import { ELEMENT_COLOUR } from '../render/dragons.ts';
 import { mapSvg, TEAM_COLOUR } from '../render/map-svg.ts';
 import type { Schedule } from '../model/schedule.ts';
@@ -46,12 +46,12 @@ export interface ViewCtx {
   schedule: Schedule | null;
   /** Wall-clock time now (ms), for countdowns to the next match. */
   now: number;
-  spoiler: SpoilerLevel;
+  spoilerFree: boolean;
   /** For tests: the time zone to show times in. */
   timeZone?: string;
 }
 
-export const schedCtx = (c: ViewCtx): ScheduleCtx => ({ schedule: c.schedule, now: c.now, spoiler: c.spoiler, S: c.S, lang: c.lang, ...(c.timeZone ? { timeZone: c.timeZone } : {}) });
+export const schedCtx = (c: ViewCtx): ScheduleCtx => ({ schedule: c.schedule, now: c.now, spoilerFree: c.spoilerFree, S: c.S, lang: c.lang, ...(c.timeZone ? { timeZone: c.timeZone } : {}) });
 
 export const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 const dot = (t: Team) => `<i class="dot" style="background:${TEAM_COLOUR[t]}"></i>`;

@@ -23,7 +23,7 @@ const live = { ...finished, status: 'in_game' as const };
 const withMock = { ...adapt({ ...sample, ...mock }), status: 'in_game' as const };
 const ctx = (over: Partial<ViewCtx> = {}): ViewCtx => ({
   s: finished, clock: finished.clock, show: { ...DEFAULTS.show }, gold: 'diff', S: STRINGS['zh-Hant'], lang: 'zh-Hant',
-  conn: 'ok', sample: false, schedule: null, now: 0, spoiler: 'scores', ...over,
+  conn: 'ok', sample: false, schedule: null, now: 0, spoilerFree: true, ...over,
 });
 const opts = { inhibitors: true, inhibTimers: true, nexusTimers: true, unnamed: (n: number) => `+${n}?`, unnamedTitle: '', unknownTitle: '' };
 const AT = 27 * 60 + 6;
