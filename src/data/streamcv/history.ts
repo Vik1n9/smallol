@@ -42,8 +42,10 @@ export function adaptTeams(input: unknown): Record<string, TeamGame[]> {
 
 export function adaptPlayers(input: unknown): Record<string, PlayerHistory> {
   const out: Record<string, PlayerHistory> = {};
-  for (const [name, v] of Object.entries(obj(obj(input).players))) {
-    if (!name.trim() || name.length > 40) continue;
+  for (const [raw, v] of Object.entries(obj(obj(input).players))) {
+    // Trimmed like the names in teams.json and state.json: the service has sent "C9 Loki " (2026-10-17).
+    const name = raw.trim();
+    if (!name || name.length > 40) continue;
     const o = obj(v);
     const pool: PoolEntry[] = [];
     for (const [ch, e] of Object.entries(obj(o.pool))) {

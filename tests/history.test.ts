@@ -132,3 +132,68 @@ describe('schedule: pick a match to see both teams', () => {
     expect(html).not.toContain('勝');
   });
 });
+
+// ---------- the service's real history (StreamCV 5e3fe0b): Worlds 2026 Play-In, 15 games ----------
+import realTeams from '../fixtures/streamcv/history_teams.json' with { type: 'json' };
+import realPlayers from '../fixtures/streamcv/history_players.json' with { type: 'json' };
+import realGame from '../fixtures/streamcv/history_game.json' with { type: 'json' };
+
+describe('real history samples, checked against each other and the live sample', () => {
+  const T = adaptTeams(realTeams);
+  const P = adaptPlayers(realPlayers);
+  const state = adapt(day2);
+
+  it('covers 15 games, 4 teams, 21 players', () => {
+    expect(Object.keys(T).sort()).toEqual(['C9', 'FUR', 'KC', 'MVK']);
+    expect(new Set(Object.values(T).flat().map((x) => x.gameId)).size).toBe(15);
+    expect(Object.keys(P)).toHaveLength(21);
+  });
+
+  it('the history of this game (KC vs MVK game 2) is the draft the live sample showed', () => {
+    for (const [code, side] of [['KC', 'B'], ['MVK', 'R']] as const) {
+      const g = T[code]!.find((x) => x.gameId === state.gameId)!;
+      expect(g.side).toBe(side);
+      expect(g.bans).toEqual(state.draft!.current!.sides[side].bans);
+      expect(g.picks.map((p) => p.champion)).toEqual(state.draft!.current!.sides[side].picks);
+    }
+  });
+
+  it("the game review's final numbers are the live sample's", () => {
+    expect(realGame.gameId).toBe(state.gameId);
+    for (const t of ['B', 'R'] as const) {
+      expect(realGame.final[t].kills).toBe(state.teams[t].kills);
+      expect(realGame.final[t].gold).toBe(state.teams[t].gold);
+      expect(realGame.final[t].towers).toBe(state.teams[t].towersDestroyed);
+      expect(realGame.final[t].barons).toBe(state.teams[t].barons);
+      // Voidgrubs and herald from Leaguepedia, against the service's own reading of the broadcast.
+      expect(realGame.voidgrubs[t]).toBe(state.voidgrubs![t]);
+    }
+    expect(realGame.heralds.B).toBe(1);
+    expect(state.herald!.team).toBe('B');
+  });
+
+  it('names are trimmed the same way everywhere (the service sent "C9 Loki ")', () => {
+    expect(Object.keys(realPlayers.players)).toContain('C9 Loki ');
+    expect(P['C9 Loki']).toBeDefined();
+    expect(findPlayer(P, 'C9', 'Loki')!.name).toBe('C9 Loki');
+  });
+
+  it("each player's pool adds up to the games they appear in", () => {
+    const appear = new Map<string, number>();
+    for (const g of Object.values(T).flat()) for (const p of g.picks) appear.set(p.player, (appear.get(p.player) ?? 0) + 1);
+    for (const p of Object.values(P)) {
+      expect(p.pool.reduce((n, e) => n + e.games, 0)).toBe(p.games);
+      expect(appear.get(p.name)).toBe(p.games);
+    }
+  });
+
+  it('views: KC banned Nocturne 6 times in 8 games; the live players have pools', () => {
+    const c = ctx({ history: { teams: T, players: P } });
+    expect(T.KC).toHaveLength(8);
+    expect(tally(T.KC!, 'bans', 1)).toEqual([['Nocturne', 6]]);
+    expect(draftGameView(c)).toContain('夜曲<i>×6</i>');
+    // All ten players of this game are in the history.
+    expect(playersView(c).match(/has-pool/g)).toHaveLength(10);
+    expect(poolTitle(c, 'KC', 'Canna', 'Galio')).toMatch(/^本屆 加里歐：\d+ 場 · KDA \d+\.\d/);
+  });
+});
