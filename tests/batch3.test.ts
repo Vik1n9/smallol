@@ -50,3 +50,11 @@ describe('hotkeys and low-key in the settings tab (batch 3 §1–2)', () => {
     expect(normalize({ soundVolume: 'loud' }).soundVolume).toBe('mid');
   });
 });
+
+describe('official feed down (2026-10-19)', () => {
+  it('the service saying the feed is missing reaches the state; otherwise it is not set', async () => {
+    const { adapt } = await import('../src/data/streamcv/adapter.ts');
+    expect(adapt({ status: 'waiting', feed: 'missing' }).feedMissing).toBe(true);
+    expect(adapt({ status: 'waiting' }).feedMissing).toBeUndefined();
+  });
+});

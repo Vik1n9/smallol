@@ -9,6 +9,8 @@ export interface RawState {
   status?: string;
   game?: string;
   updated?: string;
+  /** "missing": the official API says a game is on, but the official feed has had nothing for 2 minutes. */
+  feed?: string;
   gameClock?: string;
   clockSource?: string;
   videoLagSec?: number;

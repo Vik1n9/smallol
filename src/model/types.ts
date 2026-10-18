@@ -157,6 +157,8 @@ export interface Player {
 
 export interface MatchState {
   status: GameStatus;
+  /** The official live feed is down while a game is on (the service says so): say it, do not look broken. */
+  feedMissing?: boolean;
   gameId: string | null;
   /** Service time of this snapshot (ISO), for "last updated". */
   updated: string | null;

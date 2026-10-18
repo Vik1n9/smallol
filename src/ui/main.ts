@@ -579,6 +579,8 @@ function render(): void {
   // Row B: a 3-second note, else the log line of this game (or the last game's, between games), else a resting line.
   const now = Date.now();
   if (note && now < note.until) swapLine(lineHtml({ text: note.text, at: null, team: null }), null, true);
+  // The official feed is down mid-game (2026-10-19, Day 4 game 1): say so instead of "picks so far: 0".
+  else if (state.feedMissing) swapLine(lineHtml({ text: B.feedDown, at: null, team: null }), null, true);
   else {
     note = null;
     const current = line && (line.game === state.gameId || state.status === 'finished' || state.status === 'waiting') ? line : null;
