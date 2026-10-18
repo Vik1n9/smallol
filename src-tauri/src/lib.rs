@@ -1,4 +1,5 @@
-// The desktop shell: one floating window, a tray menu, and remembered position.
+// The desktop shell: the bar, the notification window and the optional windows, a tray menu, and
+// remembered positions.
 // Everything about the game lives in the web view; this side only manages the window and the
 // settings file. Trimmed from Basesmall's shell (no updater, hotkeys or style files yet).
 
@@ -67,7 +68,8 @@ fn write_settings(app: tauri::AppHandle, text: String) -> Result<(), String> {
 
 pub fn run() {
     // Size is per view (game, settings) and handled by the web view.
-    let mut window_state = tauri_plugin_window_state::Builder::default().with_state_flags(StateFlags::POSITION);
+    // The notification window is placed by the main window (bottom-right corner); the others remember where the user put them.
+    let mut window_state = tauri_plugin_window_state::Builder::default().with_state_flags(StateFlags::POSITION).with_denylist(&["notify"]);
     // A checking run keeps its window position with its scratch settings, not the user's. The
     // plugin joins this onto the config dir, and an absolute path replaces it.
     if let Some(dir) = std::env::var_os("DESKTOPLOL_CONFIG_DIR").filter(|d| !d.is_empty()) {
@@ -75,6 +77,12 @@ pub fn run() {
     }
     tauri::Builder::default()
         .plugin(window_state.build())
+        // Closing the bar quits, the other windows with it; otherwise a card or a panel would be left on screen.
+        .on_window_event(|window, event| {
+            if window.label() == "main" && matches!(event, tauri::WindowEvent::Destroyed) {
+                window.app_handle().exit(0);
+            }
+        })
         .invoke_handler(tauri::generate_handler![launch_args, config_info, read_settings, write_settings])
         .setup(|app| {
             let toggle = MenuItem::with_id(app, "toggle", "Show / hide", true, None::<&str>)?;

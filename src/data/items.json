@@ -275,7 +275,8 @@
   },
   "2065": {
    "zh-Hant": "蘇瑞亞的戰歌",
-   "en": "Shurelya's Battlesong"
+   "en": "Shurelya's Battlesong",
+   "legendary": true
   },
   "2138": {
    "zh-Hant": "抗擊藥劑",
@@ -330,19 +331,23 @@
   },
   "2501": {
    "zh-Hant": "狂霸血甲",
-   "en": "Overlord's Bloodmail"
+   "en": "Overlord's Bloodmail",
+   "legendary": true
   },
   "2502": {
    "zh-Hant": "無盡絕望",
-   "en": "Unending Despair"
+   "en": "Unending Despair",
+   "legendary": true
   },
   "2503": {
    "zh-Hant": "黑焰火炬",
-   "en": "Blackfire Torch"
+   "en": "Blackfire Torch",
+   "legendary": true
   },
   "2504": {
    "zh-Hant": "凱尼克欺瞞者",
-   "en": "Kaenic Rookern"
+   "en": "Kaenic Rookern",
+   "legendary": true
   },
   "2508": {
    "zh-Hant": "命定灰燼",
@@ -350,35 +355,43 @@
   },
   "2510": {
    "zh-Hant": "暮夜與黎明",
-   "en": "Dusk and Dawn"
+   "en": "Dusk and Dawn",
+   "legendary": true
   },
   "2512": {
    "zh-Hant": "獵魔弩箭",
-   "en": "Fiendhunter Bolts"
+   "en": "Fiendhunter Bolts",
+   "legendary": true
   },
   "2517": {
    "zh-Hant": "無盡飢渴",
-   "en": "Endless Hunger"
+   "en": "Endless Hunger",
+   "legendary": true
   },
   "2520": {
    "zh-Hant": "破堡者",
-   "en": "Bastionbreaker"
+   "en": "Bastionbreaker",
+   "legendary": true
   },
   "2522": {
    "zh-Hant": "時現者",
-   "en": "Actualizer"
+   "en": "Actualizer",
+   "legendary": true
   },
   "2523": {
    "zh-Hant": "海克斯光學C44",
-   "en": "Hexoptics C44"
+   "en": "Hexoptics C44",
+   "legendary": true
   },
   "2524": {
    "zh-Hant": "班德爾笛子",
-   "en": "Bandlepipes"
+   "en": "Bandlepipes",
+   "legendary": true
   },
   "2525": {
    "zh-Hant": "原質馭帶",
-   "en": "Protoplasm Harness"
+   "en": "Protoplasm Harness",
+   "legendary": true
   },
   "2526": {
    "zh-Hant": "低語之環",
@@ -394,11 +407,13 @@
   },
   "3003": {
    "zh-Hant": "大天使之杖",
-   "en": "Archangel's Staff"
+   "en": "Archangel's Staff",
+   "legendary": true
   },
   "3004": {
    "zh-Hant": "魔劍正宗",
-   "en": "Manamune"
+   "en": "Manamune",
+   "legendary": true
   },
   "3006": {
    "zh-Hant": "狂戰士護脛",
@@ -434,19 +449,23 @@
   },
   "3026": {
    "zh-Hant": "守護天使",
-   "en": "Guardian Angel"
+   "en": "Guardian Angel",
+   "legendary": true
   },
   "3031": {
    "zh-Hant": "無盡之刃",
-   "en": "Infinity Edge"
+   "en": "Infinity Edge",
+   "legendary": true
   },
   "3032": {
    "zh-Hant": "雲陶狂箭",
-   "en": "Yun Tal Wildarrows"
+   "en": "Yun Tal Wildarrows",
+   "legendary": true
   },
   "3033": {
    "zh-Hant": "致死宣告",
-   "en": "Mortal Reminder"
+   "en": "Mortal Reminder",
+   "legendary": true
   },
   "3035": {
    "zh-Hant": "最後耳語",
@@ -454,7 +473,8 @@
   },
   "3036": {
    "zh-Hant": "多明尼克的問候",
-   "en": "Lord Dominik's Regards"
+   "en": "Lord Dominik's Regards",
+   "legendary": true
   },
   "3040": {
    "zh-Hant": "熾天使的擁抱",
@@ -474,7 +494,8 @@
   },
   "3046": {
    "zh-Hant": "幻影之舞",
-   "en": "Phantom Dancer"
+   "en": "Phantom Dancer",
+   "legendary": true
   },
   "3047": {
    "zh-Hant": "鍍板鋼蓋",
@@ -482,7 +503,8 @@
   },
   "3050": {
    "zh-Hant": "錫柯的聚合之力",
-   "en": "Zeke's Convergence"
+   "en": "Zeke's Convergence",
+   "legendary": true
   },
   "3051": {
    "zh-Hant": "爐縛之斧",
@@ -490,7 +512,8 @@
   },
   "3053": {
    "zh-Hant": "史特拉克手套",
-   "en": "Sterak's Gage"
+   "en": "Sterak's Gage",
+   "legendary": true
   },
   "3057": {
    "zh-Hant": "閃耀劍",
@@ -498,7 +521,8 @@
   },
   "3065": {
    "zh-Hant": "振奮盔甲",
-   "en": "Spirit Visage"
+   "en": "Spirit Visage",
+   "legendary": true
   },
   "3066": {
    "zh-Hant": "飛翼月甲",
@@ -510,7 +534,8 @@
   },
   "3068": {
    "zh-Hant": "日炎聖盾",
-   "en": "Sunfire Aegis"
+   "en": "Sunfire Aegis",
+   "legendary": true
   },
   "3070": {
    "zh-Hant": "女神之淚",
@@ -518,23 +543,28 @@
   },
   "3071": {
    "zh-Hant": "黑色切割者",
-   "en": "Black Cleaver"
+   "en": "Black Cleaver",
+   "legendary": true
   },
   "3072": {
    "zh-Hant": "嗜血者",
-   "en": "Bloodthirster"
+   "en": "Bloodthirster",
+   "legendary": true
   },
   "3073": {
    "zh-Hant": "實驗型海克斯板甲",
-   "en": "Experimental Hexplate"
+   "en": "Experimental Hexplate",
+   "legendary": true
   },
   "3074": {
    "zh-Hant": "狂怒九頭蛇",
-   "en": "Ravenous Hydra"
+   "en": "Ravenous Hydra",
+   "legendary": true
   },
   "3075": {
    "zh-Hant": "荊棘之甲",
-   "en": "Thornmail"
+   "en": "Thornmail",
+   "legendary": true
   },
   "3076": {
    "zh-Hant": "刺藤胸甲",
@@ -546,7 +576,8 @@
   },
   "3078": {
    "zh-Hant": "三相之力",
-   "en": "Trinity Force"
+   "en": "Trinity Force",
+   "legendary": true
   },
   "3082": {
    "zh-Hant": "守望者鎧甲",
@@ -554,15 +585,18 @@
   },
   "3083": {
    "zh-Hant": "好戰者鎧甲",
-   "en": "Warmog's Armor"
+   "en": "Warmog's Armor",
+   "legendary": true
   },
   "3084": {
    "zh-Hant": "雄心之鋼",
-   "en": "Heartsteel"
+   "en": "Heartsteel",
+   "legendary": true
   },
   "3085": {
    "zh-Hant": "芮蘭颶風箭",
-   "en": "Runaan's Hurricane"
+   "en": "Runaan's Hurricane",
+   "legendary": true
   },
   "3086": {
    "zh-Hant": "狂熱雙刀",
@@ -570,35 +604,43 @@
   },
   "3087": {
    "zh-Hant": "史提克彈簧刀",
-   "en": "Statikk Shiv"
+   "en": "Statikk Shiv",
+   "legendary": true
   },
   "3089": {
    "zh-Hant": "死亡之帽",
-   "en": "Rabadon's Deathcap"
+   "en": "Rabadon's Deathcap",
+   "legendary": true
   },
   "3091": {
    "zh-Hant": "智慧末刃",
-   "en": "Wit's End"
+   "en": "Wit's End",
+   "legendary": true
   },
   "3094": {
    "zh-Hant": "衝擊火炮",
-   "en": "Rapid Firecannon"
+   "en": "Rapid Firecannon",
+   "legendary": true
   },
   "3095": {
    "zh-Hant": "狂暴利刃",
-   "en": "Stormrazor"
+   "en": "Stormrazor",
+   "legendary": true
   },
   "3100": {
    "zh-Hant": "巫妖之禍",
-   "en": "Lich Bane"
+   "en": "Lich Bane",
+   "legendary": true
   },
   "3102": {
    "zh-Hant": "女妖面紗",
-   "en": "Banshee's Veil"
+   "en": "Banshee's Veil",
+   "legendary": true
   },
   "3107": {
    "zh-Hant": "贖罪神石",
-   "en": "Redemption"
+   "en": "Redemption",
+   "legendary": true
   },
   "3108": {
    "zh-Hant": "惡魔法典",
@@ -606,11 +648,13 @@
   },
   "3109": {
    "zh-Hant": "騎士誓願",
-   "en": "Knight's Vow"
+   "en": "Knight's Vow",
+   "legendary": true
   },
   "3110": {
    "zh-Hant": "冰霜之心",
-   "en": "Frozen Heart"
+   "en": "Frozen Heart",
+   "legendary": true
   },
   "3111": {
    "zh-Hant": "水星之靴",
@@ -630,11 +674,13 @@
   },
   "3115": {
    "zh-Hant": "納什之牙",
-   "en": "Nashor's Tooth"
+   "en": "Nashor's Tooth",
+   "legendary": true
   },
   "3116": {
    "zh-Hant": "瑞萊的冰晶節杖",
-   "en": "Rylai's Crystal Scepter"
+   "en": "Rylai's Crystal Scepter",
+   "legendary": true
   },
   "3117": {
    "zh-Hant": "疾行之靴",
@@ -642,11 +688,13 @@
   },
   "3118": {
    "zh-Hant": "惡意",
-   "en": "Malignance"
+   "en": "Malignance",
+   "legendary": true
   },
   "3119": {
    "zh-Hant": "凜冬將至",
-   "en": "Winter's Approach"
+   "en": "Winter's Approach",
+   "legendary": true
   },
   "3121": {
    "zh-Hant": "芬布爾之冬",
@@ -658,7 +706,8 @@
   },
   "3124": {
    "zh-Hant": "鬼索的狂暴之刃",
-   "en": "Guinsoo's Rageblade"
+   "en": "Guinsoo's Rageblade",
+   "legendary": true
   },
   "3133": {
    "zh-Hant": "考菲爾德的戰槌",
@@ -670,15 +719,18 @@
   },
   "3135": {
    "zh-Hant": "虛空之杖",
-   "en": "Void Staff"
+   "en": "Void Staff",
+   "legendary": true
   },
   "3137": {
    "zh-Hant": "死墓之花",
-   "en": "Cryptbloom"
+   "en": "Cryptbloom",
+   "legendary": true
   },
   "3139": {
    "zh-Hant": "水星彎刀",
-   "en": "Mercurial Scimitar"
+   "en": "Mercurial Scimitar",
+   "legendary": true
   },
   "3140": {
    "zh-Hant": "水銀飾帶",
@@ -686,11 +738,13 @@
   },
   "3142": {
    "zh-Hant": "妖夢鬼刀",
-   "en": "Youmuu's Ghostblade"
+   "en": "Youmuu's Ghostblade",
+   "legendary": true
   },
   "3143": {
    "zh-Hant": "蘭頓之兆",
-   "en": "Randuin's Omen"
+   "en": "Randuin's Omen",
+   "legendary": true
   },
   "3144": {
    "zh-Hant": "斥候彈弓",
@@ -702,7 +756,8 @@
   },
   "3146": {
    "zh-Hant": "海克斯科技槍刃",
-   "en": "Hextech Gunblade"
+   "en": "Hextech Gunblade",
+   "legendary": true
   },
   "3147": {
    "zh-Hant": "幽魂面具",
@@ -710,11 +765,13 @@
   },
   "3152": {
    "zh-Hant": "海克斯科技火箭腰帶",
-   "en": "Hextech Rocketbelt"
+   "en": "Hextech Rocketbelt",
+   "legendary": true
   },
   "3153": {
    "zh-Hant": "殞落王者之劍",
-   "en": "Blade of The Ruined King"
+   "en": "Blade of The Ruined King",
+   "legendary": true
   },
   "3155": {
    "zh-Hant": "吸魔劍",
@@ -722,11 +779,13 @@
   },
   "3156": {
    "zh-Hant": "魔提斯深淵",
-   "en": "Maw of Malmortius"
+   "en": "Maw of Malmortius",
+   "legendary": true
   },
   "3157": {
    "zh-Hant": "中婭沙漏",
-   "en": "Zhonya's Hourglass"
+   "en": "Zhonya's Hourglass",
+   "legendary": true
   },
   "3158": {
    "zh-Hant": "愛歐尼亞之靴",
@@ -734,11 +793,13 @@
   },
   "3161": {
    "zh-Hant": "精進之矛",
-   "en": "Spear of Shojin"
+   "en": "Spear of Shojin",
+   "legendary": true
   },
   "3165": {
    "zh-Hant": "黑魔禁書",
-   "en": "Morellonomicon"
+   "en": "Morellonomicon",
+   "legendary": true
   },
   "3168": {
    "zh-Hant": "不朽之道",
@@ -778,11 +839,13 @@
   },
   "3179": {
    "zh-Hant": "闇影戰戟",
-   "en": "Umbral Glaive"
+   "en": "Umbral Glaive",
+   "legendary": true
   },
   "3181": {
    "zh-Hant": "破船戰斧",
-   "en": "Hullbreaker"
+   "en": "Hullbreaker",
+   "legendary": true
   },
   "3184": {
    "zh-Hant": "保衛者戰鎚",
@@ -790,7 +853,8 @@
   },
   "3190": {
    "zh-Hant": "日輪的加冕",
-   "en": "Locket of the Iron Solari"
+   "en": "Locket of the Iron Solari",
+   "legendary": true
   },
   "3211": {
    "zh-Hant": "亡靈斗篷",
@@ -798,11 +862,13 @@
   },
   "3222": {
    "zh-Hant": "米凱的祝福",
-   "en": "Mikael's Blessing"
+   "en": "Mikael's Blessing",
+   "legendary": true
   },
   "3302": {
    "zh-Hant": "臨界點",
-   "en": "Terminus"
+   "en": "Terminus",
+   "legendary": true
   },
   "3330": {
    "zh-Hant": "稻草人",
@@ -831,11 +897,13 @@
   },
   "3504": {
    "zh-Hant": "熾灼魔器",
-   "en": "Ardent Censer"
+   "en": "Ardent Censer",
+   "legendary": true
   },
   "3508": {
    "zh-Hant": "奪魄之鐮",
-   "en": "Essence Reaver"
+   "en": "Essence Reaver",
+   "legendary": true
   },
   "3599": {
    "zh-Hant": "克黎思妲的靈魂黑矛",
@@ -849,11 +917,13 @@
   },
   "3742": {
    "zh-Hant": "死者肩甲",
-   "en": "Dead Man's Plate"
+   "en": "Dead Man's Plate",
+   "legendary": true
   },
   "3748": {
    "zh-Hant": "泰坦九頭蛇",
-   "en": "Titanic Hydra"
+   "en": "Titanic Hydra",
+   "legendary": true
   },
   "3801": {
    "zh-Hant": "水晶護腕",
@@ -869,7 +939,8 @@
   },
   "3814": {
    "zh-Hant": "夜色緣界",
-   "en": "Edge of Night"
+   "en": "Edge of Night",
+   "legendary": true
   },
   "3865": {
    "zh-Hant": "世界地圖",
@@ -921,19 +992,23 @@
   },
   "4005": {
    "zh-Hant": "帝王命令",
-   "en": "Imperial Mandate"
+   "en": "Imperial Mandate",
+   "legendary": true
   },
   "4401": {
    "zh-Hant": "自然之力",
-   "en": "Force of Nature"
+   "en": "Force of Nature",
+   "legendary": true
   },
   "4628": {
    "zh-Hant": "視界專注",
-   "en": "Horizon Focus"
+   "en": "Horizon Focus",
+   "legendary": true
   },
   "4629": {
    "zh-Hant": "星河馳騁",
-   "en": "Cosmic Drive"
+   "en": "Cosmic Drive",
+   "legendary": true
   },
   "4630": {
    "zh-Hant": "枯萎寶石",
@@ -945,7 +1020,8 @@
   },
   "4633": {
    "zh-Hant": "峽谷製造者",
-   "en": "Riftmaker"
+   "en": "Riftmaker",
+   "legendary": true
   },
   "4635": {
    "zh-Hant": "榨血睥睨",
@@ -969,55 +1045,68 @@
   },
   "4645": {
    "zh-Hant": "黯影之炎",
-   "en": "Shadowflame"
+   "en": "Shadowflame",
+   "legendary": true
   },
   "4646": {
    "zh-Hant": "雷霆風暴",
-   "en": "Stormsurge"
+   "en": "Stormsurge",
+   "legendary": true
   },
   "6333": {
    "zh-Hant": "死亡之舞",
-   "en": "Death's Dance"
+   "en": "Death's Dance",
+   "legendary": true
   },
   "6609": {
    "zh-Hant": "生化龐克鏈鋸之劍",
-   "en": "Chempunk Chainsword"
+   "en": "Chempunk Chainsword",
+   "legendary": true
   },
   "6610": {
    "zh-Hant": "突破天際",
-   "en": "Sundered Sky"
+   "en": "Sundered Sky",
+   "legendary": true
   },
   "6616": {
    "zh-Hant": "流水之杖",
-   "en": "Staff of Flowing Water"
+   "en": "Staff of Flowing Water",
+   "legendary": true
   },
   "6617": {
    "zh-Hant": "月之石再生裝置",
-   "en": "Moonstone Renewer"
+   "en": "Moonstone Renewer",
+   "legendary": true
   },
   "6620": {
    "zh-Hant": "希利亞的迴響",
-   "en": "Echoes of Helia"
+   "en": "Echoes of Helia",
+   "legendary": true
   },
   "6621": {
    "zh-Hant": "破曉之核",
-   "en": "Dawncore"
+   "en": "Dawncore",
+   "legendary": true
   },
   "6631": {
    "zh-Hant": "步履破壞者",
-   "en": "Stridebreaker"
+   "en": "Stridebreaker",
+   "legendary": true
   },
   "6653": {
    "zh-Hant": "黎安卓的折磨",
-   "en": "Liandry's Torment"
+   "en": "Liandry's Torment",
+   "legendary": true
   },
   "6655": {
    "zh-Hant": "盧登回音",
-   "en": "Luden's Echo"
+   "en": "Luden's Echo",
+   "legendary": true
   },
   "6657": {
    "zh-Hant": "時光之杖",
-   "en": "Rod of Ages"
+   "en": "Rod of Ages",
+   "legendary": true
   },
   "6660": {
    "zh-Hant": "巴米灰燼",
@@ -1025,15 +1114,18 @@
   },
   "6662": {
    "zh-Hant": "寒冰霸拳",
-   "en": "Iceborn Gauntlet"
+   "en": "Iceborn Gauntlet",
+   "legendary": true
   },
   "6664": {
    "zh-Hant": "虛偽光彩",
-   "en": "Hollow Radiance"
+   "en": "Hollow Radiance",
+   "legendary": true
   },
   "6665": {
    "zh-Hant": "千變萬化之賈克修",
-   "en": "Jak'Sho, The Protean"
+   "en": "Jak'Sho, The Protean",
+   "legendary": true
   },
   "6670": {
    "zh-Hant": "正午箭筒",
@@ -1041,19 +1133,23 @@
   },
   "6672": {
    "zh-Hant": "海妖殺手",
-   "en": "Kraken Slayer"
+   "en": "Kraken Slayer",
+   "legendary": true
   },
   "6673": {
    "zh-Hant": "不朽盾弓",
-   "en": "Immortal Shieldbow"
+   "en": "Immortal Shieldbow",
+   "legendary": true
   },
   "6675": {
    "zh-Hant": "那歐閃刃",
-   "en": "Navori Flickerblade"
+   "en": "Navori Flickerblade",
+   "legendary": true
   },
   "6676": {
    "zh-Hant": "蒐集者",
-   "en": "The Collector"
+   "en": "The Collector",
+   "legendary": true
   },
   "6690": {
    "zh-Hant": "導翔之羽",
@@ -1061,7 +1157,8 @@
   },
   "6692": {
    "zh-Hant": "星蝕",
-   "en": "Eclipse"
+   "en": "Eclipse",
+   "legendary": true
   },
   "6693": {
    "zh-Hant": "潛行者之爪",
@@ -1069,27 +1166,33 @@
   },
   "6694": {
    "zh-Hant": "席利妲咒怨",
-   "en": "Serylda's Grudge"
+   "en": "Serylda's Grudge",
+   "legendary": true
   },
   "6695": {
    "zh-Hant": "巨蛇鋒牙",
-   "en": "Serpent's Fang"
+   "en": "Serpent's Fang",
+   "legendary": true
   },
   "6696": {
    "zh-Hant": "公理弧刃",
-   "en": "Axiom Arc"
+   "en": "Axiom Arc",
+   "legendary": true
   },
   "6697": {
    "zh-Hant": "傲慢",
-   "en": "Hubris"
+   "en": "Hubris",
+   "legendary": true
   },
   "6698": {
    "zh-Hant": "瀆神九頭蛇",
-   "en": "Profane Hydra"
+   "en": "Profane Hydra",
+   "legendary": true
   },
   "6699": {
    "zh-Hant": "電流旋風劍",
-   "en": "Voltaic Cyclosword"
+   "en": "Voltaic Cyclosword",
+   "legendary": true
   },
   "6701": {
    "zh-Hant": "機會",
@@ -1105,15 +1208,18 @@
   },
   "8010": {
    "zh-Hant": "血書詛咒",
-   "en": "Bloodletter's Curse"
+   "en": "Bloodletter's Curse",
+   "legendary": true
   },
   "8020": {
    "zh-Hant": "深淵面具",
-   "en": "Abyssal Mask"
+   "en": "Abyssal Mask",
+   "legendary": true
   },
   "322065": {
    "zh-Hant": "蘇瑞亞的戰歌",
-   "en": "Shurelya's Battlesong"
+   "en": "Shurelya's Battlesong",
+   "legendary": true
   },
   "322526": {
    "zh-Hant": "低語之環",
@@ -1129,11 +1235,13 @@
   },
   "323003": {
    "zh-Hant": "大天使之杖",
-   "en": "Archangel's Staff"
+   "en": "Archangel's Staff",
+   "legendary": true
   },
   "323004": {
    "zh-Hant": "魔劍正宗",
-   "en": "Manamune"
+   "en": "Manamune",
+   "legendary": true
   },
   "323040": {
    "zh-Hant": "熾天使的擁抱",
@@ -1145,7 +1253,8 @@
   },
   "323050": {
    "zh-Hant": "錫柯的聚合之力",
-   "en": "Zeke's Convergence"
+   "en": "Zeke's Convergence",
+   "legendary": true
   },
   "323070": {
    "zh-Hant": "女神之淚",
@@ -1153,23 +1262,28 @@
   },
   "323075": {
    "zh-Hant": "荊棘之甲",
-   "en": "Thornmail"
+   "en": "Thornmail",
+   "legendary": true
   },
   "323107": {
    "zh-Hant": "贖罪神石",
-   "en": "Redemption"
+   "en": "Redemption",
+   "legendary": true
   },
   "323109": {
    "zh-Hant": "騎士誓願",
-   "en": "Knight's Vow"
+   "en": "Knight's Vow",
+   "legendary": true
   },
   "323110": {
    "zh-Hant": "冰霜之心",
-   "en": "Frozen Heart"
+   "en": "Frozen Heart",
+   "legendary": true
   },
   "323119": {
    "zh-Hant": "凜冬將至",
-   "en": "Winter's Approach"
+   "en": "Winter's Approach",
+   "legendary": true
   },
   "323121": {
    "zh-Hant": "芬布爾之冬",
@@ -1177,43 +1291,53 @@
   },
   "323190": {
    "zh-Hant": "日輪的加冕",
-   "en": "Locket of the Iron Solari"
+   "en": "Locket of the Iron Solari",
+   "legendary": true
   },
   "323222": {
    "zh-Hant": "米凱的祝福",
-   "en": "Mikael's Blessing"
+   "en": "Mikael's Blessing",
+   "legendary": true
   },
   "323504": {
    "zh-Hant": "熾灼魔器",
-   "en": "Ardent Censer"
+   "en": "Ardent Censer",
+   "legendary": true
   },
   "324005": {
    "zh-Hant": "帝王命令",
-   "en": "Imperial Mandate"
+   "en": "Imperial Mandate",
+   "legendary": true
   },
   "326616": {
    "zh-Hant": "流水之杖",
-   "en": "Staff of Flowing Water"
+   "en": "Staff of Flowing Water",
+   "legendary": true
   },
   "326617": {
    "zh-Hant": "月之石再生裝置",
-   "en": "Moonstone Renewer"
+   "en": "Moonstone Renewer",
+   "legendary": true
   },
   "326620": {
    "zh-Hant": "希利亞的迴響",
-   "en": "Echoes of Helia"
+   "en": "Echoes of Helia",
+   "legendary": true
   },
   "326621": {
    "zh-Hant": "破曉之核",
-   "en": "Dawncore"
+   "en": "Dawncore",
+   "legendary": true
   },
   "326657": {
    "zh-Hant": "時光之杖",
-   "en": "Rod of Ages"
+   "en": "Rod of Ages",
+   "legendary": true
   },
   "328020": {
    "zh-Hant": "深淵面具",
-   "en": "Abyssal Mask"
+   "en": "Abyssal Mask",
+   "legendary": true
   },
   "663039": {
    "zh-Hant": "終末戰戟",
@@ -1277,7 +1401,8 @@
   },
   "667666": {
    "zh-Hant": "蒐集者",
-   "en": "The Collector"
+   "en": "The Collector",
+   "legendary": true
   },
   "771500": {
    "zh-Hant": "穿甲彈",

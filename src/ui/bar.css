@@ -1,0 +1,73 @@
+/* The sentinel bar (docs/UI_SPEC_v1.md §1): 340×48, two rows — status (11px) and the log line (13px).
+   The dot: 220×28, one row. Quiet at 72% until something happens. */
+body { --bar-h: 48px; }
+body.dot { --bar-h: 28px; }
+#bar { position: absolute; left: 0; right: 0; top: 0; height: var(--bar-h); display: flex; flex-direction: column; justify-content: center; padding: 0 11px; border-radius: 10px; overflow: hidden;
+  opacity: .72; transition: opacity 10s linear; cursor: default; }
+body.up #bar { top: auto; bottom: 0; }
+#bar.lit { opacity: 1; transition: none; }
+body:hover #bar { opacity: 1; transition: opacity .12s; }
+#bar.bg-solid, #pop.bg-solid { background: var(--background); border: 1px solid var(--border); }
+#bar.bg-semi, #pop.bg-semi { background: color-mix(in srgb, var(--background) 62%, transparent); border: 1px solid color-mix(in srgb, var(--border) 60%, transparent); }
+#bar.bg-clear { background: color-mix(in srgb, var(--panel) 88%, transparent); border: 1px solid transparent; }
+#pop.bg-clear { background: var(--background); border: 1px solid var(--border); }
+body.dot #bar { border-radius: 999px; padding: 0 12px; }
+
+.row-a { height: 18px; display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; transition: opacity .12s; }
+.row-a .score { display: inline-flex; align-items: center; gap: 4px; color: var(--text); font-family: var(--mono); }
+.row-a .score b { font-weight: 600; font-size: 12px; }
+.row-a .score .dot { width: 7px; height: 7px; flex-basis: 7px; box-shadow: none; }
+.row-a .clock { font-family: var(--mono); }
+.row-a .gold .mono { font-weight: 600; }
+.row-a .mute { color: var(--accent); }
+.row-a .conn { width: 6px; height: 6px; flex-basis: 6px; }
+/* hover: the status row cross-fades to the icon row; the bar keeps its size */
+.icons { position: absolute; left: 11px; right: 11px; top: 4px; opacity: 0; pointer-events: none; gap: 2px; transition: opacity .12s .3s; }
+body:hover .icons { opacity: 1; pointer-events: auto; transition-delay: 0s; }
+body:hover #rowA { opacity: 0; transition-delay: 0s; }
+#rowA { transition: opacity .12s .3s; }
+.icons button { height: 20px; min-width: 24px; padding: 0 5px; border-radius: 5px; color: var(--muted); font-size: 12px; display: inline-grid; place-items: center; }
+.icons button:hover, .icons button[aria-pressed='true'] { color: var(--text); background: var(--border); }
+.icons .modebtn { font-size: 10px; color: var(--muted); padding: 0 6px; margin-right: auto; white-space: nowrap; }
+.icons svg { width: 14px; height: 14px; }
+
+.row-b { position: relative; height: 22px; overflow: hidden; font-size: 13px; }
+.line { position: absolute; left: 0; right: 0; top: 0; height: 22px; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.line .t { font: 11px var(--mono); color: var(--muted); flex: 0 0 auto; }
+.line .mark { width: 3px; height: 13px; border-radius: 1px; background: var(--c, var(--accent)); flex: 0 0 3px; }
+.line .x { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.line.quiet .x { color: var(--muted); }
+.line.in { animation: line-in .2s cubic-bezier(.2, .8, .2, 1); }
+.line.out { animation: line-out .12s ease-in forwards; }
+.line.flash .mark { animation: flash .6s ease-out; }
+@keyframes line-in { from { transform: translateY(6px); opacity: 0; } }
+@keyframes line-out { to { transform: translateY(-4px); opacity: 0; } }
+@keyframes flash { 30% { transform: scaleY(1.5); filter: brightness(1.8); } }
+#bar.glow { animation: glow 1.2s ease-out; }
+@keyframes glow { from { box-shadow: 0 0 0 1px color-mix(in srgb, var(--c, var(--accent)) 90%, transparent), 0 0 12px color-mix(in srgb, var(--c, var(--accent)) 50%, transparent); } to { box-shadow: none; } }
+
+/* the dot: one row */
+body.dot .row-b, body.dot #rowA { display: none; }
+body.dot .dotrow { display: flex; }
+.dotrow { display: none; height: 28px; align-items: center; gap: 8px; font-size: 12px; white-space: nowrap; overflow: hidden; }
+.dotrow .score { display: inline-flex; align-items: center; gap: 4px; font-family: var(--mono); }
+.dotrow .score .dot { width: 7px; height: 7px; flex-basis: 7px; box-shadow: none; }
+.dotrow .clock { font-family: var(--mono); color: var(--muted); }
+body.dot .icons { top: 4px; }
+
+/* popovers under (or above) the bar: mode, panels, the first-run question */
+#pop { position: absolute; left: 0; right: 0; top: calc(var(--bar-h) + 4px); border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; font-size: 12px; }
+body.up #pop { top: 0; }
+#pop[hidden] { display: none; }
+.opt { display: flex; align-items: baseline; gap: 8px; padding: 5px 8px; border-radius: 6px; text-align: left; width: 100%; }
+.opt:hover { background: var(--panel); }
+.opt .r { width: 10px; height: 10px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--muted); flex: 0 0 10px; align-self: center; }
+.opt[aria-pressed='true'] .r { box-shadow: inset 0 0 0 3px var(--accent); }
+.opt b { font-weight: 600; flex: 0 0 auto; }
+.opt span.h { color: var(--muted); font-size: 11px; }
+.ask p { margin: 0 2px 2px; color: var(--muted); font-size: 11px; }
+.ask .choice { display: block; width: 100%; text-align: left; padding: 7px 10px; border-radius: 7px; background: var(--panel); border: 1px solid var(--border); font-size: 12px; }
+.ask .choice:hover { border-color: var(--accent); }
+#grip { display: none; }
+body:hover #grip { display: block; }
+body.has-pop #grip { display: none; }

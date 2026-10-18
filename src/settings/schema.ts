@@ -27,6 +27,19 @@ export type Feature = (typeof FEATURES)[number];
 export const VIEWS = ['draftGame', 'draftSeries', 'players', 'schedule'] as const;
 export type ViewName = (typeof VIEWS)[number];
 
+/** Windows the user opens and places (docs/UI_SPEC_v1.md §6): three panels and the data window. */
+export const PANELS = ['minimap', 'draftGame', 'players', 'data'] as const;
+export type PanelName = (typeof PANELS)[number];
+
+/** Where an event goes (UI_SPEC §3): nowhere, the log only, a strip, or a card. */
+export const CHANNELS = ['off', 'log', 'strip', 'card'] as const;
+export type Channel = (typeof CHANNELS)[number];
+/** The two presets, and custom (a preset plus the user's changes). */
+export type NotifyMode = 'work' | 'companion' | 'custom';
+/** What a custom setup started from; 'major' is the "big events only" template. */
+export type NotifyBase = 'work' | 'companion' | 'major';
+export const REMINDER_LEADS = [0, 5, 15, 30] as const;
+
 export interface Settings {
   version: typeof SETTINGS_VERSION;
   language: Language;
@@ -44,6 +57,19 @@ export interface Settings {
   spoilerFree: boolean;
   /** Window sizes per view ('size-game', 'size-settings'). */
   sizes: Record<string, Size>;
+  /** Notifications: a preset, or custom (UI_SPEC §3). */
+  mode: NotifyMode;
+  /** Custom only: the preset it started from, and the user's changes by event kind. */
+  modeBase: NotifyBase;
+  custom: Record<string, Channel>;
+  /** The one question on first launch has been answered. */
+  asked: boolean;
+  /** Which panels are open (each its own window). */
+  panels: Record<PanelName, boolean>;
+  /** The main window: the two-line bar, or the one-line dot. */
+  barTier: 'bar' | 'dot';
+  /** Minutes before a match to remind (0 = when it starts). */
+  reminderLead: (typeof REMINDER_LEADS)[number];
 }
 
 export const DEFAULTS: Settings = {
@@ -58,6 +84,13 @@ export const DEFAULTS: Settings = {
   views: { draftGame: false, draftSeries: false, players: false, schedule: false },
   spoilerFree: true,
   sizes: {},
+  mode: 'work',
+  modeBase: 'work',
+  custom: {},
+  asked: false,
+  panels: { minimap: false, draftGame: false, players: false, data: false },
+  barTier: 'bar',
+  reminderLead: 15,
 };
 
 const oneOf = <T extends string>(v: unknown, options: readonly T[], fallback: T): T =>
@@ -85,7 +118,9 @@ function size(v: unknown): Size | undefined {
 export function normalize(raw: unknown): Settings {
   const o = obj(raw);
   const d = DEFAULTS;
-  const show = obj(o.show), views = obj(o.views);
+  const show = obj(o.show), views = obj(o.views), panels = obj(o.panels);
+  const custom: Record<string, Channel> = {};
+  for (const [k, v] of Object.entries(obj(o.custom))) if (/^[a-zA-Z]{1,24}$/.test(k) && (CHANNELS as readonly unknown[]).includes(v)) custom[k] = v as Channel;
   const sizes: Record<string, Size> = {};
   for (const [k, v] of Object.entries(obj(o.sizes))) {
     const s = size(v);
@@ -102,5 +137,12 @@ export function normalize(raw: unknown): Settings {
     views: Object.fromEntries(VIEWS.map((v) => [v, bool(views[v], d.views[v])])) as Record<ViewName, boolean>,
     spoilerFree: bool(o.spoilerFree, d.spoilerFree),
     sizes,
+    mode: oneOf(o.mode, ['work', 'companion', 'custom'], d.mode),
+    modeBase: oneOf(o.modeBase, ['work', 'companion', 'major'], d.modeBase),
+    custom,
+    asked: bool(o.asked, d.asked),
+    panels: Object.fromEntries(PANELS.map((p) => [p, bool(panels[p], d.panels[p])])) as Record<PanelName, boolean>,
+    barTier: oneOf(o.barTier, ['bar', 'dot'], d.barTier),
+    reminderLead: (REMINDER_LEADS as readonly unknown[]).includes(o.reminderLead) ? (o.reminderLead as Settings['reminderLead']) : d.reminderLead,
   };
 }

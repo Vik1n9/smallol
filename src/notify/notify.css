@@ -1,0 +1,45 @@
+/* The corner notices (docs/UI_SPEC_v1.md §2): cards (300×56, 300×84 for a finished draft) and
+   strips (260×32), newest at the bottom, right-aligned in a window as tall as its content. */
+:root {
+  --background: #15171C; --panel: #1B1E24; --border: #2A2E37; --text: #E8EAEE; --muted: #A0A6B1;
+  --accent: #E8B04A; --blue: #4C93E6; --red: #E0574C;
+  --font: 'Segoe UI Variable', 'Segoe UI', 'Microsoft JhengHei UI', 'PingFang TC', system-ui, sans-serif;
+  --mono: 'Cascadia Mono', Consolas, ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: transparent; overflow: hidden; }
+body { color: var(--text); font: 12px/1.35 var(--font); user-select: none; -webkit-user-select: none; }
+#stack { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; padding: 0 0 0 0; }
+
+.item { position: relative; display: flex; overflow: hidden; border-radius: 8px; background: var(--panel); border: 1px solid color-mix(in srgb, var(--border) 80%, var(--muted));
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .35); cursor: default; --c: var(--accent); }
+.item::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--c); }
+.item.B { --c: var(--blue); } .item.R { --c: var(--red); }
+
+.card { width: 300px; height: 56px; flex-direction: column; justify-content: center; gap: 3px; padding: 0 12px 0 14px; animation: in-card .22s ease-out; }
+.card.tall { height: 84px; }
+.card .head { display: flex; align-items: baseline; gap: 8px; }
+.card .title { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card .time { font: 11px var(--mono); color: var(--muted); }
+.card .sub { font-size: 11px; color: var(--muted); white-space: pre; overflow: hidden; text-overflow: ellipsis; }
+.card.tall .sub { line-height: 17px; }
+.card.tall .sub.tight { font-size: 10px; }
+
+.strip { width: 260px; height: 32px; align-items: center; gap: 8px; padding: 0 10px 0 13px; animation: in-strip .18s ease-out; }
+.strip .title { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.strip .time { font: 11px var(--mono); color: var(--muted); }
+.strip.more { cursor: pointer; color: var(--muted); }
+.strip.more .title { color: var(--text); }
+
+/* A tower streak counting up: only the text changes, in place. */
+.title.bump { animation: bump .12s ease-out; }
+.item.out { animation: out .16s ease-in forwards; }
+
+@keyframes in-card { from { transform: translateY(8px); opacity: 0; } }
+@keyframes in-strip { from { transform: translateY(8px); opacity: 0; } }
+@keyframes bump { from { transform: translateY(4px); opacity: .2; } }
+@keyframes out { to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .card, .strip, .title.bump { animation: fade .12s ease-out; }
+  @keyframes fade { from { opacity: 0; } }
+}

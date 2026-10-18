@@ -5,7 +5,9 @@ import { itemName } from '../src/data/items.ts';
 import { clockNow, fmtClock, MAX_TICK_SEC } from '../src/model/clock.ts';
 import { TEAMS, TOWER_SITES } from '../src/model/types.ts';
 import { detectLang, LANGS, STRINGS } from '../src/i18n/index.ts';
-import { DEFAULTS, FEATURES, VIEWS } from '../src/settings/schema.ts';
+import { CHANNELS, DEFAULTS, FEATURES } from '../src/settings/schema.ts';
+import { BAR_STRINGS } from '../src/i18n/bar.ts';
+import { EVENT_KINDS } from '../src/events/kinds.ts';
 import { mapSvg, towerAt } from '../src/render/map-svg.ts';
 import {
   barView, dotView, draftGameView, draftSeriesView, fmtGold, mapView, playersView, tabsView, tierOf, timerChips, viewHeight, type ViewCtx,
@@ -234,10 +236,11 @@ describe('i18n and settings page', () => {
     expect(detectLang(undefined)).toBe('en');
   });
 
-  it('settings page has a switch for every feature and view', () => {
-    const html = settingsView(DEFAULTS, STRINGS.en, false);
-    for (const f of FEATURES) expect(html).toContain(`data-toggle="show.${f}"`);
-    for (const v of VIEWS) expect(html).toContain(`data-toggle="views.${v}"`);
+  it('settings tab: every bar feature, every panel, and four choices for every event', () => {
+    const html = settingsView(DEFAULTS, STRINGS.en, BAR_STRINGS.en, false);
+    for (const f of FEATURES.filter((x) => x !== 'series' && x !== 'nextMatch')) expect(html).toContain(`data-toggle="show.${f}"`);
+    for (const p of ['minimap', 'draftGame', 'players']) expect(html).toContain(`data-toggle="panels.${p}"`);
+    for (const k of EVENT_KINDS) for (const c of CHANNELS) expect(html).toContain(`data-ev="${k}:${c}"`);
   });
 });
 

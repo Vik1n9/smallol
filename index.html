@@ -5,11 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>DesktopLOL</title>
     <link rel="stylesheet" href="/src/ui/app.css" />
+    <link rel="stylesheet" href="/src/ui/bar.css" />
   </head>
   <body>
-    <nav id="tabs" class="bg-solid" aria-label="tabs"></nav>
-    <main id="app" class="bg-solid"></main>
-    <section id="below" aria-label="views"></section>
+    <main id="bar" class="bg-solid">
+      <div id="rowA" class="row-a"></div>
+      <div id="icons" class="row-a icons"></div>
+      <div id="rowB" class="row-b"></div>
+    </main>
+    <section id="pop" class="bg-solid" hidden></section>
     <div id="grip" aria-hidden="true"></div>
     <script type="module" src="/src/ui/main.ts"></script>
   </body>

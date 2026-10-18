@@ -14,9 +14,9 @@
       {
         "label": "main",
         "title": "DesktopLOL",
-        "width": 420,
-        "height": 214,
-        "minWidth": 170,
+        "width": 340,
+        "height": 48,
+        "minWidth": 180,
         "minHeight": 28,
         "decorations": false,
         "transparent": true,

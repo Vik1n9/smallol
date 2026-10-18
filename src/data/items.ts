@@ -4,7 +4,7 @@
 import type { Lang } from '../i18n/index.ts';
 import table from './items.json' with { type: 'json' };
 
-type Entry = Record<Lang, string> & { minor?: boolean };
+type Entry = Record<Lang, string> & { minor?: boolean; legendary?: boolean };
 const NAMES = (table as { names: Record<string, Entry> }).names;
 
 export function itemName(id: number, lang: Lang): string {
@@ -13,3 +13,6 @@ export function itemName(id: number, lang: Lang): string {
 
 /** Trinkets, wards and potions. */
 export const minorItem = (id: number) => NAMES[id]?.minor === true;
+
+/** A finished legendary item (bought, built from parts, builds into nothing, 2200 gold or more). */
+export const legendaryItem = (id: number) => NAMES[id]?.legendary === true;

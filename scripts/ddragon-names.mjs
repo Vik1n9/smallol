@@ -25,6 +25,10 @@ for (const id of Object.keys(ien).sort((a, b) => Number(a) - Number(b))) {
   items[id] = { 'zh-Hant': plain(izh[id]?.name ?? ien[id].name), en: plain(ien[id].name) };
   // Trinkets, wards and potions: the players view leaves them out of the item line.
   if (ien[id].tags?.some((t) => t === 'Trinket' || t === 'Consumable')) items[id].minor = true;
+  // A finished legendary: bought, built from parts, builds into nothing, 2200 gold or more (the
+  // "first legendary" event and the players panel count; no hand-kept list, docs/UI_SPEC_v1.md §3).
+  const it = ien[id];
+  if (it.gold?.purchasable && it.from?.length && !it.into?.length && it.gold.total >= 2200 && !items[id].minor) items[id].legendary = true;
 }
 writeFileSync('src/data/items.json', `${JSON.stringify({ source, names: items }, null, 1)}\n`);
 console.log(`src/data/items.json: ${Object.keys(items).length} items, ${source}`);

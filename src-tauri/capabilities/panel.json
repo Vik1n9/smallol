@@ -1,0 +1,16 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "panel",
+  "description": "The optional windows (minimap, this game's draft, players, data) only draw what the main window sends; they can be dragged and resized.",
+  "windows": [
+    "panel-minimap",
+    "panel-draftGame",
+    "panel-players",
+    "panel-data"
+  ],
+  "permissions": [
+    "core:default",
+    "core:window:allow-start-dragging",
+    "core:window:allow-start-resize-dragging"
+  ]
+}
