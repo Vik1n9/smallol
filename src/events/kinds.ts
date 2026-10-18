@@ -106,7 +106,11 @@ export function channelOf(kind: EventKind, s: Pick<Settings, 'mode' | 'modeBase'
   return s.custom[kind] ?? PRESETS[s.modeBase][kind];
 }
 
-/** "My team" (UI_SPEC §3, batch 2): an event that touches it goes one step up — log to strip, strip to card. */
-export function raise(ch: Channel): Channel {
-  return ch === 'log' ? 'strip' : ch === 'strip' ? 'card' : ch;
+/**
+ * "My team" (UI_SPEC §3 rev. after batch 2): an important or major event that touches it goes up to a
+ * strip at most (log → strip); cards stay cards, normal events (towers, kills, levels) stay where they
+ * are. Raising everything turned every tower and death of my team into a card or a strip.
+ */
+export function raise(ch: Channel, level: Level): Channel {
+  return level !== 'normal' && ch === 'log' ? 'strip' : ch;
 }

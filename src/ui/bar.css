@@ -87,7 +87,8 @@ body.up #pop { top: 0; }
 .hrow .who { display: inline-flex; align-items: center; gap: 3px; }
 .hrow .who .dot { width: 6px; height: 6px; flex-basis: 6px; box-shadow: none; }
 .hrow .code { font: 600 11px var(--mono); color: var(--text); padding: 0 2px; border-radius: 3px; }
-.hrow .code:hover { background: var(--border); }
+.hrow .code:hover, .hrow .pl:hover { background: var(--border); }
+.hrow .pl { font: inherit; color: inherit; padding: 0 1px; border-radius: 3px; text-decoration: underline dotted color-mix(in srgb, var(--muted) 60%, transparent); text-underline-offset: 3px; }
 .hrow .x { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hrow.major .x { font-weight: 600; }
 .hrow.major::before { content: ''; position: absolute; left: 0; top: 4px; bottom: 4px; width: 2px; background: var(--accent); border-radius: 1px; }
@@ -109,7 +110,8 @@ body.has-pop /* the history (UI_SPEC §5): 8 rows of 24, a group header per game
 .hrow .who { display: inline-flex; align-items: center; gap: 3px; }
 .hrow .who .dot { width: 6px; height: 6px; flex-basis: 6px; box-shadow: none; }
 .hrow .code { font: 600 11px var(--mono); color: var(--text); padding: 0 2px; border-radius: 3px; }
-.hrow .code:hover { background: var(--border); }
+.hrow .code:hover, .hrow .pl:hover { background: var(--border); }
+.hrow .pl { font: inherit; color: inherit; padding: 0 1px; border-radius: 3px; text-decoration: underline dotted color-mix(in srgb, var(--muted) 60%, transparent); text-underline-offset: 3px; }
 .hrow .x { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hrow.major .x { font-weight: 600; }
 .hrow.major::before { content: ''; position: absolute; left: 0; top: 4px; bottom: 4px; width: 2px; background: var(--accent); border-radius: 1px; }

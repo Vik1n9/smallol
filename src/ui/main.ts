@@ -17,7 +17,7 @@ import { Poller, StateSource, type Connection } from '../data/streamcv/source.ts
 import { adaptSchedule, nextMatch, scheduleUrl } from '../data/streamcv/schedule.ts';
 import { adaptPlayers, adaptTeams, historyUrl } from '../data/streamcv/history.ts';
 import type { History } from '../model/history.ts';
-import { adaptRoster, rosterUrl } from '../data/streamcv/roster.ts';
+import { adaptRoster, rosterPlayer, rosterUrl } from '../data/streamcv/roster.ts';
 import type { RosterTeam } from '../model/roster.ts';
 import type { Schedule } from '../model/schedule.ts';
 import { adapt, emptyState } from '../data/streamcv/adapter.ts';
@@ -215,6 +215,7 @@ function logEvents(events: GameEvent[], s: MatchState): void {
   const add = events.filter((e) => e.kind !== 'reminder' && channelOf(e.kind, cfg()) !== 'off').map((e): LogEntry => ({
     game, n: s.series?.game ?? s.draft?.current?.game ?? null, teams: [code('B'), code('R')], at: e.at, text: eventText(e, code, lang, cfg().spoilerFree).title,
     level: LEVEL[e.kind], side: e.team, code: e.team ? code(e.team) : null, victim: e.victim ? code(e.victim) : null, t: Date.now(),
+    player: e.player, victimPlayer: e.victimPlayer,
   }));
   if (!add.length) return;
   logList = addEntries(logList, add);
@@ -445,7 +446,10 @@ function popHtml(): string {
   if (popKind === 'panels') {
     return (['minimap', 'draftGame', 'players'] as const).map((p) => `<button class="opt multi" data-panel="${p}" aria-pressed="${cfg().panels[p]}"><i class="r"></i><b>${esc(B.panel[p])}</b></button>`).join('');
   }
-  if (popKind === 'history') return historyView(logList, histFilter, B, !histUp);
+  if (popKind === 'history') {
+    const link = (code: string, name: string) => rosterPlayer(roster, code, name)?.id ?? null;
+    return historyView(logList, histFilter, B, !histUp, link, line?.text ?? null);
+  }
   if (popKind === 'ask') {
     return `<div class="ask"><p>${esc(B.ask)}</p><button class="choice" data-ask="work">${esc(B.modeHint.work)}</button><button class="choice" data-ask="companion" style="margin-top:6px">${esc(B.modeHint.companion)}</button></div>`;
   }

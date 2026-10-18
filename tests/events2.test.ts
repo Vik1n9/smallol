@@ -94,10 +94,13 @@ describe('batch 2 dispatch', () => {
     expect(b.notices.at(-1)!.title).toBe('升 6 級 · KC 上、MVK 中 +1');
   });
 
-  it('my team: its events go one step up', () => {
-    const d = new Dispatcher();
+  it('my team: an important event in the log becomes a strip; normal events and cards stay', () => {
     const tower = { kind: 'tower' as const, team: 'R' as Team, victim: 'B' as Team, lane: 'mid' as const, tower: 'outer' as const, at: 900 };
-    expect(d.step([tower], 0, { ...DEFAULTS, myTeam: 'KC' }, code, 'zh-Hant').notices[0]!.kind).toBe('card');
-    expect(new Dispatcher().step([tower], 0, { ...DEFAULTS, myTeam: 'T1' }, code, 'zh-Hant').notices[0]!.kind).toBe('strip');
+    expect(new Dispatcher().step([tower], 0, { ...DEFAULTS, myTeam: 'KC' }, code, 'zh-Hant').notices[0]!.kind).toBe('strip');
+    const baron = { kind: 'baron' as const, team: 'B' as Team, at: 1500 };
+    const watching = { ...DEFAULTS, mode: 'companion' as const, myTeam: 'KC' };
+    expect(new Dispatcher().step([baron], 0, watching, code, 'zh-Hant').notices[0]!.kind).toBe('strip');
+    expect(new Dispatcher().step([baron], 0, { ...watching, myTeam: 'T1' }, code, 'zh-Hant').notices).toEqual([]);
+    expect(new Dispatcher().step([{ kind: 'level6' as const, team: 'B' as Team, at: 400, n: 6, player: 'Canna', role: 'top' }], 0, watching, code, 'zh-Hant').notices[0]!.kind).toBe('strip');
   });
 });

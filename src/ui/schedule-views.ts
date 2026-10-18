@@ -112,7 +112,7 @@ function teamBlock(c: ScheduleCtx, code: string): string {
   const games = c.history.teams?.[code] ?? [];
   const r = c.roster?.[code];
   const tip = r ? ` title="${esc(teamCard(c.S, r))}"` : '';
-  const head = `<div class="th"><b${tip}>${esc(code)}</b>${r?.seedLabel ? `<span class="seed">${esc(r.seedLabel)}</span>` : ''}`
+  const head = `<div class="th">${r ? `<button class="tlink" data-team="${esc(code)}"${tip}>${esc(code)}</button>` : `<b>${esc(code)}</b>`}${r?.seedLabel ? `<span class="seed">${esc(r.seedLabel)}</span>` : ''}`
     + `<span class="muted">${esc(games.length ? c.S.eventGames(games.length) : c.S.ui.noHistory)}</span></div>`;
   const pool = (name: string) => {
     const p = findPlayer(c.history.players, code, name);
@@ -123,7 +123,7 @@ function teamBlock(c: ScheduleCtx, code: string): string {
   // The five starters from the roster (nationality and age), with this event's most played when known.
   const rows = r
     ? starters(r).map((p) => `<div class="tp"><span class="k">${p.role ? esc(c.S.role[p.role]) : ''}</span>`
-      + `<b class="has-card" title="${esc(playerCard(c.S, p))}">${esc(p.id)}</b><span class="muted pshort">${esc(playerShort(c.S, p))}</span><span class="tpool">${pool(p.id)}</span></div>`).join('')
+      + `<button class="plink has-card" data-player="${esc(code)}|${esc(p.id)}" title="${esc(playerCard(c.S, p))}">${esc(p.id)}</button><span class="muted pshort">${esc(playerShort(c.S, p))}</span><span class="tpool">${pool(p.id)}</span></div>`).join('')
     : teamPlayers(c.history.players, code).map((p) => {
       const short = p.name.startsWith(`${code} `) ? p.name.slice(code.length + 1) : p.name;
       return `<div class="tp"><span class="k">${p.role ? esc(c.S.role[p.role]) : ''}</span><b>${esc(short)}</b><span></span><span class="tpool">${pool(short)}</span></div>`;

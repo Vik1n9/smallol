@@ -33,7 +33,7 @@ function run(mode: NotifyMode) {
     const evs = [...deriveEvents(prev, s, seen), ...deriveMore(prev, s, mem)];
     if (prev?.status === 'in_game' && s.status === 'finished' && winnerOf(s) === null) unknownWinners++;
     const code = (x: Team) => s.series?.teams[x].code ?? x;
-    const res = d.step(evs, t, { ...DEFAULTS, mode }, code, 'zh-Hant');
+    const res = d.step(evs, t, { ...DEFAULTS, mode, myTeam: process.env.MYTEAM ?? null }, code, 'zh-Hant');
     const g = s.gameId ?? (s.series ? `${s.series.matchId}-${s.series.game}` : 'none');
     const st = perGame.get(g) ?? { cards: 0, strips: 0, kinds: {}, peakStrips: 0, peakCards: 0 };
     for (const e of evs) st.kinds[e.kind] = (st.kinds[e.kind] ?? 0) + 1;
@@ -55,6 +55,9 @@ describe.skipIf(!rows.length)('replay of Day 2/3 (recorded state log)', () => {
     it(`${mode}: per game counts, and at most 3 cards and 4 strips in any minute`, () => {
       const games = [...run(mode)].filter(([g, st]) => g !== 'none' && (st.cards || st.strips || Object.keys(st.kinds).length));
       for (const [g, st] of games) console.log(mode, g.slice(-3), JSON.stringify(st));
+      const real = games.filter(([, st]) => st.cards || st.strips > 1);
+      const q = (k: 'cards' | 'strips' | 'peakStrips' | 'peakCards') => { const v = real.map(([, st]) => st[k]).sort((a, b) => a - b); return `${v[0]}/${v[Math.floor(v.length / 2)]}/${v[v.length - 1]}`; };
+      console.log(`SUMMARY myTeam=${process.env.MYTEAM ?? '-'} ${mode}: games ${real.length} cards ${q('cards')} strips ${q('strips')} peak strips ${q('peakStrips')} peak cards ${q('peakCards')} (min/median/max)`);
       console.log(mode, 'games where the winner could not be told:', unknownWinners);
       unknownWinners = 0;
       expect(games.length).toBeGreaterThan(5);

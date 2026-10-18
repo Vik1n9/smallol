@@ -82,9 +82,9 @@ export function teamFile(c: ViewCtx, B: BarStrings, t: RosterTeam, myTeam: strin
 
 /** A player's page. */
 export function playerFile(c: ViewCtx, B: BarStrings, t: RosterTeam, p: RosterPlayer): string {
-  const head = `<div class="phead"><button class="back" data-action="profile-back">${esc(B.prof.back)}</button><span class="crumb muted">${esc(t.code)} ›</span><b class="pcode">${esc(p.id)}</b>`
+  // No bio paragraph: it repeated the names, titles and Worlds lines below (review P1); it is the id's tooltip.
+  const head = `<div class="phead"><button class="back" data-action="profile-back">${esc(B.prof.back)}</button><span class="crumb muted">${esc(t.code)} ›</span><b class="pcode"${p.bio ? ` title="${esc(p.bio)}"` : ''}>${esc(p.id)}</b>`
     + `<span class="grow"></span><span class="muted">${esc(roleOf(c, p))}${roleOf(c, p) ? ' · ' : ''}${esc(p.starter ? B.prof.starter : B.prof.sub)}</span></div>`;
-  const bio = p.bio ? `<p class="bio">${esc(p.bio)}</p>` : '';
   const names = [p.realName, p.nativeName && p.nativeName !== p.realName ? p.nativeName : null, p.nationality, p.age === null ? null : c.S.age(p.age), p.debutYear ? B.prof.debut(p.debutYear) : null]
     .filter(Boolean).map((x) => esc(String(x))).join(' · ');
   const worlds = p.titles['世界賽'] ?? 0, msi = p.titles.MSI ?? 0;
@@ -101,5 +101,5 @@ export function playerFile(c: ViewCtx, B: BarStrings, t: RosterTeam, p: RosterPl
     ? `<div class="poolh"><span class="k">${esc(B.prof.pool)}</span><span class="grow"></span><button class="mini" data-toggle-spoiler="1">${esc(winsShown ? B.prof.hideWins : B.prof.showWins)}</button></div>`
       + `<div class="pool">${ph.pool.slice(0, 5).map((e) => `<span class="tchip">${esc(championName(e.champion, c.lang))}<i>×${e.games}${winsShown && e.wins !== null ? ` · ${e.wins}${c.lang === 'zh-Hant' ? '勝' : 'W'}` : ''}</i></span>`).join('')}</div>`
     : `<p class="muted">${esc(B.prof.noPool)}</p>`;
-  return `${head}${bio}<p class="names">${names}</p>${boxes}${wline}${played}${pool}`;
+  return `${head}<p class="names">${names}</p>${boxes}${wline}${played}${pool}`;
 }

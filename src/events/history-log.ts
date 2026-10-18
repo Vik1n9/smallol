@@ -21,6 +21,9 @@ export interface LogEntry {
   side: Team | null;
   code: string | null;
   victim: string | null;
+  /** Players named in the text (as the feed spells them), to link to their profiles when the roster knows them. */
+  player?: string;
+  victimPlayer?: string;
   /** When it was logged (ms), for order. */
   t: number;
 }
@@ -49,6 +52,15 @@ export function parseEntries(text: string | null): LogEntry[] {
 
 export type HistFilter = 'all' | 'big' | string;
 
+/** A player's roster id for a name in the text, or null (no link: a name the roster does not know would be a dead link). */
+export type PlayerLink = (code: string, name: string) => string | null;
+
+/** Within a game, by game time; entries without one (the draft) by when they were logged (review H1). */
+function byGameTime(a: LogEntry, b: LogEntry): number {
+  if (a.at !== null && b.at !== null && a.at !== b.at) return a.at - b.at;
+  return a.t - b.t;
+}
+
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 const clock = (sec: number) => `${Math.floor(Math.max(0, sec) / 60)}:${String(Math.floor(Math.max(0, sec)) % 60).padStart(2, '0')}`;
 
@@ -56,22 +68,37 @@ const clock = (sec: number) => `${Math.floor(Math.max(0, sec) / 60)}:${String(Ma
  * The list. `newestFirst` when it opens downward (the newest row is next to the bar); upward, the
  * newest is at the bottom, still next to the bar. The filter row is at the end away from the bar.
  */
-export function historyView(list: LogEntry[], filter: HistFilter, B: BarStrings, newestFirst: boolean): string {
+export function historyView(list: LogEntry[], filter: HistFilter, B: BarStrings, newestFirst: boolean, link: PlayerLink = () => null, skipText: string | null = null): string {
   const teams = list.length ? list[list.length - 1]!.teams : null;
   const pick = (e: LogEntry) => filter === 'all' || (filter === 'big' ? e.level !== 'normal' : e.code === filter || e.victim === filter);
   const shown = list.filter(pick);
+  // The newest row says what the bar's line already says: leave it out, not the same line twice (review H2).
+  if (skipText && shown.length && shown[shown.length - 1]!.text === skipText) shown.pop();
   const groups: { head: string; rows: LogEntry[] }[] = [];
   for (const e of shown) {
     const g = groups[groups.length - 1];
     if (g && g.head === e.game) g.rows.push(e);
     else groups.push({ head: e.game, rows: [e] });
   }
-  const row = (e: LogEntry) => `<div class="hrow${e.level === 'major' ? ' major' : ''}"><span class="t">${e.at === null ? '' : clock(e.at)}</span>`
-    + `<span class="who">${e.side ? `<i class="dot" style="background:${TEAM_COLOUR[e.side]}"></i>` : ''}${e.code ? `<button class="code" data-team="${esc(e.code)}">${esc(e.code)}</button>` : ''}</span>`
-    + `<span class="x" title="${esc(e.text)}">${esc(e.text)}</span></div>`;
+  // The subject column is the first team the text names (the team that died, for "倒下"), and the text
+  // drops that leading code, so a code never shows twice and the columns line up (review H2).
+  const row = (e: LogEntry) => {
+    const subject = e.code ?? e.victim;
+    const side: Team | null = e.code ? e.side : e.victim ? (e.victim === e.teams[0] ? 'B' : 'R') : null;
+    const body = subject && e.text.startsWith(`${subject} `) ? e.text.slice(subject.length + 1) : e.text;
+    let html = esc(body);
+    for (const [code, name] of [[e.code, e.player], [e.victim, e.victimPlayer]] as const) {
+      const id = code && name ? link(code, name) : null;
+      if (id && code) html = html.replace(esc(name!), `<button class="pl" data-player="${esc(code)}|${esc(id)}">${esc(name!)}</button>`);
+    }
+    return `<div class="hrow${e.level === 'major' ? ' major' : ''}"><span class="t">${e.at === null ? '' : clock(e.at)}</span>`
+      + `<span class="who">${side ? `<i class="dot" style="background:${TEAM_COLOUR[side]}"></i>` : ''}${subject ? `<button class="code" data-team="${esc(subject)}">${esc(subject)}</button>` : ''}</span>`
+      + `<span class="x" title="${esc(e.text)}">${html}</span></div>`;
+  };
   const block = (g: { rows: LogEntry[] }) => {
     const f = g.rows[0]!;
-    const rows = newestFirst ? [...g.rows].reverse() : g.rows;
+    const sorted = [...g.rows].sort(byGameTime);
+    const rows = newestFirst ? sorted.reverse() : sorted;
     return `<div class="hgroup"><div class="hhead">${esc(f.n === null ? `${f.teams[0]} vs ${f.teams[1]}` : B.hist.game(f.n, f.teams[0], f.teams[1]))}</div>${rows.map(row).join('')}</div>`;
   };
   const ordered = newestFirst ? [...groups].reverse() : groups;

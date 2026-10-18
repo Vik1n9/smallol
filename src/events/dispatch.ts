@@ -70,7 +70,7 @@ export class Dispatcher {
       if (ch === 'off') continue;
       // My team: an event it is part of goes one step up (log → strip → card).
       const mine = !!cfg.myTeam && ((e.team && code(e.team) === cfg.myTeam) || (e.victim && code(e.victim) === cfg.myTeam));
-      if (mine) ch = raise(ch);
+      if (mine) ch = raise(ch, LEVEL[e.kind]);
       // Milestones only for my team, when the user narrowed them (custom); the log still has them.
       if (cfg.milestones === 'mine' && MILESTONE_MS[e.kind] && !mine && ch !== 'log') ch = 'log';
       const level = LEVEL[e.kind];
