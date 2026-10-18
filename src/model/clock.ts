@@ -13,6 +13,21 @@ export function clockNow(s: MatchState, receivedAt: number, now: number, tick: b
   return s.clock + Math.min(MAX_TICK_SEC, Math.max(0, (now - receivedAt) / 1000));
 }
 
+/** A new snapshot this much behind the clock already shown is kept from pulling it back. */
+export const STEADY_BACK_SEC = 15;
+
+/**
+ * The clock to keep from a new snapshot: never back by a few seconds. When the clock is worked out from
+ * the feed's timestamps (the broadcast's own clock unread), a snapshot can repeat the last frame's time
+ * while the shown clock has ticked on, and it ran 16..20, 16..21, 27 (2026-10-19). A snapshot more than
+ * 15 s behind (a pause, a restart) is taken as it is.
+ */
+export function steadyClock(prev: MatchState | null, prevAt: number, next: MatchState, at: number): number | null {
+  if (next.clock === null || !prev || prev.clock === null || prev.gameId !== next.gameId || prev.status !== 'in_game' || next.status !== 'in_game') return next.clock;
+  const shown = prev.clock + Math.min(MAX_TICK_SEC, Math.max(0, (at - prevAt) / 1000));
+  return next.clock < shown && shown - next.clock <= STEADY_BACK_SEC ? shown : next.clock;
+}
+
 /** 1626 -> "27:06"; negative values clamp to "0:00". */
 export function fmtClock(sec: number): string {
   const t = Math.max(0, Math.floor(sec));

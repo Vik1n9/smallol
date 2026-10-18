@@ -73,3 +73,19 @@ describe('the score as the broadcast shows it (2026-10-19)', () => {
     expect(adapt({ status: 'in_game', kills: { B: 6, R: 2 } }).teams.R.kills).toBe(2);
   });
 });
+
+describe('the clock only moves on (2026-10-19)', () => {
+  it('a snapshot repeating an earlier time keeps the ticked clock; a later one is taken; a big step back is taken', async () => {
+    const { steadyClock } = await import('../src/model/clock.ts');
+    const { emptyState } = await import('../src/data/streamcv/adapter.ts');
+    const st = (clock: number) => ({ ...emptyState('in_game'), gameId: 'g', clock });
+    // Shown 16 at t=0, ticked to 21 by t=5 s; the feed still says 16: keep 21.
+    expect(steadyClock(st(16), 0, st(16), 5000)).toBe(21);
+    // The feed moves to 27: take it.
+    expect(steadyClock(st(16), 0, st(27), 5000)).toBe(27);
+    // 40 s back (a pause, a restart): take it.
+    expect(steadyClock(st(100), 0, st(60), 5000)).toBe(60);
+    // Another game: take it.
+    expect(steadyClock({ ...st(900), gameId: 'h' }, 0, st(10), 5000)).toBe(10);
+  });
+});

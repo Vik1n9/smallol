@@ -33,7 +33,7 @@ import { adaptRoster, rosterPlayer, rosterUrl } from '../data/streamcv/roster.ts
 import type { RosterTeam } from '../model/roster.ts';
 import type { Schedule } from '../model/schedule.ts';
 import { adapt, emptyState } from '../data/streamcv/adapter.ts';
-import { clockNow, fmtClock } from '../model/clock.ts';
+import { clockNow, fmtClock, steadyClock } from '../model/clock.ts';
 import { TEAMS, type MatchState, type Team } from '../model/types.ts';
 import { detectLang, STRINGS, type Lang } from '../i18n/index.ts';
 import { BAR_STRINGS, type DataTab } from '../i18n/bar.ts';
@@ -316,6 +316,8 @@ function swapLine(html: string, level: Level | null, quiet: boolean): void {
 const source = new StateSource(DEFAULTS.endpoint, {
   onState(s, at) {
     haveLive = true;
+    // The clock only moves on: a snapshot repeating the feed's last time does not pull it back.
+    s = { ...s, clock: steadyClock(state, receivedAt, s, at) };
     sample = false;
     if (state.gameId !== s.gameId) dispatcher.reset();
     prevState = state.status === 'idle' && !haveSeen ? null : state;
