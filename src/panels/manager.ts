@@ -86,8 +86,9 @@ export class Panels {
         url: `panel.html#${name}`,
         x: Math.round(x), y: Math.round(y),
         width: size.w, height: size.h, minWidth: 120, minHeight: 60,
-        // Only the data window takes focus (its fields need the keyboard); the others never interrupt typing.
-        focus: data, focusable: data,
+        // Only the data window can take focus (its fields need the keyboard), and only when the user opens it
+        // (focusData): restored at start it must not take focus from what the user is doing.
+        focus: false, focusable: data,
         decorations: false, transparent: true, shadow: false, resizable: true,
         alwaysOnTop: true, skipTaskbar: true, title: 'DesktopLOL',
       });

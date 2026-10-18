@@ -6,6 +6,8 @@
 //   --sample       show the bundled sample instead of asking the service (dev builds only)
 //   --demo         with the sample: treat it as a game in progress, so countdowns run
 //   --set=path:value,...  change settings in memory (e.g. language:en,mode:companion)
+//   --open=history|mode|panels   open that popover once started (screenshots without clicking)
+//   --tab=teams|schedule|series|settings, --team=GEN, --player=GEN:Canyon   open the data window there
 
 import { getCurrentWindow, currentMonitor } from '@tauri-apps/api/window';
 import { LogicalSize } from '@tauri-apps/api/dpi';
@@ -587,7 +589,9 @@ bar.addEventListener('click', (e) => {
 });
 window.addEventListener('keydown', (e) => { if (e.key === 'Escape') void closePop(); });
 // And when the user clicks elsewhere (the window loses focus). The first-run question stays until answered.
-window.addEventListener('blur', () => { if (popKind && popKind !== 'ask') void closePop(); });
+/** A checking run opened a popover for a screenshot (--open): keep it while focus moves elsewhere. */
+let keepOpen = false;
+window.addEventListener('blur', () => { if (popKind && popKind !== 'ask' && !keepOpen) void closePop(); });
 // The history folds away a minute after the mouse leaves (UI_SPEC §1).
 let leaveTimer: ReturnType<typeof setTimeout> | null = null;
 document.body.addEventListener('mouseleave', () => { if (popKind === 'history') leaveTimer = setTimeout(() => { if (popKind === 'history') void closePop(); }, 60_000); });
@@ -640,14 +644,14 @@ async function start(): Promise<void> {
   const q = new URLSearchParams(location.search);
   if (inTauri) {
     for (const a of await invoke<string[]>('launch_args').catch(() => [] as string[])) {
-      const m = /^--(set|sample)=(.+)$/.exec(a);
+      const m = /^--(set|sample|open|tab|team|player)=(.+)$/.exec(a);
       if (m) q.set(m[1]!, m[2]!);
       for (const flag of ['sample', 'demo']) if (a === `--${flag}`) q.set(flag, '1');
     }
   }
   flags.sample = q.has('sample');
   flags.demo = q.has('demo');
-  const checking = ['sample', 'demo', 'set'].some((k) => q.has(k));
+  const checking = ['sample', 'demo', 'set', 'open', 'tab', 'team', 'player'].some((k) => q.has(k));
   settings = await SettingsStore.open(backend, () => DEFAULTS);
   settings.persist = !checking;
   for (const pair of (q.get('set') ?? '').split(',').filter(Boolean)) {
@@ -670,5 +674,12 @@ async function start(): Promise<void> {
   void panels?.sync(cfg().panels);
   // The one question, the first time (UI_SPEC §8).
   if (!cfg().asked && !checking) void openPop('ask');
+  // Checking aids: open a popover or the data window without clicking.
+  const open = q.get('open');
+  if (open === 'history' || open === 'mode' || open === 'panels') { keepOpen = true; setTimeout(() => void openPop(open), 2500); }
+  const tab = q.get('tab') as DataTab | null, team = q.get('team'), player = q.get('player');
+  if (player) { const [t, p] = player.split(/[|:]/) as [string, string]; profile = { team: t, player: p }; }
+  else if (team) profile = { team, player: null };
+  if (tab || team || player) setTimeout(() => void openData(tab ?? 'teams'), 2500);
 }
 void start();
