@@ -56,10 +56,28 @@ export class Panels {
     for (const name of this.open.keys()) void emitTo(panelLabel(name), 'panel-frame', frame);
   }
 
-  /** Bring the data window forward (it is the one window that takes focus: its search and fields need keys). */
+  private hidden = false;
+  /**
+   * Put every open window out of sight and back (low-key, the hide hotkey). Hidden, not closed: they come
+   * back where they were, as big as they were, and a window opened meanwhile starts hidden.
+   */
+  async setHidden(hidden: boolean): Promise<void> {
+    if (hidden === this.hidden) return;
+    this.hidden = hidden;
+    for (const [name, creating] of this.open) {
+      await creating.catch(() => undefined);
+      const w = await WebviewWindow.getByLabel(panelLabel(name));
+      if (hidden) await w?.hide(); else await w?.show();
+    }
+  }
+
+  /** Bring the data window forward (it is the one window that takes focus: its search and fields need keys).
+   * Shown even while the others are put away: low-key is left from its settings tab. */
   async focusData(): Promise<void> {
     await this.open.get('data');
-    await (await WebviewWindow.getByLabel(panelLabel('data')))?.setFocus().catch(() => undefined);
+    const w = await WebviewWindow.getByLabel(panelLabel('data'));
+    if (this.hidden) await w?.show();
+    await w?.setFocus().catch(() => undefined);
   }
 
   private async create(name: PanelName): Promise<void> {
@@ -88,7 +106,7 @@ export class Panels {
         width: size.w, height: size.h, minWidth: 120, minHeight: 60,
         // Only the data window can take focus (its fields need the keyboard), and only when the user opens it
         // (focusData): restored at start it must not take focus from what the user is doing.
-        focus: false, focusable: data,
+        focus: false, focusable: data, visible: !this.hidden,
         decorations: false, transparent: true, shadow: false, resizable: true,
         alwaysOnTop: true, skipTaskbar: true, title: 'DesktopLOL',
       });

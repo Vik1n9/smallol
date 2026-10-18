@@ -19,8 +19,13 @@ export function modeLabel(cfg: Settings, B: BarStrings): string {
   return cfg.mode === 'custom' ? B.customOf(B.base[cfg.modeBase]) : B.mode[cfg.mode];
 }
 
-export function settingsView(cfg: Settings, S: Strings, B: BarStrings, endpointError: boolean): string {
+/** What the settings tab needs besides the settings: low-key now (by hand or detection), hotkeys another
+ * program holds, why a typed stream address was refused. */
+export interface SettingsExtra { lowNow: boolean; hotkeyBusy: string[]; watchError: keyof BarStrings['b3']['watchBad'] | null }
+
+export function settingsView(cfg: Settings, S: Strings, B: BarStrings, endpointError: boolean, x: SettingsExtra = { lowNow: false, hotkeyBusy: [], watchError: null }): string {
   const t = S.set;
+  const b = B.b3;
   const modes = (['work', 'companion', 'custom'] as const).map((m) =>
     `<button data-set="mode:${m}" aria-pressed="${cfg.mode === m}">${esc(m === 'custom' && cfg.mode === 'custom' ? modeLabel(cfg, B) : B.mode[m])}</button>`).join('');
   const events = EVENT_KINDS.map((k) => {
@@ -38,6 +43,9 @@ export function settingsView(cfg: Settings, S: Strings, B: BarStrings, endpointE
     <div class="srow"><span class="k">${esc(B.sections.soon)}</span>${seg('soonLead', String(cfg.soonLead), SOON_LEADS.map((n) => [String(n), B.seconds(n)]))}</div>
     <div class="srow"><span class="k">${esc(B.sections.milestones)}</span>${seg('milestones', cfg.milestones, [['all', B.milestones.all], ['mine', B.milestones.mine]])}</div>
     <div class="srow"><span class="k">${esc(B.sections.corner)}</span>${seg('notifyCorner', cfg.notifyCorner, [['br', B.corner.br], ['tr', B.corner.tr]])}</div>
+    <div class="srow">${check('cardSound', cfg.cardSound, b.sound)}${seg('soundVolume', cfg.soundVolume, (['low', 'mid', 'high'] as const).map((v) => [v, b.volume[v]]))}<span class="seg"><button data-action="sound-test">${esc(b.test)}</button></span></div>
+    <div class="srow"><span class="k">${esc(b.watchUrl)}</span><input class="key" data-input="watchUrl" value="${esc(cfg.watchUrl)}" spellcheck="false" placeholder="https://"/></div>
+    <p class="note">${esc(x.watchError ? b.watchBad[x.watchError] : b.watchNote)}</p>
     <h3>${esc(B.sections.panels)}</h3>
     <div class="chips">${(['minimap', 'draftGame', 'players'] as const).map((p) => check(`panels.${p}`, cfg.panels[p], B.panel[p])).join('')}</div>
     <h3>${esc(B.sections.general)}</h3>
@@ -45,6 +53,12 @@ export function settingsView(cfg: Settings, S: Strings, B: BarStrings, endpointE
     <div class="srow"><span class="k">${esc(t.background)}</span>${seg('background', cfg.background, [['solid', t.solid], ['semi', t.semi], ['clear', t.clear]])}</div>
     <div class="srow">${check('spoilerFree', cfg.spoilerFree, t.spoilerFree)}</div>
     <div class="srow">${check('tickClock', cfg.tickClock, t.tickClock)}</div>
+    <div class="srow">${check('lowKey', x.lowNow, b.lowKey)}</div>
+    <div class="srow">${check('hotkeys', cfg.hotkeys, b.hotkeys)}</div>
+    ${cfg.hotkeys ? `<p class="note">${esc(b.hotkeyHide)}<br>${esc(b.hotkeyLow)}</p>` : ''}
+    ${x.hotkeyBusy.length ? `<p class="note warn">${esc(b.hotkeyBusy(x.hotkeyBusy.join(', ')))}</p>` : ''}
+    <div class="srow">${check('autoLowKey', cfg.autoLowKey, b.autoLow)}</div>
+    <p class="note">${esc(b.autoLowNote)}</p>
     <h3>${esc(t.show)}</h3>
     <div class="chips">${FEATURES.filter((f) => f !== 'series' && f !== 'nextMatch').map((f) => check(`show.${f}`, cfg.show[f], S.feature[f])).join('')}</div>
     <h3>${esc(t.endpoint)}</h3>

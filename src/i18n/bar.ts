@@ -17,7 +17,7 @@ export interface BarStrings {
   event: Record<EventKind, string>;
   panel: Record<PanelName, string>;
   tab: Record<DataTab, string>;
-  icon: Record<'mode' | 'history' | 'panels' | 'data' | 'pause' | 'resume' | 'tier' | 'settings', string>;
+  icon: Record<'mode' | 'history' | 'panels' | 'data' | 'pause' | 'resume' | 'tier' | 'settings' | 'watch', string>;
   ask: string;
   feedback: { mode(m: string): string; paused: string; resumed: string };
   more: string;
@@ -43,6 +43,12 @@ export interface BarStrings {
   up: string;
   minutes(n: number): string;
   atStart: string;
+  /** Batch 3: low-key, hotkeys, presentation detection, card sound, stream address. */
+  b3: {
+    lowKey: string; lowKeyTip: string; hotkeys: string; hotkeyHide: string; hotkeyLow: string; hotkeyBusy(keys: string): string;
+    autoLow: string; autoLowNote: string; sound: string; volume: Record<'low' | 'mid' | 'high', string>; test: string;
+    watchUrl: string; watchNote: string; watchBad: Record<'scheme' | 'credentials' | 'long' | 'bad', string>; watch: string; hideRefused: string;
+  };
 }
 
 const zh: BarStrings = {
@@ -69,7 +75,7 @@ const zh: BarStrings = {
     played: (n) => `本屆上場 ${n} 局`, pool: '本屆英雄池', showWins: '顯示勝率', hideWins: '隱藏勝率', debut: (y) => `${y} 出道`, noPool: '本屆還沒上場',
   },
   hist: { all: '全部', big: '重要事件', game: (n, a, b) => `第 ${n} 局 · ${a} 對 ${b}`, empty: '還沒有紀錄' },
-  icon: { mode: '通知模式', history: '歷史', panels: '面板', data: '資料窗', pause: '暫停通知 30 分鐘', resume: '恢復通知', tier: '切換大小', settings: '設定' },
+  icon: { mode: '通知模式', history: '歷史', panels: '面板', data: '資料窗', pause: '暫停通知 30 分鐘', resume: '恢復通知', tier: '切換大小', settings: '設定', watch: '看轉播' },
   ask: '你怎麼用這個小工具？之後可以從模式標籤改。',
   feedback: { mode: (m) => `通知模式：${m}`, paused: '通知已暫停 30 分鐘', resumed: '通知已恢復' },
   more: '+{n} 則 ▸',
@@ -87,6 +93,15 @@ const zh: BarStrings = {
   up: '在場',
   minutes: (n) => `${n} 分`,
   atStart: '開打時',
+  b3: {
+    lowKey: '低調模式', lowKeyTip: '雙擊恢復', hotkeys: '全域熱鍵',
+    hotkeyHide: '隱藏全部視窗 Ctrl+Alt+Shift+H', hotkeyLow: '低調模式 Ctrl+Alt+Shift+Q', hotkeyBusy: (k) => `熱鍵被其他程式占用：${k}`,
+    autoLow: '全螢幕、簡報或勿擾時自動低調', autoLowNote: '上班模式包含自己全螢幕看轉播時；陪看模式只在簡報與勿擾時。',
+    sound: '卡片音效', volume: { low: '小', mid: '中', high: '大' }, test: '試聽',
+    watchUrl: '轉播網址', watchNote: '有填時，卡片滑過會出現「▶ 看」，點了用預設瀏覽器開這個網址。',
+    watchBad: { scheme: '只接受 http 或 https，沒有儲存', credentials: '網址不能帶帳號密碼，沒有儲存', long: '網址太長（上限 2048 字），沒有儲存', bad: '網址格式不對，沒有儲存' },
+    watch: '▶ 看', hideRefused: '沒有系統匣也沒有熱鍵，不隱藏',
+  },
 };
 
 const en: BarStrings = {
@@ -113,7 +128,7 @@ const en: BarStrings = {
     played: (n) => `${n} game${n === 1 ? '' : 's'} this event`, pool: 'Champions this event', showWins: 'Show wins', hideWins: 'Hide wins', debut: (y) => `debut ${y}`, noPool: 'No games this event yet',
   },
   hist: { all: 'All', big: 'Big events', game: (n, a, b) => `Game ${n} · ${a} vs ${b}`, empty: 'Nothing yet' },
-  icon: { mode: 'Notification mode', history: 'History', panels: 'Panels', data: 'Data window', pause: 'Pause notifications for 30 min', resume: 'Resume notifications', tier: 'Change size', settings: 'Settings' },
+  icon: { mode: 'Notification mode', history: 'History', panels: 'Panels', data: 'Data window', pause: 'Pause notifications for 30 min', resume: 'Resume notifications', tier: 'Change size', settings: 'Settings', watch: 'Watch the stream' },
   ask: 'How will you use this? You can change it later from the mode label.',
   feedback: { mode: (m) => `Notifications: ${m}`, paused: 'Notifications paused for 30 min', resumed: 'Notifications back on' },
   more: '+{n} more ▸',
@@ -131,6 +146,15 @@ const en: BarStrings = {
   up: 'up',
   minutes: (n) => `${n} min`,
   atStart: 'At start',
+  b3: {
+    lowKey: 'Low-key', lowKeyTip: 'Double-click to restore', hotkeys: 'Global hotkeys',
+    hotkeyHide: 'Hide every window Ctrl+Alt+Shift+H', hotkeyLow: 'Low-key Ctrl+Alt+Shift+Q', hotkeyBusy: (k) => `Hotkey taken by another program: ${k}`,
+    autoLow: 'Go low-key in full screen, presentations and quiet hours', autoLowNote: 'At work this includes your own full-screen stream; watching along, only presentations and quiet hours.',
+    sound: 'Card sound', volume: { low: 'Low', mid: 'Medium', high: 'High' }, test: 'Play',
+    watchUrl: 'Stream address', watchNote: 'When set, cards show "▶ Watch" on hover; it opens this address in your browser.',
+    watchBad: { scheme: 'Only http or https; not saved', credentials: 'No user name or password in the address; not saved', long: 'Too long (2048 at most); not saved', bad: 'Not an address; not saved' },
+    watch: '▶ Watch', hideRefused: 'No tray or hotkey to undo it: not hidden',
+  },
 };
 
 export const BAR_STRINGS: Record<Lang, BarStrings> = { 'zh-Hant': zh, en };

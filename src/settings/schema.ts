@@ -79,6 +79,18 @@ export interface Settings {
   milestones: 'all' | 'mine';
   /** My team's code: its events go one step up (log → strip → card). */
   myTeam: string | null;
+  /** Low-key, turned on by hand: a small grey strip of numbers, no notices (batch 3 §2). Turned on by
+   * presentation detection it is not saved. */
+  lowKey: boolean;
+  /** The two global hotkeys (hide everything, low-key). */
+  hotkeys: boolean;
+  /** Go low-key by itself while Windows says not to disturb (full screen, presenting, quiet hours). */
+  autoLowKey: boolean;
+  /** A short tone with each card, two rising notes for a major one (off by default). */
+  cardSound: boolean;
+  soundVolume: 'low' | 'mid' | 'high';
+  /** The user's own stream address, opened from a card's "▶ Watch" (empty: no button). */
+  watchUrl: string;
 }
 
 export const DEFAULTS: Settings = {
@@ -104,6 +116,12 @@ export const DEFAULTS: Settings = {
   soonLead: 30,
   milestones: 'all',
   myTeam: null,
+  lowKey: false,
+  hotkeys: true,
+  autoLowKey: true,
+  cardSound: false,
+  soundVolume: 'mid',
+  watchUrl: '',
 };
 
 const oneOf = <T extends string>(v: unknown, options: readonly T[], fallback: T): T =>
@@ -115,6 +133,19 @@ const obj = (v: unknown): Record<string, unknown> => (v && typeof v === 'object'
 export function validEndpoint(v: unknown): v is string {
   if (typeof v !== 'string' || v.length > 300 || /\s/.test(v)) return false;
   try { const u = new URL(v); return u.protocol === 'http:' || u.protocol === 'https:'; } catch { return false; }
+}
+
+/** Why a stream address is refused, or null when it is fine (empty is fine: no button). Same rules as
+ * src-tauri's watch_url_ok: http or https, a host, no user name or password, at most 2048 characters. */
+export function watchUrlProblem(v: string): 'scheme' | 'credentials' | 'long' | 'bad' | null {
+  if (v === '') return null;
+  if (v.length > 2048) return 'long';
+  let u: URL;
+  try { u = new URL(v); } catch { return 'bad'; }
+  if (u.protocol !== 'http:' && u.protocol !== 'https:') return 'scheme';
+  if (u.username || u.password) return 'credentials';
+  if (!u.hostname) return 'bad';
+  return null;
 }
 
 function size(v: unknown): Size | undefined {
@@ -161,5 +192,11 @@ export function normalize(raw: unknown): Settings {
     soonLead: (SOON_LEADS as readonly unknown[]).includes(o.soonLead) ? (o.soonLead as Settings['soonLead']) : d.soonLead,
     milestones: oneOf(o.milestones, ['all', 'mine'], d.milestones),
     myTeam: typeof o.myTeam === 'string' && /^[A-Za-z0-9]{2,5}$/.test(o.myTeam) ? o.myTeam : null,
+    lowKey: bool(o.lowKey, d.lowKey),
+    hotkeys: bool(o.hotkeys, d.hotkeys),
+    autoLowKey: bool(o.autoLowKey, d.autoLowKey),
+    cardSound: bool(o.cardSound, d.cardSound),
+    soundVolume: oneOf(o.soundVolume, ['low', 'mid', 'high'], d.soundVolume),
+    watchUrl: typeof o.watchUrl === 'string' && watchUrlProblem(o.watchUrl) === null ? o.watchUrl : d.watchUrl,
   };
 }

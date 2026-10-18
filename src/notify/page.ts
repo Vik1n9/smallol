@@ -5,6 +5,7 @@
 
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { emit } from '@tauri-apps/api/event';
+import { invoke } from '@tauri-apps/api/core';
 import type { Notice } from '../events/dispatch.ts';
 
 const stack = document.getElementById('stack')!;
@@ -18,6 +19,8 @@ let overflow = 0;
 let overflowLeft = 0;
 let moreLabel = (n: number) => `+${n} ▸`;
 let hovering = false;
+/** "▶ 看" when the user saved a stream address, else null (batch 3 §4). */
+let watchLabel: string | null = null;
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 
@@ -26,7 +29,10 @@ function fill(el: HTMLElement, n: Notice): void {
   const time = n.time ? `<span class="time">${esc(n.time)}</span>` : '';
   if (n.kind === 'card') {
     const sub = n.sub ? `<span class="sub${n.tall && n.sub.length > 40 ? ' tight' : ''}">${esc(n.sub)}</span>` : '';
-    el.innerHTML = `<div class="head"><span class="title">${esc(n.title)}</span>${time}</div>${sub}`;
+    // With a stream address the time sits in a fixed 48 px box that turns into "▶ 看" on hover, so the
+    // title never re-truncates when the mouse comes over.
+    const right = watchLabel ? `<span class="tw">${time || '<span class="time"></span>'}<button class="watch">${esc(watchLabel)}</button></span>` : time;
+    el.innerHTML = `<div class="head"><span class="title">${esc(n.title)}</span>${right}</div>${sub}`;
   } else {
     el.innerHTML = `<span class="title">${esc(n.title)}</span>${time}`;
   }
@@ -114,13 +120,24 @@ stack.addEventListener('click', (e) => {
   if (!el) return;
   if (el.classList.contains('more')) { overflow = 0; drawMore(); void emit('notify-more'); report(); return; }
   const it = items.get(el.dataset.id ?? '');
+  // "▶ 看": open the saved address (the command takes none: nothing here can open anything else).
+  if ((e.target as HTMLElement).closest('.watch')) void invoke('open_watch_url').catch(() => undefined);
   if (it) retire(it);
 });
 
+// Animation start and end, for the main window's --animlog checking aid (it ignores them otherwise).
+for (const type of ['animationstart', 'animationend'] as const) {
+  stack.addEventListener(type, (e) => {
+    const el = e.target as HTMLElement;
+    void emit('notify-anim', { ev: type === 'animationstart' ? 'start' : 'end', name: e.animationName, cls: el.className, id: el.closest<HTMLElement>('.item')?.dataset.id ?? '', t: performance.now() });
+  });
+}
+
 const self = getCurrentWebviewWindow();
 void (async () => {
-  await self.listen<{ items: Notice[]; more: string; corner: 'br' | 'tr' }>('notices', (e) => {
+  await self.listen<{ items: Notice[]; more: string; corner: 'br' | 'tr'; watch: string | null }>('notices', (e) => {
     moreLabel = (n) => e.payload.more.replace('{n}', String(n));
+    watchLabel = e.payload.watch;
     document.body.classList.toggle('tr', e.payload.corner === 'tr');
     for (const n of e.payload.items) upsert(n);
     report();

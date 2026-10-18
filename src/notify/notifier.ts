@@ -17,6 +17,8 @@ export class Notifier {
   private width = WIDTH;
   /** "+{n} 則 ▸" in the user's language. */
   more = '+{n} ▸';
+  /** "▶ 看" when the user saved a stream address: cards show it on hover (batch 3 §4); null, no button. */
+  watch: string | null = null;
   /** Bottom-right (spec), or top-right when Windows' own notifications cover the bottom corner. */
   corner: 'br' | 'tr' = 'br';
 
@@ -28,7 +30,7 @@ export class Notifier {
     if (!items.length) return;
     try {
       await this.open();
-      await emitTo(LABEL, 'notices', { items, more: this.more, corner: this.corner });
+      await emitTo(LABEL, 'notices', { items, more: this.more, corner: this.corner, watch: this.watch });
     } catch (e) {
       console.warn('notification window:', e);
     }

@@ -11,6 +11,7 @@ import type { RosterTeam } from '../model/roster.ts';
 import type { Schedule } from '../model/schedule.ts';
 import type { MatchState } from '../model/types.ts';
 import type { PanelName, Settings } from '../settings/schema.ts';
+import type { SettingsExtra } from '../ui/settings-view.ts';
 
 export interface PanelFrame {
   state: MatchState;
@@ -28,6 +29,8 @@ export interface PanelFrame {
   /** The team or player open in the data window's teams tab. */
   profile: ProfileNav;
   endpointError: boolean;
+  /** Low-key now, hotkeys another program holds, a refused stream address (the settings tab). */
+  settingsExtra: SettingsExtra;
 }
 
 /** A click in a window, as the element's data-* attributes. */

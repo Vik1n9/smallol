@@ -9,6 +9,10 @@
 //   --open=history|mode|panels|ask   open that popover once started (screenshots without clicking)
 //   --tab=teams|schedule|series|settings, --team=GEN, --player=GEN:Canyon   open the data window there
 //   --match=<matchId>|next   with --tab=schedule: that match picked (both teams, their links)
+//   --animlog      write every animation's start and end (bar and notices) to anim-log.jsonl
+//   --press=hide|lowkey[:seconds],...   run what a hotkey runs, at those seconds after start (else one every 3 s; no keys sent)
+//   --notify-state=busy|d3d|presentation|quiet|app|away|ok[:seconds],...   stand in for Windows' answer
+//   --no-tray      (read by the shell too) no tray icon: hiding everything is refused unless a hotkey can undo it
 
 import { getCurrentWindow, currentMonitor } from '@tauri-apps/api/window';
 import { LogicalSize } from '@tauri-apps/api/dpi';
@@ -26,7 +30,7 @@ import { clockNow, fmtClock } from '../model/clock.ts';
 import { TEAMS, type MatchState, type Team } from '../model/types.ts';
 import { detectLang, STRINGS, type Lang } from '../i18n/index.ts';
 import { BAR_STRINGS, type DataTab } from '../i18n/bar.ts';
-import { DEFAULTS, normalize, PANELS, type NotifyBase, type PanelName, type Settings, type Size } from '../settings/schema.ts';
+import { DEFAULTS, normalize, PANELS, watchUrlProblem, type NotifyBase, type PanelName, type Settings, type Size } from '../settings/schema.ts';
 import { SettingsStore, type SettingsBackend } from '../settings/store.ts';
 import { Announced, deriveEvents, dueReminders, winnerOf } from '../events/derive.ts';
 import { deriveMore, Memory } from '../events/derive2.ts';
@@ -41,6 +45,8 @@ import { TEAM_COLOUR } from '../render/map-svg.ts';
 import { ELEMENT_COLOUR } from '../render/dragons.ts';
 import { fmtStart } from './schedule-views.ts';
 import { modeLabel } from './settings-view.ts';
+import { AutoLow, detectionMode, OS_STATES, type OsState } from './autolow.ts';
+import { playTone } from './sound.ts';
 import { esc, fmtGold } from './views.ts';
 
 const inTauri = '__TAURI_INTERNALS__' in window;
@@ -103,6 +109,9 @@ const BAR_SIZE: Record<'bar' | 'dot', Size> = { bar: { w: 380, h: 48 }, dot: { w
 const WIDTH_RANGE: Record<'bar' | 'dot', [number, number]> = { bar: [300, 600], dot: [180, 600] };
 const tier = () => cfg().barTier;
 const barWidth = () => cfg().sizes[`size-${tier()}`]?.w ?? BAR_SIZE[tier()].w;
+/** Low-key (batch 3 §2): one grey line of numbers, 150×24, top-left where the bar was. Never saved as the bar's size. */
+const LOW_SIZE: Size = { w: 150, h: 24 };
+const winWidth = () => (lowKeyOn() ? LOW_SIZE.w : barWidth());
 type Pop = null | 'mode' | 'panels' | 'ask' | 'history';
 let popKind: Pop = null;
 let popH = 0;
@@ -116,12 +125,12 @@ async function resizeTo(w: number, h: number): Promise<void> {
   await win.setSize(new LogicalSize(w, h)).catch(() => undefined);
   setTimeout(() => { resizingTo = false; }, 300);
 }
-const wantedHeight = () => BAR_SIZE[tier()].h + (popKind ? popH + 4 : 0);
-async function fitWindow(): Promise<void> { await resizeTo(barWidth(), wantedHeight()); }
+const wantedHeight = () => (lowKeyOn() ? LOW_SIZE.h : BAR_SIZE[tier()].h + (popKind ? popH + 4 : 0));
+async function fitWindow(): Promise<void> { await resizeTo(winWidth(), wantedHeight()); }
 /** Position and size together (src-tauri set_bounds): two calls made the bar flicker as a popover opened upward. */
 async function setBounds(x: number, y: number, h: number): Promise<void> {
   resizingTo = true;
-  await invoke('set_bounds', { label: 'main', x, y, w: barWidth(), h, show: false }).catch(() => undefined);
+  await invoke('set_bounds', { label: 'main', x, y, w: winWidth(), h, show: false }).catch(() => undefined);
   setTimeout(() => { resizingTo = false; }, 300);
 }
 
@@ -131,7 +140,7 @@ window.addEventListener('resize', () => {
   if (!win || resizingTo) return;
   // Only the width is the user's: the bar's height is fixed (UI_SPEC §1).
   if (Math.abs(window.innerHeight - wantedHeight()) > 1) void resizeTo(window.innerWidth, wantedHeight());
-  if (popKind) return;
+  if (popKind || lowKeyOn()) return;
   if (saveTimer) clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
     const [lo, hi] = WIDTH_RANGE[tier()];
@@ -196,6 +205,13 @@ const notifier = new Notifier();
 const reminded = new Set<string>();
 let pausedUntil = 0;
 const paused = () => Date.now() < pausedUntil;
+/** Low-key turned on by presentation detection (never saved); by hand it is the lowKey setting. */
+const auto = new AutoLow();
+const lowKeyOn = () => cfg().lowKey || auto.on;
+/** Every window put away by the hide hotkey (never saved: each start shows them). */
+let hiddenByKey = false;
+/** No cards, strips or sounds: paused, low-key, or hidden. The log line and the history go on. */
+const quiet = () => paused() || lowKeyOn() || hiddenByKey;
 
 /** The log history (UI_SPEC §5): the last five games, saved to log-history.json. */
 let logList: LogEntry[] = [];
@@ -236,10 +252,19 @@ function onEvents(events: ReturnType<typeof deriveEvents>, s: MatchState): void 
   if (!events.length) return;
   const now = Date.now();
   logEvents(events, s);
-  const res = dispatcher.step(events, now, cfg(), codeOf(s), lang, paused());
+  const res = dispatcher.step(events, now, cfg(), codeOf(s), lang, quiet());
   if (res.line && replacesLine(line, res.line.level, now)) showLine({ ...res.line, shownAt: now, game: s.gameId });
-  if (res.notices.length && inTauri) void notifier.push(res.notices);
+  if (res.notices.length && inTauri && !quiet()) {
+    notifier.watch = cfg().watchUrl ? B.b3.watch : null;
+    void notifier.push(res.notices);
+    // One tone per card, from this page (a hidden notification window would have it throttled).
+    const card = res.notices.find((n) => n.kind === 'card');
+    if (card && cfg().cardSound && card.level !== 'normal') { soundCalls++; playTone(card.level, cfg().soundVolume); }
+  }
 }
+
+/** Tones played, for the checking runs (low-key, paused and hidden must play none). */
+let soundCalls = 0;
 
 let lineEl: HTMLElement | null = null;
 function lineHtml(l: { text: string; at: number | null; team: Team | null }): string {
@@ -254,7 +279,7 @@ function showLine(l: Line): void {
   bar.classList.add('lit');
   requestAnimationFrame(() => requestAnimationFrame(() => bar.classList.remove('lit')));
   bar.style.setProperty('--c', l.team ? TEAM_COLOUR[l.team] : 'var(--accent)');
-  if (l.level === 'major') { bar.classList.remove('glow'); void bar.offsetWidth; bar.classList.add('glow'); }
+  if (l.level === 'major' && !lowKeyOn()) { bar.classList.remove('glow'); void bar.offsetWidth; bar.classList.add('glow'); }
 }
 function swapLine(html: string, level: Level | null, quiet: boolean): void {
   if (lineEl && lineEl.dataset.html === html) return;
@@ -313,10 +338,15 @@ let dataTab: DataTab = 'schedule';
 let profile: { team: string | null; player: string | null } = { team: null, player: null };
 let pickedMatch: string | null = null;
 let endpointError = false;
+let watchError: ReturnType<typeof watchUrlProblem> = null;
+/** Hotkeys by name and whether they are registered (src-tauri set_hotkeys). */
+let hotkeyState: Record<string, boolean> = {};
+const HOTKEY_LABEL: Record<string, string> = { hide: 'Ctrl+Alt+Shift+H', lowkey: 'Ctrl+Alt+Shift+Q' };
 const panels = inTauri ? new Panels((n) => cfg().sizes[`size-panel-${n}`] ?? PANEL_SIZE[n]) : null;
 function sendPanels(): void {
   if (!panels) return;
-  const f: PanelFrame = { state, receivedAt, settings: cfg(), lang, conn, sample, schedule, history, roster, pickedMatch, dataTab, profile, endpointError };
+  const f: PanelFrame = { state, receivedAt, settings: cfg(), lang, conn, sample, schedule, history, roster, pickedMatch, dataTab, profile, endpointError,
+    settingsExtra: { lowNow: lowKeyOn(), hotkeyBusy: cfg().hotkeys ? Object.entries(hotkeyState).filter(([, on]) => !on).map(([k]) => HOTKEY_LABEL[k] ?? k) : [], watchError } };
   panels.send(f);
 }
 async function openData(tab: DataTab): Promise<void> {
@@ -337,6 +367,7 @@ const ICON = {
   resume: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 6h2.5L9 3v10L5.5 10H3z"/><path d="M11.5 5.5c1 .7 1.5 1.6 1.5 2.5s-.5 1.8-1.5 2.5"/></svg>',
   tier: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.5 2.5h4v4M6.5 13.5h-4v-4M13.5 2.5l-4.5 4.5M2.5 13.5l4.5-4.5"/></svg>',
   settings: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.8v2M8 12.2v2M1.8 8h2M12.2 8h2M3.6 3.6l1.4 1.4M11 11l1.4 1.4M3.6 12.4 5 11M11 5l1.4-1.4"/></svg>',
+  watch: '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M5 3.2v9.6L12.6 8z"/></svg>',
 };
 
 function scoreHtml(s: MatchState, compact: boolean): string {
@@ -441,7 +472,8 @@ function iconsRow(): string {
     + b('data', B.icon.data, ICON.data, cfg().panels.data)
     + (paused() ? b('pause', B.icon.resume, ICON.resume, true) : b('pause', B.icon.pause, ICON.pause))
     + b('tier', B.icon.tier, ICON.tier)
-    + b('settings', B.icon.settings, ICON.settings);
+    + b('settings', B.icon.settings, ICON.settings)
+    + (cfg().watchUrl ? b('watch', B.icon.watch, ICON.watch) : '');
 }
 
 function popHtml(): string {
@@ -463,9 +495,31 @@ function popHtml(): string {
   return '';
 }
 
+/** The low-key line: numbers only, nothing that reads as sport at a glance (batch 3 §2). */
+function lowText(clock: number | null): string {
+  const s = state;
+  if (s.status === 'in_game') return `${s.teams.B.kills ?? 0}:${s.teams.R.kills ?? 0} · ${clock === null ? '–' : fmtClock(clock)}`;
+  if (s.status === 'waiting') return 'BP';
+  if (s.status === 'idle') {
+    const m = schedule ? nextMatch(schedule, Date.now()) : null;
+    if (m) { const d = new Date(m.start); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; }
+  }
+  return '—';
+}
+
 function render(): void {
   document.body.classList.toggle('dot', tier() === 'dot');
   const clock = clockNow(state, receivedAt, Date.now(), cfg().tickClock);
+  const low = lowKeyOn();
+  document.body.classList.toggle('low', low);
+  bar.title = low ? B.b3.lowKeyTip : '';
+  if (low) {
+    let el = bar.querySelector<HTMLElement>('.lowrow');
+    if (!el) { el = document.createElement('div'); el.className = 'lowrow'; bar.appendChild(el); }
+    const text = lowText(clock);
+    if (el.textContent !== text) el.textContent = text;
+    return;
+  }
   if (tier() === 'dot') {
     let el = bar.querySelector<HTMLElement>('.dotrow');
     if (!el) { el = document.createElement('div'); el.className = 'dotrow'; bar.appendChild(el); }
@@ -526,7 +580,7 @@ function setMode(m: 'work' | 'companion' | 'custom'): void {
 function act(d: Record<string, string | undefined>): void {
   if (d.mode) { setMode(d.mode as 'work' | 'companion' | 'custom'); void closePop(); return; }
   if (d.ask) { settings.update((x) => { x.mode = d.ask as 'work' | 'companion'; x.asked = true; }); void closePop(); showNote(B.feedback.mode(modeLabel(cfg(), B))); return; }
-  if (d.panel && d.panel in cfg().panels && !d.action && !d.tab && !d.set && !d.toggle && !d.ev && !d.reset && !d.match && d.endpoint === undefined && !('toggleSpoiler' in d) && !d.checked) {
+  if (d.panel && d.panel in cfg().panels && !d.action && !d.tab && !d.set && !d.toggle && !d.ev && !d.reset && !d.match && d.endpoint === undefined && d.watchUrl === undefined && !('toggleSpoiler' in d) && !d.checked) {
     const p = d.panel as PanelName;
     settings.update((x) => { x.panels[p] = !x.panels[p]; });
     return;
@@ -539,7 +593,15 @@ function act(d: Record<string, string | undefined>): void {
   if (d.action === 'profile-back') { profile = profile.player ? { team: profile.team, player: null } : { team: null, player: null }; sendPanels(); return; }
   if (d.star) { const code = d.star; settings.update((x) => { x.myTeam = x.myTeam === code ? null : code; }); return; }
   if (d.set) { const [path, value] = d.set.split(':') as [string, string]; if (path === 'mode') setMode(value as 'work' | 'companion' | 'custom'); else setPath(path, value); return; }
+  // Low-key from the settings: the box shows low-key now (by hand or detection); clearing it leaves either.
+  if (d.toggle === 'lowKey') { if (d.checked === 'true') settings.update((x) => { x.lowKey = true; }); else leaveLowKey(); return; }
   if (d.toggle) { setPath(d.toggle, d.checked === 'true'); return; }
+  if (d.watchUrl !== undefined) {
+    const v = d.watchUrl;
+    watchError = watchUrlProblem(v);
+    if (!watchError) settings.update((x) => { x.watchUrl = v; }); else sendPanels();
+    return;
+  }
   if (d.ev) {
     const [kind, ch] = d.ev.split(':') as [EventKind, string];
     settings.update((x) => {
@@ -578,6 +640,8 @@ function act(d: Record<string, string | undefined>): void {
       break;
     case 'tier': settings.update((x) => { x.barTier = x.barTier === 'bar' ? 'dot' : 'bar'; }); break;
     case 'settings': void openData('settings'); break;
+    case 'sound-test': playTone('major', cfg().soundVolume); break;
+    case 'watch': void invoke('open_watch_url').catch(() => undefined); break;
   }
 }
 
@@ -596,11 +660,13 @@ for (const el of [bar, pop]) el.addEventListener('click', (e) => {
 });
 // The dot: a click on it (not a drag) goes back to the bar.
 bar.addEventListener('click', (e) => {
-  if ((e.target as HTMLElement).closest('button') || moved) return;
+  if ((e.target as HTMLElement).closest('button') || moved || lowKeyOn()) return;
   if (tier() === 'dot') settings.update((x) => { x.barTier = 'bar'; });
   else void openPop('history');
 });
 window.addEventListener('keydown', (e) => { if (e.key === 'Escape') void closePop(); });
+// Low-key: a double click brings the bar back; a single click or the mouse passing over does nothing.
+bar.addEventListener('dblclick', () => { if (lowKeyOn()) leaveLowKey(); });
 // And when the user clicks elsewhere (the window loses focus). The first-run question stays until answered.
 /** A checking run opened a popover for a screenshot (--open): keep it while focus moves elsewhere. */
 let keepOpen = false;
@@ -647,6 +713,9 @@ function onSettings(now: Settings, before: Settings): void {
     rosterPoller.setUrl(rosterUrl(now.endpoint));
   }
   if (now.barTier !== before.barTier) void fitWindow();
+  if (now.hotkeys !== before.hotkeys) void applyHotkeys();
+  if (now.watchUrl !== before.watchUrl) watchError = null;
+  syncLow();
   notifier.corner = now.notifyCorner;
   if (PANELS.some((p) => now.panels[p] !== before.panels[p])) void panels?.sync(now.panels);
   sendPanels();
@@ -657,14 +726,14 @@ async function start(): Promise<void> {
   const q = new URLSearchParams(location.search);
   if (inTauri) {
     for (const a of await invoke<string[]>('launch_args').catch(() => [] as string[])) {
-      const m = /^--(set|sample|open|tab|team|player|match)=(.+)$/.exec(a);
+      const m = /^--(set|sample|open|tab|team|player|match|press|notify-state)=(.+)$/.exec(a);
       if (m) q.set(m[1]!, m[2]!);
-      for (const flag of ['sample', 'demo']) if (a === `--${flag}`) q.set(flag, '1');
+      for (const flag of ['sample', 'demo', 'animlog', 'no-tray']) if (a === `--${flag}`) q.set(flag, '1');
     }
   }
   flags.sample = q.has('sample');
   flags.demo = q.has('demo');
-  const checking = ['sample', 'demo', 'set', 'open', 'tab', 'team', 'player', 'match'].some((k) => q.has(k));
+  const checking = ['sample', 'demo', 'set', 'open', 'tab', 'team', 'player', 'match', 'animlog', 'press', 'notify-state', 'no-tray'].some((k) => q.has(k));
   settings = await SettingsStore.open(backend, () => DEFAULTS);
   settings.persist = !checking;
   for (const pair of (q.get('set') ?? '').split(',').filter(Boolean)) {
@@ -693,6 +762,16 @@ async function start(): Promise<void> {
   const tab = q.get('tab') as DataTab | null, team = q.get('team'), player = q.get('player');
   if (player) { const [t, p] = player.split(/[|:]/) as [string, string]; profile = { team: t, player: p }; }
   else if (team) profile = { team, player: null };
+  if (q.has('animlog') && inTauri) startAnimLog();
+  noTray = q.has('no-tray');
+  osPlan = (q.get('notify-state') ?? '').split(',').filter(Boolean).map((x) => { const [st, sec] = x.split(':'); return { st: st as OsState, sec: Number(sec ?? Infinity) }; }).filter((x) => OS_STATES.includes(x.st));
+  osPlanStart = Date.now();
+  syncLow();
+  void applyHotkeys();
+  (q.get('press') ?? '').split(',').forEach((x, i) => {
+    const [k, sec] = x.split(':');
+    if (k === 'hide' || k === 'lowkey') setTimeout(() => onHotkey(k), sec ? Number(sec) * 1000 : 4000 + i * 3000);
+  });
   const match = q.get('match');
   // Once the schedule has come (it is polled), up to 20 s.
   if (match) { let tries = 0; const pick = () => {
@@ -703,4 +782,94 @@ async function start(): Promise<void> {
   }; setTimeout(pick, 3000); }
   if (tab || team || player) setTimeout(() => void openData(tab ?? 'teams'), 2500);
 }
+// ---------- low-key, hiding, hotkeys, presentation detection (batch 3) ----------
+
+let lowWas = false;
+/** Apply low-key turning on or off: the bar's size and look, the other windows, the notices. */
+function syncLow(): void {
+  const on = lowKeyOn();
+  if (on === lowWas) return;
+  lowWas = on;
+  if (on) { void closePop(); void notifier.clear(); bar.classList.remove('glow', 'lit'); }
+  void panels?.setHidden(on || hiddenByKey);
+  render();
+  void fitWindow();
+  sendPanels();
+}
+
+/** Leave low-key by hand, whichever way it came on. */
+function leaveLowKey(): void {
+  auto.leaveByHand();
+  if (cfg().lowKey) settings.update((d) => { d.lowKey = false; }); else syncLow();
+}
+
+function toggleLowKey(): void {
+  if (lowKeyOn()) leaveLowKey(); else settings.update((d) => { d.lowKey = true; });
+}
+
+let noTray = false;
+/**
+ * Every window out of sight, and back (batch 3 §1). Hidden only when something can bring it back: the
+ * tray icon, or the hide hotkey registered. Events still go to the history; nothing is replayed after.
+ */
+function toggleHidden(): void {
+  if (!hiddenByKey && noTray && !hotkeyState.hide) { showNote(B.b3.hideRefused); return; }
+  hiddenByKey = !hiddenByKey;
+  if (hiddenByKey) { void closePop(); void notifier.clear(); void win?.hide(); } else { void win?.show(); render(); }
+  void panels?.setHidden(lowKeyOn() || hiddenByKey);
+}
+
+function onHotkey(name: string): void {
+  if (name === 'hide') toggleHidden();
+  else if (name === 'lowkey') toggleLowKey();
+}
+
+async function applyHotkeys(): Promise<void> {
+  if (!inTauri) return;
+  const r = await invoke<[string, boolean][]>('set_hotkeys', { on: cfg().hotkeys }).catch(() => [] as [string, boolean][]);
+  hotkeyState = Object.fromEntries(r);
+  sendPanels();
+}
+if (win) void listen<string>('hotkey', (e) => onHotkey(e.payload));
+
+/** --notify-state: states to report instead of Windows', each for so many seconds; the last one stays. */
+let osPlan: { st: OsState; sec: number }[] = [];
+let osPlanStart = 0;
+function plannedState(): OsState | null {
+  if (!osPlan.length) return null;
+  let t = (Date.now() - osPlanStart) / 1000;
+  for (const p of osPlan) { if (t < p.sec) return p.st; t -= p.sec; }
+  return osPlan[osPlan.length - 1]!.st;
+}
+// Every 2 s: does Windows say not to disturb? (batch 3 §6)
+setInterval(() => {
+  if (!inTauri) return;
+  void (async () => {
+    const st = plannedState() ?? (await invoke<OsState>('notify_state').catch(() => 'ok' as OsState));
+    if (auto.step(st, detectionMode(cfg().mode, cfg().modeBase), cfg().autoLowKey)) syncLow();
+  })();
+}, 2000);
+
+/**
+ * Checking aid: every animation's start and end in the bar and the notices, one JSON line each, so their
+ * real durations can be read without screen captures (a throttled window shows as ends far too late).
+ */
+function startAnimLog(): void {
+  let buf: string[] = [];
+  const add = (r: Record<string, unknown>) => buf.push(JSON.stringify({ ...r, wall: Date.now() }));
+  for (const type of ['animationstart', 'animationend'] as const) {
+    document.addEventListener(type, (e) => {
+      const el = e.target as HTMLElement;
+      add({ w: 'bar', ev: type === 'animationstart' ? 'start' : 'end', name: e.animationName, cls: `${el.id ? `#${el.id} ` : ''}${el.className}`, t: performance.now() });
+    }, true);
+  }
+  void listen<Record<string, unknown>>('notify-anim', (e) => add({ w: 'notify', ...e.payload }));
+  setInterval(() => {
+    if (!buf.length) return;
+    const text = buf.map((l) => `${l}\n`).join('');
+    buf = [];
+    void invoke('append_anim_log', { text }).catch(() => undefined);
+  }, 2000);
+}
+
 void start();

@@ -50,7 +50,7 @@ function body(f: PanelFrame): string {
   if (name === 'draftGame') return draftPanel(c);
   if (name === 'players') return playersPanel(c, window.innerWidth >= 400);
   const tabs = (['schedule', 'teams', 'series', 'settings'] as const).map((t) => `<button data-tab="${t}" aria-pressed="${f.dataTab === t}">${esc(B.tab[t])}</button>`).join('');
-  const content = f.dataTab === 'schedule' ? scheduleView(schedCtx(c)) : f.dataTab === 'teams' ? teamsTab(f, c) : f.dataTab === 'series' ? draftSeriesView(c) : settingsView(f.settings, c.S, B, f.endpointError);
+  const content = f.dataTab === 'schedule' ? scheduleView(schedCtx(c)) : f.dataTab === 'teams' ? teamsTab(f, c) : f.dataTab === 'series' ? draftSeriesView(c) : settingsView(f.settings, c.S, B, f.endpointError, f.settingsExtra);
   return `<nav class="dtabs">${tabs}</nav><div class="dbody tab-${f.dataTab}">${content}</div>`;
 }
 
@@ -97,8 +97,10 @@ root.addEventListener('click', (e) => {
   if (t instanceof HTMLInputElement && t.type === 'checkbox') data.checked = String(t.checked);
   void emit('panel-action', data);
 });
-function commitEndpoint(input: HTMLInputElement): void {
-  void emit('panel-action', { panel: name, endpoint: input.value.trim() });
+/** A typed field (the data source, the stream address) is sent when the user presses Enter or leaves it. */
+const TYPED = '[data-input=endpoint], [data-input=watchUrl]';
+function commitField(input: HTMLInputElement): void {
+  void emit('panel-action', { panel: name, [input.dataset.input!]: input.value.trim() });
   input.blur();
 }
 // Search as the user types; while an input method is composing (注音, 拼音) wait for the word.
@@ -114,11 +116,11 @@ function searchFrom(el: HTMLElement): void {
 
 root.addEventListener('keydown', (e) => {
   const t = e.target as HTMLElement;
-  if (t.matches('[data-input=endpoint]') && e.key === 'Enter') commitEndpoint(t as HTMLInputElement);
+  if (t.matches(TYPED) && e.key === 'Enter') commitField(t as HTMLInputElement);
 });
 root.addEventListener('focusout', (e) => {
   const t = e.target as HTMLElement;
-  if (t.matches('[data-input=endpoint]')) commitEndpoint(t as HTMLInputElement);
+  if (t.matches(TYPED)) commitField(t as HTMLInputElement);
 });
 
 // Drag from anywhere that is not a control; resize from the corner; close from the corner button.

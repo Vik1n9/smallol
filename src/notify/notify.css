@@ -25,6 +25,11 @@ body { color: var(--text); font: 12px/1.35 var(--font); user-select: none; -webk
 .card .head { display: flex; align-items: baseline; gap: 8px; }
 .card .title { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .card .time { font: 11px var(--mono); color: var(--muted); }
+/* The time box with a stream address: fixed width, the time or (on hover) "▶ 看" in it. */
+.card .tw { flex: 0 0 48px; width: 48px; display: flex; justify-content: flex-end; }
+.card .tw .watch { display: none; padding: 0 4px; border: 0; border-radius: 4px; background: var(--border); color: var(--text); font: 600 11px var(--font); cursor: pointer; }
+.card:hover .tw .time { display: none; }
+.card:hover .tw .watch { display: block; }
 .card .sub { font-size: 11px; color: var(--muted); white-space: pre; overflow: hidden; text-overflow: ellipsis; }
 .card.tall .sub { line-height: 17px; }
 .card.tall .sub.tight { font-size: 10px; }

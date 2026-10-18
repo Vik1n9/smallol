@@ -100,3 +100,10 @@ body.up #pop { top: 0; }
 #grip { display: none; }
 body:hover #grip { display: block; }
 body.has-pop #grip { display: none; }
+/* Low-key (batch 3 §2): 150×24, one grey line of numbers; no team colours, no glow, no hover row. */
+body.low { --bar-h: 24px; }
+/* Pure greys: the theme's muted text and border lean blue (channel spread 17 and 13); low-key has no colour at all. */
+body.low #bar { padding: 0 10px; border-radius: 6px; animation: none; box-shadow: none; opacity: 1; background: #171717; border: 1px solid #2e2e2e; }
+body.low #rowA, body.low #rowB, body.low .row-b, body.low #icons, body.low .icons, body.low .dotrow, body.low #grip, body.low #pop { display: none !important; }
+.lowrow { display: none; }
+body.low .lowrow { display: block; height: 22px; line-height: 22px; font: 12px var(--mono); color: #a3a3a3; white-space: nowrap; overflow: hidden; }

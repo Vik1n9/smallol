@@ -1,7 +1,7 @@
 // The desktop shell: the bar, the notification window and the optional windows, a tray menu, and
 // remembered positions.
 // Everything about the game lives in the web view; this side only manages the window and the
-// settings file. Trimmed from Basesmall's shell (no updater, hotkeys or style files yet).
+// settings file. Trimmed from Basesmall's shell (no updater or style files yet).
 
 use tauri::{
     menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu},
@@ -9,7 +9,112 @@ use tauri::{
     Emitter, Manager,
 };
 use std::path::PathBuf;
+use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
+use tauri_plugin_opener::OpenerExt;
 use tauri_plugin_window_state::StateFlags;
+
+/// The two global hotkeys (UI_SPEC batch 3 §1): three modifiers, so they take nothing from other
+/// programs (Ctrl+Alt+L is IntelliJ's reformat), and different letters from Basesmall's (B, L).
+fn hotkeys() -> [(&'static str, Shortcut); 2] {
+    let m = Some(Modifiers::CONTROL | Modifiers::ALT | Modifiers::SHIFT);
+    [("hide", Shortcut::new(m, Code::KeyH)), ("lowkey", Shortcut::new(m, Code::KeyQ))]
+}
+
+/// Register or drop both hotkeys. Returns, for each, whether it is registered now; one another program
+/// holds stays unregistered without stopping the other.
+#[tauri::command]
+async fn set_hotkeys(app: tauri::AppHandle, on: bool) -> Vec<(String, bool)> {
+    let gs = app.global_shortcut();
+    let state = hotkeys()
+        .into_iter()
+        .map(|(name, key)| {
+            if on {
+                if !gs.is_registered(key) {
+                    let _ = gs.register(key);
+                }
+            } else if gs.is_registered(key) {
+                let _ = gs.unregister(key);
+            }
+            (name.to_string(), gs.is_registered(key))
+        })
+        .collect::<Vec<_>>();
+    // In the dev log: what checking runs read back (registered or held by another program).
+    #[cfg(debug_assertions)]
+    eprintln!("hotkeys on={on}: {state:?}");
+    state
+}
+
+/// Whether Windows says notifications are welcome now (the same signal Windows uses for its own):
+/// "busy" (a full-screen program), "d3d" (a full-screen game), "presentation", "quiet" (quiet hours),
+/// "app" (a full-screen Store app), "away" (screen saver, locked) or "ok". Elsewhere always "ok".
+#[tauri::command]
+fn notify_state() -> &'static str {
+    #[cfg(windows)]
+    {
+        use windows_sys::Win32::UI::Shell::{
+            SHQueryUserNotificationState, QUNS_APP, QUNS_BUSY, QUNS_NOT_PRESENT, QUNS_PRESENTATION_MODE, QUNS_QUIET_TIME,
+            QUNS_RUNNING_D3D_FULL_SCREEN,
+        };
+        let mut state = 0;
+        if unsafe { SHQueryUserNotificationState(&mut state) } != 0 {
+            return "ok";
+        }
+        match state {
+            QUNS_BUSY => "busy",
+            QUNS_RUNNING_D3D_FULL_SCREEN => "d3d",
+            QUNS_PRESENTATION_MODE => "presentation",
+            QUNS_QUIET_TIME => "quiet",
+            QUNS_APP => "app",
+            QUNS_NOT_PRESENT => "away",
+            _ => "ok",
+        }
+    }
+    #[cfg(not(windows))]
+    {
+        "ok"
+    }
+}
+
+/// Whether Alt is held: a window let go with Alt down does not snap to edges (batch 3 §5).
+#[tauri::command]
+fn alt_down() -> bool {
+    #[cfg(windows)]
+    {
+        use windows_sys::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_MENU};
+        (unsafe { GetAsyncKeyState(VK_MENU as i32) } as u16 & 0x8000) != 0
+    }
+    #[cfg(not(windows))]
+    {
+        false
+    }
+}
+
+/// A stream address as the settings accept it: http or https, a host, no user name or password, at
+/// most 2048 characters. The web view checks the same before saving; this checks again before opening.
+fn watch_url_ok(text: &str) -> Option<tauri::Url> {
+    if text.is_empty() || text.len() > 2048 {
+        return None;
+    }
+    let url = tauri::Url::parse(text).ok()?;
+    let fine = matches!(url.scheme(), "http" | "https") && url.host_str().is_some_and(|h| !h.is_empty()) && url.username().is_empty() && url.password().is_none();
+    fine.then_some(url)
+}
+
+/// Open the stream address the user saved (batch 3 §4). Takes no address: nothing in a web view can
+/// make it open anything else. With `--open-stub` it appends the address to `opened-urls.txt` instead.
+#[tauri::command]
+fn open_watch_url(app: tauri::AppHandle) -> Result<(), String> {
+    let (dir, _) = config_dir(&app).ok_or("no config folder")?;
+    let text = std::fs::read_to_string(dir.join("settings.json")).map_err(|e| e.to_string())?;
+    let v: serde_json::Value = serde_json::from_str(text.trim_start_matches('\u{feff}')).map_err(|e| e.to_string())?;
+    let url = watch_url_ok(v.get("watchUrl").and_then(|u| u.as_str()).unwrap_or("")).ok_or("no valid stream address saved")?;
+    if std::env::args().any(|a| a == "--open-stub") {
+        use std::io::Write;
+        let mut f = std::fs::OpenOptions::new().create(true).append(true).open(dir.join("opened-urls.txt")).map_err(|e| e.to_string())?;
+        return writeln!(f, "{url}").map_err(|e| e.to_string());
+    }
+    app.opener().open_url(url.as_str(), None::<&str>).map_err(|e| e.to_string())
+}
 
 /// Command-line arguments, so `desktoplol --sample --tier=bar` can be checked by hand.
 #[tauri::command]
@@ -92,6 +197,20 @@ fn write_history(app: tauri::AppHandle, text: String) -> Result<(), String> {
     std::fs::rename(&tmp, dir.join("log-history.json")).map_err(|e| e.to_string())
 }
 
+/// Checking aid (`--animlog`): append animation start/end records to `anim-log.jsonl` in the config
+/// folder, to time the animations without screen captures (batch 2 review: throttling shows as long ends).
+#[tauri::command]
+fn append_anim_log(app: tauri::AppHandle, text: String) -> Result<(), String> {
+    use std::io::Write;
+    if text.len() > 256 * 1024 {
+        return Err("too long".into());
+    }
+    let (dir, _) = config_dir(&app).ok_or("no config folder")?;
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let mut f = std::fs::OpenOptions::new().create(true).append(true).open(dir.join("anim-log.jsonl")).map_err(|e| e.to_string())?;
+    f.write_all(text.as_bytes()).map_err(|e| e.to_string())
+}
+
 /// Move and resize a window in one step (logical pixels on the window's own screen), without
 /// activating it; `show` also shows it. Two separate calls (size, then position) left one frame where
 /// the notification stack or the bar jumped (interaction designer's batch 1 review, item A/H).
@@ -135,17 +254,33 @@ pub fn run() {
     if let Some(dir) = std::env::var_os("DESKTOPLOL_CONFIG_DIR").filter(|d| !d.is_empty()) {
         window_state = window_state.with_filename(PathBuf::from(dir).join(".window-state.json").to_string_lossy());
     }
+    let no_tray = std::env::args().any(|a| a == "--no-tray");
     tauri::Builder::default()
         .plugin(window_state.build())
+        .plugin(tauri_plugin_opener::init())
+        // A hotkey goes to the bar's page, which owns every window (hide all, low-key).
+        .plugin(
+            tauri_plugin_global_shortcut::Builder::new()
+                .with_handler(|app, shortcut, event| {
+                    if event.state() != ShortcutState::Pressed {
+                        return;
+                    }
+                    if let Some((name, _)) = hotkeys().into_iter().find(|(_, k)| k == shortcut) {
+                        let _ = app.emit_to("main", "hotkey", name);
+                    }
+                })
+                .build(),
+        )
         // Closing the bar quits, the other windows with it; otherwise a card or a panel would be left on screen.
         .on_window_event(|window, event| {
             if window.label() == "main" && matches!(event, tauri::WindowEvent::Destroyed) {
                 window.app_handle().exit(0);
             }
         })
-        .invoke_handler(tauri::generate_handler![launch_args, config_info, read_settings, write_settings, set_bounds, read_history, write_history])
-        .setup(|app| {
+        .invoke_handler(tauri::generate_handler![launch_args, config_info, read_settings, write_settings, set_bounds, read_history, write_history, append_anim_log, set_hotkeys, notify_state, alt_down, open_watch_url])
+        .setup(move |app| {
             let toggle = MenuItem::with_id(app, "toggle", "Show / hide", true, None::<&str>)?;
+            let lowkey = MenuItem::with_id(app, "lowkey", "Low-key", true, None::<&str>)?;
             let settings = MenuItem::with_id(app, "settings", "Settings…", true, None::<&str>)?;
             let click_through =
                 CheckMenuItem::with_id(app, "click_through", "Click-through", true, false, None::<&str>)?;
@@ -158,45 +293,49 @@ pub fn run() {
             let separator = PredefinedMenuItem::separator(app)?;
             let menu = Menu::with_items(
                 app,
-                &[&toggle, &settings, &click_through, &on_top, &background, &separator, &quit],
+                &[&toggle, &lowkey, &settings, &click_through, &on_top, &background, &separator, &quit],
             )?;
 
             let ct = click_through.clone();
             let ot = on_top.clone();
-            TrayIconBuilder::with_id("main")
-                .icon(app.default_window_icon().cloned().expect("bundled icon"))
-                .tooltip("DesktopLOL")
-                .menu(&menu)
-                .show_menu_on_left_click(true)
-                .on_menu_event(move |app, event| {
-                    let Some(window) = app.get_webview_window("main") else { return };
-                    match event.id().as_ref() {
-                        "toggle" => {
-                            if window.is_visible().unwrap_or(true) {
-                                let _ = window.hide();
-                            } else {
-                                let _ = window.show();
+            // A checking run without the tray (`--no-tray`): the web view then refuses to hide everything
+            // unless a hotkey can bring it back (batch 3 §1, the way back is a hard rule).
+            if !no_tray {
+                TrayIconBuilder::with_id("main")
+                    .icon(app.default_window_icon().cloned().expect("bundled icon"))
+                    .tooltip("DesktopLOL")
+                    .menu(&menu)
+                    .show_menu_on_left_click(true)
+                    .on_menu_event(move |app, event| {
+                        let Some(window) = app.get_webview_window("main") else { return };
+                        match event.id().as_ref() {
+                            // Every window, not only the bar: the bar's page owns them (same as the hotkey).
+                            "toggle" => {
+                                let _ = window.emit("hotkey", "hide");
                             }
+                            "lowkey" => {
+                                let _ = window.emit("hotkey", "lowkey");
+                            }
+                            // Clicks pass through to whatever is underneath; only the tray can turn it off.
+                            "click_through" => {
+                                let _ = window.set_ignore_cursor_events(ct.is_checked().unwrap_or(false));
+                            }
+                            "on_top" => {
+                                let _ = window.set_always_on_top(ot.is_checked().unwrap_or(true));
+                            }
+                            "settings" => {
+                                let _ = window.show();
+                                let _ = window.emit("open-settings", ());
+                            }
+                            id if id.starts_with("bg:") => {
+                                let _ = window.emit("bg-mode", &id[3..]);
+                            }
+                            "quit" => app.exit(0),
+                            _ => {}
                         }
-                        // Clicks pass through to whatever is underneath; only the tray can turn it off.
-                        "click_through" => {
-                            let _ = window.set_ignore_cursor_events(ct.is_checked().unwrap_or(false));
-                        }
-                        "on_top" => {
-                            let _ = window.set_always_on_top(ot.is_checked().unwrap_or(true));
-                        }
-                        "settings" => {
-                            let _ = window.show();
-                            let _ = window.emit("open-settings", ());
-                        }
-                        id if id.starts_with("bg:") => {
-                            let _ = window.emit("bg-mode", &id[3..]);
-                        }
-                        "quit" => app.exit(0),
-                        _ => {}
-                    }
-                })
-                .build(app)?;
+                    })
+                    .build(app)?;
+            }
 
             // Shown once the web view has had a moment to draw, so it never flashes blank.
             if let Some(window) = app.get_webview_window("main") {
