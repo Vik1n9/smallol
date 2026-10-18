@@ -131,6 +131,9 @@ export interface MapOptions {
   drakes?: { titles: (e: string) => string };
   /** Team codes at each team's edge of the board, at the head of its drake row (minimap window). */
   teams?: Record<Team, string>;
+  /** Leave out the "+1 unread" notes (the minimap window: the feed counts a fallen tower 0–15 s before
+   *  the screen reading names it, so the note flashed and went; the maintainer found it a distraction). */
+  noUnnamed?: boolean;
 }
 
 /** A dragon's head seen from the front on a 20x20 box: two horns sweeping out, a wide brow, a narrowing snout. */
@@ -226,7 +229,7 @@ export function mapSvg(s: MatchState, clock: number | null, o: MapOptions): stri
   const notes: string[] = [];
   for (const t of TEAMS) {
     const u = s.teams[t].unnamedLost;
-    if (!s.towersKnown || u <= 0) continue;
+    if (!s.towersKnown || u <= 0 || o.noUnnamed) continue;
     const [x, y, anchor] = t === 'B' ? [3, VIEW_H - 1.5, 'start'] : [99, 5, 'end'];
     notes.push(`<text class="unnamed" x="${x}" y="${n(y)}" text-anchor="${anchor}" font-size="4.6"><title>${o.unnamedTitle}</title>${o.unnamed(u)}</text>`);
   }

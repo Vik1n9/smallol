@@ -94,6 +94,18 @@ export function adapt(input: unknown): MatchState {
     tower.down = true;
     tower.respawnAt = parseClock(o.respawnAt);
   }
+  // A lane's turrets fall in order (outer, inner, inhibitor turret: each is untargetable until the one
+  // in front of it is down). The screen reading sometimes names the wrong one (an inner down with the
+  // outer standing, 2026-10-18 replay): keep its count per lane, and put the losses at the front.
+  for (const t of TEAMS) {
+    for (const l of LANES) {
+      const order = [`${l}_outer`, `${l}_inner`, `${l}_inhib_tower`] as const;
+      const ts = order.map((x) => s.teams[t].towers[x]);
+      const down = ts.filter((x) => x.down);
+      const times = down.map((x) => x.lostAt).sort((a, b) => (a ?? Infinity) - (b ?? Infinity));
+      ts.forEach((x, i) => { x.down = i < down.length; x.lostAt = i < down.length ? times[i] ?? null : null; });
+    }
+  }
   for (const t of TEAMS) {
     const named = Object.values(s.teams[t].towers).filter((x) => x.down).length;
     const destroyed = s.teams[other(t)].towersDestroyed;

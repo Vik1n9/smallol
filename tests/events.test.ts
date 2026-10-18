@@ -13,6 +13,16 @@ const live = (): MatchState => ({ ...adapt(day2), status: 'in_game' });
 const clone = (s: MatchState): MatchState => structuredClone(s);
 const code = (t: Team) => (t === 'B' ? 'KC' : 'MVK');
 
+describe('lane order', () => {
+  it('a lane loses its outer turret first: a misnamed inner turret is moved to the front of the lane', () => {
+    const raw = structuredClone(day2) as Record<string, unknown>;
+    raw.towersLost = { B: [{ site: 'mid_inner', sec: 700, gameTime: '11:40' }], R: [] };
+    const s = adapt(raw);
+    expect(s.teams.B.towers.mid_outer).toMatchObject({ down: true, lostAt: 700 });
+    expect(s.teams.B.towers.mid_inner.down).toBe(false);
+  });
+});
+
 describe('event detection', () => {
   it('a tower falling is one event, named, and the screen reading taking it back and again is not a second', () => {
     const a = live();
