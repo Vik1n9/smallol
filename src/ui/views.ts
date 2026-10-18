@@ -26,10 +26,9 @@ export type Tier = 'dot' | 'bar' | 'map';
 /** Height of the tab strip above the game, and of each view under it. */
 export const TAB_H = 22;
 const VIEW_H: Record<ViewName, number> = { draftGame: 134, draftSeries: 152, players: 0, schedule: 236 };
-/** Players: two lines a player with item names, one without. Draft: two more lines a team with this event's tendencies. */
+/** Players: two lines a player with item names, one without. */
 export function viewHeight(v: ViewName, show: Record<Feature, boolean>): number {
   if (v === 'players') return show.playerItems ? 420 : 290;
-  if (v === 'draftGame') return show.tendencies ? 230 : VIEW_H.draftGame;
   return VIEW_H[v];
 }
 
@@ -316,33 +315,19 @@ export function draftGameView(c: ViewCtx): string {
     // The service cannot see bans yet: say so, rather than draw five empty slots that look like "none yet".
     if (kind === 'ban' && !d.bansSupported) return `${label}<span class="unsupported muted">${esc(c.S.ui.bansUnsupported)}</span>`;
     const list = kind === 'ban' ? g.sides[t].bans : g.sides[t].picks;
-    if (kind === 'pick' && byRole && list.every((x) => x === null)) return `${label}<span class="unsupported muted">${esc(c.S.ui.picksAtStart)}</span>`;
+    // Since contract v0.9 picks arrive during the draft as they lock, so a draft in progress shows five empty slots.
+    if (kind === 'pick' && byRole && c.s.status !== 'waiting' && list.every((x) => x === null)) return `${label}<span class="unsupported muted">${esc(c.S.ui.picksAtStart)}</span>`;
     // Five empty bans after the draft: the service never saw this game's draft (v0.3), not "no bans".
     if (kind === 'ban' && c.s.status !== 'waiting' && list.every((x) => x === null)) return `${label}<span class="unsupported muted">${esc(c.S.ui.bansMissing)}</span>`;
     const now = (i: number) => g.turn?.side === t && g.turn.kind === kind && g.turn.slot === i;
     // Positions are not marked here; they are in the players view (maintainer, 2026-10-16).
     return label + list.map((id, i) => champ(c, id, kind, t, now(i))).join('');
   };
-  const tend = (t: Team) => (c.show.tendencies ? tendencyLines(c, g.sides[t].team) : '');
+  // This event's most banned and picked live with the team, in the schedule's match detail, not here:
+  // some viewers care, many do not (maintainer, 2026-10-18).
   return `<header><b>${esc(c.S.view.draftGame)}</b><span class="muted">${esc(c.S.gameNo(g.game))}</span>${sidesFlag(c)}</header>
-    <div class="dgrid${c.show.tendencies ? ' tend' : ''}">${TEAMS.map((t) => `<div class="dteam">${dot(t)}<span class="dtn"><b class="tn" style="color:${TEAM_COLOUR[t]}"${teamTip(c, g.sides[t].team)}>${esc(g.sides[t].team)}</b>${seedTag(c, g.sides[t].team)}</span></div>
-      <div class="dline">${line(t, 'ban')}</div><div class="dline">${line(t, 'pick')}</div>${tend(t)}`).join('')}</div>`;
-}
-
-/** A champion with how often: "夜曲×5". */
-const tendChip = (c: ViewCtx, id: string, n: number) => {
-  const name = championName(id, c.lang);
-  return `<span class="ch tendc" title="${esc(name)}">${esc(name)}<i>×${n}</i></span>`;
-};
-
-/** "常禁 夜曲×5 …" and "常選 …" for one team, this event (the service's recorded games only). */
-export function tendencyLines(c: ViewCtx, code: string): string {
-  const games = c.history.teams?.[code];
-  if (!c.history.teams) return '';
-  if (!games?.length) return `<div class="dline tend span2"><span class="muted" title="${esc(c.S.ui.historyScope)}">${esc(c.S.ui.noHistory)}</span></div>`;
-  const row = (what: 'bans' | 'picks', label: string) =>
-    `<div class="dline tend"><span class="k" title="${esc(`${c.S.eventGames(games.length)} · ${c.S.ui.historyScope}`)}">${esc(label)}</span>${tally(games, what).map(([id, n]) => tendChip(c, id, n)).join('')}</div>`;
-  return row('bans', c.S.ui.tendBans) + row('picks', c.S.ui.tendPicks);
+    <div class="dgrid">${TEAMS.map((t) => `<div class="dteam">${dot(t)}<span class="dtn"><b class="tn" style="color:${TEAM_COLOUR[t]}"${teamTip(c, g.sides[t].team)}>${esc(g.sides[t].team)}</b>${seedTag(c, g.sides[t].team)}</span></div>
+      <div class="dline">${line(t, 'ban')}</div><div class="dline">${line(t, 'pick')}</div>`).join('')}</div>`;
 }
 
 /** "本屆 薩亨 2 場 1 勝 · KDA 3.5" and the rest of the pool, for a tooltip. Wins only when scores may show. */

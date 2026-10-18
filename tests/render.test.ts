@@ -194,10 +194,10 @@ describe('tab strip and draft views', () => {
     const during = draftGameView(ctx({ s: live }));
     expect(during).not.toContain(STRINGS['zh-Hant'].ui.bansMissing);
     expect(during.match(/class="ch ban"/g)).toHaveLength(1);
-    expect(during.match(/class="ch empty/g)).toHaveLength(9);
-    // During the draft (v0.1: picks only arrive once the game starts).
+    // 9 empty bans and, since contract v0.9 (picks arrive during the draft as they lock), 10 empty pick slots.
+    expect(during.match(/class="ch empty/g)).toHaveLength(19);
     const waiting = adapt({ status: 'waiting', draft: { current: { game: 4, B: { team: 'MVK' }, R: { team: 'FUR' } }, earlier: [], picksOrder: 'role', bansSupported: false } });
-    expect(draftGameView(ctx({ s: waiting }))).toContain(STRINGS['zh-Hant'].ui.picksAtStart);
+    expect(draftGameView(ctx({ s: waiting }))).not.toContain(STRINGS['zh-Hant'].ui.picksAtStart);
   });
 
   it('real sample: the series view locks the 20 picks of games 1 and 2', () => {
@@ -359,8 +359,9 @@ describe('views, contract v0.4', () => {
     const w = adapt(day2draft);
     const html = draftGameView(ctx({ s: w }));
     expect(html.match(/class="ch ban"/g)).toHaveLength(7);
-    expect(html.match(/class="ch empty/g)).toHaveLength(3);
-    expect(html.match(new RegExp(STRINGS['zh-Hant'].ui.picksAtStart, 'g'))).toHaveLength(2);
+    // 3 bans to come and 10 picks to come (this v0.6 sample has no picks yet; since v0.9 they fill in as they lock).
+    expect(html.match(/class="ch empty/g)).toHaveLength(13);
+    expect(html).not.toContain(STRINGS['zh-Hant'].ui.picksAtStart);
     expect(html).not.toContain(STRINGS['zh-Hant'].ui.bansMissing);
     expect(tabsView(ctx({ s: w }), DEFAULTS.views, true, false)).toContain('KC 1–0 MVK');
     expect(mapView(ctx({ s: w, clock: null }), true)).toContain(STRINGS['zh-Hant'].status.waiting);

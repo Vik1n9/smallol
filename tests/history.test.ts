@@ -71,25 +71,24 @@ const ctx = (over: Partial<ViewCtx> = {}): ViewCtx => ({
   schedule: null, now: 0, spoilerFree: true, history, pickedMatch: null, roster: null, ...over,
 });
 
-describe('draft view: this event', () => {
-  it("adds each team's most banned and picked, with how often", () => {
+describe('draft view: this game only', () => {
+  // The event's most banned and picked moved to the team in the schedule's match detail (maintainer, 2026-10-18).
+  it("does not carry the event's tendencies", () => {
     const html = draftGameView(ctx());
-    expect(html).toContain('常禁');
-    expect(html).toContain('夜曲<i>×3</i>');
-    expect(html).toContain('杰西<i>×2</i>');
-    expect(html).toContain('薩亨<i>×1</i>'); // MVK's one game
+    expect(html).not.toContain('常禁');
+    expect(html).not.toContain('<i>×');
+    expect(viewHeight('draftGame', DEFAULTS.show)).toBe(134);
   });
 
-  it('can be turned off, and the view gets shorter', () => {
-    const show = { ...DEFAULTS.show, tendencies: false };
-    expect(draftGameView(ctx({ show }))).not.toContain('常禁');
-    expect(viewHeight('draftGame', show)).toBeLessThan(viewHeight('draftGame', DEFAULTS.show));
-  });
-
-  it('says so when a team has no recorded games, and stays quiet before history is read', () => {
-    const noKC = { teams: { MVK: teams.MVK! }, players };
-    expect(draftGameView(ctx({ history: noKC }))).toContain('本屆還沒有記錄');
-    expect(draftGameView(ctx({ history: { teams: null, players: null } }))).not.toContain('常禁');
+  it('during the draft, picks not locked yet are empty slots, not "shown once the game starts" (contract v0.9)', () => {
+    const cur = live.draft!.current!;
+    const none = [null, null, null, null, null];
+    const waiting = { ...live, status: 'waiting' as const, draft: { ...live.draft!, current: { ...cur, sides: {
+      B: { ...cur.sides.B, picks: ['Ziggs', 'Jayce', null, null, null] }, R: { ...cur.sides.R, picks: none } } } } };
+    const html = draftGameView(ctx({ s: waiting }));
+    expect(html).toContain('希格斯');
+    expect(html).not.toContain('開局後才會有');
+    expect(html.match(/class="ch empty/g)!.length).toBeGreaterThanOrEqual(8);
   });
 });
 
@@ -125,6 +124,8 @@ describe('schedule: pick a match to see both teams', () => {
     const html = scheduleView(sc({ picked: 'm1' }));
     expect(html).toContain('← 賽程');
     expect(html).toContain('本屆 3 局');
+    expect(html).toContain('常禁');
+    expect(html).toContain('常選');
     expect(html).toContain('夜曲<i>×3</i>');
     expect(html).toContain('<b>Canna</b>');
     expect(html).toContain('杰西<i>2</i>');
@@ -192,7 +193,7 @@ describe('real history samples, checked against each other and the live sample',
     const c = ctx({ history: { teams: T, players: P } });
     expect(T.KC).toHaveLength(8);
     expect(tally(T.KC!, 'bans', 1)).toEqual([['Nocturne', 6]]);
-    expect(draftGameView(c)).toContain('夜曲<i>×6</i>');
+    expect(draftGameView(c)).not.toContain('夜曲<i>×6</i>'); // tendencies live in the schedule's match detail now
     // All ten players of this game are in the history.
     expect(playersView(c).match(/has-pool/g)).toHaveLength(10);
     expect(poolTitle(c, 'KC', 'Canna', 'Galio')).toMatch(/^本屆 加里歐：\d+ 場 · KDA \d+\.\d/);
