@@ -1,4 +1,4 @@
-# CLAUDE.md — DesktopLOL（尚未開工）
+# CLAUDE.md — SmalLoL
 
 2026-10-13 由 DesktopMLB 的 session 預先建立。這裡還沒有程式碼，只有前一個專案留下的經驗。
 **先讀完本檔與 `docs/` 三份，再動手。**

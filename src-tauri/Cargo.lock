@@ -720,19 +720,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "desktoplol"
-version = "0.0.1"
-dependencies = [
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-global-shortcut",
- "tauri-plugin-opener",
- "tauri-plugin-window-state",
- "windows-sys 0.61.2",
-]
-
-[[package]]
 name = "digest"
 version = "0.10.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3174,6 +3161,19 @@ name = "slab"
 version = "0.4.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c790de23124f9ab44544d7ac05d60440adc586479ce501c1d6d7da3cd8c9cf5"
+
+[[package]]
+name = "smallol"
+version = "0.0.1"
+dependencies = [
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-global-shortcut",
+ "tauri-plugin-opener",
+ "tauri-plugin-window-state",
+ "windows-sys 0.61.2",
+]
 
 [[package]]
 name = "smallvec"

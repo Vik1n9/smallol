@@ -13,10 +13,10 @@ const memory = (initial: string | null = null) => {
 };
 
 describe('settings schema', () => {
-  it('turns every feature on and reads the local service by default', () => {
+  it('turns every feature on and reads the public service by default', () => {
     expect(Object.keys(DEFAULTS.show)).toEqual([...FEATURES]);
     expect(Object.values(DEFAULTS.show).every(Boolean)).toBe(true);
-    expect(DEFAULTS.endpoint).toBe('http://127.0.0.1:8787/state.json');
+    expect(DEFAULTS.endpoint).toBe('https://smallol.161.97.96.65.sslip.io/state.json');
     expect(DEFAULTS.views).toEqual({ draftGame: false, draftSeries: false, players: false, schedule: false });
   });
 

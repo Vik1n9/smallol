@@ -1,4 +1,4 @@
-// The Stream CV service's state.json as documented in DesktopLOL-StreamCV/docs/SERVICE_CONTRACT.md
+// The Stream CV service's state.json as documented in smallol-cv/docs/SERVICE_CONTRACT.md
 // (v0, 2026-10-16). Everything is optional here: the adapter must survive a field that is missing,
 // renamed or of the wrong type, because the service is young and v1 may add fields.
 

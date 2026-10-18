@@ -1,7 +1,7 @@
 # UI 骨架（2026-10-16）
 
 Tauri 2 + TypeScript，骨架從 Basesmall 複製後刪減（沒有更新、熱鍵、風格檔、選配小視窗）。
-資料只來自 Stream CV 服務的 `state.json`（合約：`DesktopLOL-StreamCV/docs/SERVICE_CONTRACT.md` v0）。
+資料只來自 Stream CV 服務的 `state.json`（合約：`smallol-cv/docs/SERVICE_CONTRACT.md` v0）。
 
 ## 執行
 

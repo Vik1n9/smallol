@@ -108,7 +108,7 @@ export class Panels {
         // (focusData): restored at start it must not take focus from what the user is doing.
         focus: false, focusable: data, visible: !this.hidden,
         decorations: false, transparent: true, shadow: false, resizable: true,
-        alwaysOnTop: true, skipTaskbar: true, title: 'DesktopLOL',
+        alwaysOnTop: true, skipTaskbar: true, title: 'SmalLoL',
       });
       void w.once('tauri://created', () => resolve());
       void w.once('tauri://error', () => resolve());

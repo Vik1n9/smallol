@@ -139,22 +139,22 @@ fn open_watch_url(app: tauri::AppHandle) -> Result<(), String> {
     app.opener().open_url(url.as_str(), None::<&str>).map_err(|e| e.to_string())
 }
 
-/// Command-line arguments, so `desktoplol --sample --tier=bar` can be checked by hand.
+/// Command-line arguments, so `smallol --sample --tier=bar` can be checked by hand.
 #[tauri::command]
 fn launch_args() -> Vec<String> {
     std::env::args().skip(1).collect()
 }
 
-/// Where settings live: the app config dir, or `DESKTOPLOL_CONFIG_DIR` when set
+/// Where settings live: the app config dir, or `SMALLOL_CONFIG_DIR` when set
 /// (checking runs use a scratch folder so they never touch the user's own settings).
 fn config_dir(app: &tauri::AppHandle) -> Option<(PathBuf, bool)> {
-    if let Some(dir) = std::env::var_os("DESKTOPLOL_CONFIG_DIR").filter(|d| !d.is_empty()) {
+    if let Some(dir) = std::env::var_os("SMALLOL_CONFIG_DIR").filter(|d| !d.is_empty()) {
         return Some((PathBuf::from(dir), true));
     }
     app.path().app_config_dir().ok().map(|d| (d, false))
 }
 
-/// The config folder in use, and whether it was overridden by `DESKTOPLOL_CONFIG_DIR`.
+/// The config folder in use, and whether it was overridden by `SMALLOL_CONFIG_DIR`.
 #[tauri::command]
 fn config_info(app: tauri::AppHandle) -> (String, bool) {
     config_dir(&app).map(|(d, o)| (d.display().to_string(), o)).unwrap_or_default()
@@ -287,7 +287,7 @@ pub fn run() {
     let mut window_state = tauri_plugin_window_state::Builder::default().with_state_flags(StateFlags::POSITION).with_denylist(&["notify"]);
     // A checking run keeps its window position with its scratch settings, not the user's. The
     // plugin joins this onto the config dir, and an absolute path replaces it.
-    if let Some(dir) = std::env::var_os("DESKTOPLOL_CONFIG_DIR").filter(|d| !d.is_empty()) {
+    if let Some(dir) = std::env::var_os("SMALLOL_CONFIG_DIR").filter(|d| !d.is_empty()) {
         window_state = window_state.with_filename(PathBuf::from(dir).join(".window-state.json").to_string_lossy());
     }
     let no_tray = std::env::args().any(|a| a == "--no-tray");
@@ -325,7 +325,7 @@ pub fn run() {
             let bg_semi = MenuItem::with_id(app, "bg:semi", "Translucent", true, None::<&str>)?;
             let bg_clear = MenuItem::with_id(app, "bg:clear", "Clear", true, None::<&str>)?;
             let background = Submenu::with_items(app, "Background", true, &[&bg_solid, &bg_semi, &bg_clear])?;
-            let quit = MenuItem::with_id(app, "quit", "Quit DesktopLOL", true, None::<&str>)?;
+            let quit = MenuItem::with_id(app, "quit", "Quit SmalLoL", true, None::<&str>)?;
             let separator = PredefinedMenuItem::separator(app)?;
             let menu = Menu::with_items(
                 app,
@@ -339,7 +339,7 @@ pub fn run() {
             if !no_tray {
                 TrayIconBuilder::with_id("main")
                     .icon(app.default_window_icon().cloned().expect("bundled icon"))
-                    .tooltip("DesktopLOL")
+                    .tooltip("SmalLoL")
                     .menu(&menu)
                     .show_menu_on_left_click(true)
                     .on_menu_event(move |app, event| {
@@ -390,7 +390,7 @@ pub fn run() {
             Ok(())
         })
         .run(tauri::generate_context!())
-        .expect("error while running DesktopLOL");
+        .expect("error while running SmalLoL");
 }
 
 #[cfg(test)]

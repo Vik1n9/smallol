@@ -57,7 +57,7 @@ export class Notifier {
       void listen('notify-ready', () => { clearTimeout(timer); unlisten?.(); resolve(); }).then((u) => { unlisten = u; });
       const w = new WebviewWindow(LABEL, {
         url: 'notify.html', width: WIDTH, height: 40, visible: false, focus: false, focusable: false,
-        decorations: false, transparent: true, shadow: false, resizable: false, alwaysOnTop: true, skipTaskbar: true, title: 'DesktopLOL',
+        decorations: false, transparent: true, shadow: false, resizable: false, alwaysOnTop: true, skipTaskbar: true, title: 'SmalLoL',
       });
       void w.once('tauri://error', (e) => { clearTimeout(timer); reject(new Error(String(e.payload))); });
     });

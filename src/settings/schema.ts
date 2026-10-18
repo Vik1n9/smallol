@@ -1,6 +1,6 @@
 // Every user setting, its default, and how a saved file is read back. Pure: tests run it on
 // broken, old and hand-edited files. The file lives in the app config dir as settings.json.
-// Copied from Basesmall's schema; the fields are DesktopLOL's own.
+// Copied from Basesmall's schema; the fields are SmalLoL's own.
 
 import { DEFAULT_ENDPOINT } from '../data/streamcv/source.ts';
 

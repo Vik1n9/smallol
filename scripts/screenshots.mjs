@@ -37,7 +37,7 @@ const SHOTS = [
 ];
 
 mkdirSync(OUT, { recursive: true });
-const profile = mkdtempSync(join(tmpdir(), 'desktoplol-shots-'));
+const profile = mkdtempSync(join(tmpdir(), 'smallol-shots-'));
 // Port 0: Edge picks a free port (a fixed one can fall in a range Windows reserves) and writes it down.
 const edge = spawn(EDGE, ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--remote-debugging-port=0', `--user-data-dir=${profile}`, 'about:blank'], { stdio: 'ignore' });
 let PORT = 0;

@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "DesktopLOL",
+  "productName": "SmalLoL",
   "version": "0.0.1",
-  "identifier": "io.github.zaious.desktoplol",
+  "identifier": "io.github.zaious.smallol",
   "build": {
     "devUrl": "http://localhost:1430",
     "frontendDist": "../dist",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "DesktopLOL",
+        "title": "SmalLoL",
         "width": 380,
         "height": 48,
         "minWidth": 180,

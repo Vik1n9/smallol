@@ -6,7 +6,7 @@
 import { adapt } from './adapter.ts';
 import type { MatchState } from '../../model/types.ts';
 
-export const DEFAULT_ENDPOINT = 'http://127.0.0.1:8787/state.json';
+export const DEFAULT_ENDPOINT = 'https://smallol.161.97.96.65.sslip.io/state.json';
 export const INTERVAL_MS = 5000;
 const TIMEOUT_MS = 4000;
 const MAX_BACKOFF_MS = 60_000;

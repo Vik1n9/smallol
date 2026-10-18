@@ -2,7 +2,7 @@
 // dispatcher, and checks the acceptance line (docs/UI_SPEC_v1.md §8): in any 60 seconds, at most
 // 4 strips (merged) and 3 cards, in both presets. The log is not in the repo (recorded data);
 // set STATELOG to its path to run this, e.g.
-//   STATELOG=P:/MyOpenSource/DesktopLOL-StreamCV/data/live_worlds2026/statelog.jsonl npx vitest run tests/replay.test.ts
+//   STATELOG=<smallol-cv>/data/live_worlds2026/statelog.jsonl npx vitest run tests/replay.test.ts
 
 import { readFileSync, existsSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
