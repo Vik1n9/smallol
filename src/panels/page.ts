@@ -13,6 +13,7 @@ import { draftPanel, playersPanel } from '../ui/panel-views.ts';
 import { scheduleView } from '../ui/schedule-views.ts';
 import { settingsView } from '../ui/settings-view.ts';
 import { draftSeriesView, esc, schedCtx, timerChips, type ViewCtx } from '../ui/views.ts';
+import { playerFile, teamFile, teamIndex, teamResults } from '../ui/profile-views.ts';
 import type { PanelFrame } from './frame.ts';
 
 const name = (location.hash.slice(1) || 'minimap') as PanelName;
@@ -46,9 +47,21 @@ function body(f: PanelFrame): string {
   }
   if (name === 'draftGame') return draftPanel(c);
   if (name === 'players') return playersPanel(c, window.innerWidth >= 400);
-  const tabs = (['schedule', 'series', 'settings'] as const).map((t) => `<button data-tab="${t}" aria-pressed="${f.dataTab === t}">${esc(B.tab[t])}</button>`).join('');
-  const content = f.dataTab === 'schedule' ? scheduleView(schedCtx(c)) : f.dataTab === 'series' ? draftSeriesView(c) : settingsView(f.settings, c.S, B, f.endpointError);
+  const tabs = (['schedule', 'teams', 'series', 'settings'] as const).map((t) => `<button data-tab="${t}" aria-pressed="${f.dataTab === t}">${esc(B.tab[t])}</button>`).join('');
+  const content = f.dataTab === 'schedule' ? scheduleView(schedCtx(c)) : f.dataTab === 'teams' ? teamsTab(f, c) : f.dataTab === 'series' ? draftSeriesView(c) : settingsView(f.settings, c.S, B, f.endpointError);
   return `<nav class="dtabs">${tabs}</nav><div class="dbody tab-${f.dataTab}">${content}</div>`;
+}
+
+/** The search typed in the teams tab: this window's own, never sent to the main window. */
+let query = '';
+let composing = false;
+function teamsTab(f: PanelFrame, c: ViewCtx): string {
+  const B = BAR_STRINGS[f.lang];
+  const t = f.profile.team ? f.roster?.[f.profile.team] : null;
+  const p = t && f.profile.player ? t.players.find((x) => x.id === f.profile.player) : null;
+  if (t && p) return playerFile(c, B, t, p);
+  if (t) return teamFile(c, B, t, f.settings.myTeam);
+  return teamIndex(c, B, f.settings.myTeam, query);
 }
 
 let lastHtml = '';
@@ -86,6 +99,17 @@ function commitEndpoint(input: HTMLInputElement): void {
   void emit('panel-action', { panel: name, endpoint: input.value.trim() });
   input.blur();
 }
+// Search as the user types; while an input method is composing (注音, 拼音) wait for the word.
+root.addEventListener('compositionstart', () => { composing = true; });
+root.addEventListener('compositionend', (e) => { composing = false; searchFrom(e.target as HTMLElement); });
+root.addEventListener('input', (e) => { if (!composing) searchFrom(e.target as HTMLElement); });
+function searchFrom(el: HTMLElement): void {
+  if (!frame || !el.matches('[data-input=search]')) return;
+  query = (el as HTMLInputElement).value;
+  const box = root.querySelector('.tresults');
+  if (box) box.innerHTML = teamResults(ctx(frame), BAR_STRINGS[frame.lang], frame.settings.myTeam, query);
+}
+
 root.addEventListener('keydown', (e) => {
   const t = e.target as HTMLElement;
   if (t.matches('[data-input=endpoint]') && e.key === 'Enter') commitEndpoint(t as HTMLInputElement);

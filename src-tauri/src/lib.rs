@@ -66,6 +66,32 @@ fn write_settings(app: tauri::AppHandle, text: String) -> Result<(), String> {
     std::fs::rename(&tmp, &path).map_err(|e| e.to_string())
 }
 
+const HISTORY_MAX_BYTES: u64 = 512 * 1024;
+
+/// The log history (the last five games' events, UI_SPEC §5), or nothing before the first save.
+#[tauri::command]
+fn read_history(app: tauri::AppHandle) -> Option<String> {
+    let (dir, _) = config_dir(&app)?;
+    let path = dir.join("log-history.json");
+    if std::fs::metadata(&path).ok()?.len() > HISTORY_MAX_BYTES {
+        return None;
+    }
+    std::fs::read_to_string(path).ok()
+}
+
+/// Save the log history atomically, like the settings.
+#[tauri::command]
+fn write_history(app: tauri::AppHandle, text: String) -> Result<(), String> {
+    if text.len() as u64 > HISTORY_MAX_BYTES || serde_json::from_str::<serde_json::Value>(&text).is_err() {
+        return Err("history must be JSON under 512 KB".into());
+    }
+    let (dir, _) = config_dir(&app).ok_or("no config folder")?;
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let tmp = dir.join("log-history.json.tmp");
+    std::fs::write(&tmp, text).map_err(|e| e.to_string())?;
+    std::fs::rename(&tmp, dir.join("log-history.json")).map_err(|e| e.to_string())
+}
+
 /// Move and resize a window in one step (logical pixels on the window's own screen), without
 /// activating it; `show` also shows it. Two separate calls (size, then position) left one frame where
 /// the notification stack or the bar jumped (interaction designer's batch 1 review, item A/H).
@@ -117,7 +143,7 @@ pub fn run() {
                 window.app_handle().exit(0);
             }
         })
-        .invoke_handler(tauri::generate_handler![launch_args, config_info, read_settings, write_settings, set_bounds])
+        .invoke_handler(tauri::generate_handler![launch_args, config_info, read_settings, write_settings, set_bounds, read_history, write_history])
         .setup(|app| {
             let toggle = MenuItem::with_id(app, "toggle", "Show / hide", true, None::<&str>)?;
             let settings = MenuItem::with_id(app, "settings", "Settings…", true, None::<&str>)?;

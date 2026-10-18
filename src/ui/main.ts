@@ -28,7 +28,9 @@ import { SettingsStore, type SettingsBackend } from '../settings/store.ts';
 import { Announced, deriveEvents, dueReminders } from '../events/derive.ts';
 import { deriveMore, Memory } from '../events/derive2.ts';
 import { Dispatcher, replacesLine, type LineUpdate } from '../events/dispatch.ts';
-import { channelOf, EVENT_KINDS, type EventKind, type Level } from '../events/kinds.ts';
+import { channelOf, EVENT_KINDS, LEVEL, type EventKind, type GameEvent, type Level } from '../events/kinds.ts';
+import { eventText } from '../events/text.ts';
+import { addEntries, historyView, parseEntries, type HistFilter, type LogEntry } from '../events/history-log.ts';
 import { Notifier } from '../notify/notifier.ts';
 import { Panels } from '../panels/manager.ts';
 import { PANEL_SIZE, type PanelFrame } from '../panels/frame.ts';
@@ -96,7 +98,7 @@ const BAR_SIZE: Record<'bar' | 'dot', Size> = { bar: { w: 340, h: 48 }, dot: { w
 const WIDTH_RANGE: Record<'bar' | 'dot', [number, number]> = { bar: [300, 600], dot: [180, 600] };
 const tier = () => cfg().barTier;
 const barWidth = () => cfg().sizes[`size-${tier()}`]?.w ?? BAR_SIZE[tier()].w;
-type Pop = null | 'mode' | 'panels' | 'ask';
+type Pop = null | 'mode' | 'panels' | 'ask' | 'history';
 let popKind: Pop = null;
 let popH = 0;
 /** The bar's top-left while a popover opens upward, to put the window back after. */
@@ -141,6 +143,7 @@ async function openPop(kind: Pop): Promise<void> {
   render();
   pop.hidden = false;
   popH = Math.ceil(pop.scrollHeight);
+  pop.classList.toggle('hist', kind === 'history');
   document.body.classList.add('has-pop');
   if (win) {
     const mon = await currentMonitor();
@@ -149,6 +152,7 @@ async function openPop(kind: Pop): Promise<void> {
     const bottom = mon ? (mon.workArea.position.y + mon.workArea.size.height) / mon.scaleFactor : Infinity;
     const up = pos.y + BAR_SIZE[tier()].h + popH + 4 > bottom;
     document.body.classList.toggle('up', up);
+    if (kind === 'history' && up !== histUp) { histUp = up; delete pop.dataset.html; render(); }
     if (up) restoreY = pos.y;
     await setBounds(pos.x, up ? pos.y - popH - 4 : pos.y, wantedHeight());
   }
@@ -188,6 +192,31 @@ const reminded = new Set<string>();
 let pausedUntil = 0;
 const paused = () => Date.now() < pausedUntil;
 
+/** The log history (UI_SPEC §5): the last five games, saved to log-history.json. */
+let logList: LogEntry[] = [];
+let histFilter: HistFilter = 'all';
+/** The history opened upward (the bar low on the screen): newest at the bottom, next to the bar. */
+let histUp = false;
+let saveHistTimer: ReturnType<typeof setTimeout> | null = null;
+function saveHistory(): void {
+  if (saveHistTimer) clearTimeout(saveHistTimer);
+  saveHistTimer = setTimeout(() => {
+    const text = JSON.stringify(logList);
+    if (inTauri) void invoke('write_history', { text }).catch(() => undefined); else local.set('log-history', text);
+  }, 2000);
+}
+function logEvents(events: GameEvent[], s: MatchState): void {
+  const code = codeOf(s);
+  const game = s.gameId ?? `${s.series?.matchId ?? 'm'}-${s.series?.game ?? s.draft?.current?.game ?? 0}`;
+  const add = events.filter((e) => e.kind !== 'reminder' && channelOf(e.kind, cfg()) !== 'off').map((e): LogEntry => ({
+    game, n: s.series?.game ?? s.draft?.current?.game ?? null, teams: [code('B'), code('R')], at: e.at, text: eventText(e, code, lang, cfg().spoilerFree).title,
+    level: LEVEL[e.kind], side: e.team, code: e.team ? code(e.team) : null, victim: e.victim ? code(e.victim) : null, t: Date.now(),
+  }));
+  if (!add.length) return;
+  logList = addEntries(logList, add);
+  saveHistory();
+}
+
 /** The log line on the bar, and how long it has held. */
 interface Line extends LineUpdate { shownAt: number; game: string | null; quiet?: boolean }
 let line: Line | null = null;
@@ -199,6 +228,7 @@ const codeOf = (s: MatchState) => (t: Team) => s.series?.teams[t].code ?? S.team
 function onEvents(events: ReturnType<typeof deriveEvents>, s: MatchState): void {
   if (!events.length) return;
   const now = Date.now();
+  logEvents(events, s);
   const res = dispatcher.step(events, now, cfg(), codeOf(s), lang, paused());
   if (res.line && replacesLine(line, res.line.level, now)) showLine({ ...res.line, shownAt: now, game: s.gameId });
   if (res.notices.length && inTauri) void notifier.push(res.notices);
@@ -273,12 +303,13 @@ const rosterPoller = new Poller(rosterUrl(DEFAULTS.endpoint), adaptRoster, 30 * 
 // ---------- panels ----------
 
 let dataTab: DataTab = 'schedule';
+let profile: { team: string | null; player: string | null } = { team: null, player: null };
 let pickedMatch: string | null = null;
 let endpointError = false;
 const panels = inTauri ? new Panels((n) => cfg().sizes[`size-panel-${n}`] ?? PANEL_SIZE[n]) : null;
 function sendPanels(): void {
   if (!panels) return;
-  const f: PanelFrame = { state, receivedAt, settings: cfg(), lang, conn, sample, schedule, history, roster, pickedMatch, dataTab, endpointError };
+  const f: PanelFrame = { state, receivedAt, settings: cfg(), lang, conn, sample, schedule, history, roster, pickedMatch, dataTab, profile, endpointError };
   panels.send(f);
 }
 async function openData(tab: DataTab): Promise<void> {
@@ -292,6 +323,7 @@ async function openData(tab: DataTab): Promise<void> {
 
 const dotHtml = (t: Team) => `<i class="dot" style="background:${TEAM_COLOUR[t]}"></i>`;
 const ICON = {
+  history: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h10M3 8h10M3 12h6"/></svg>',
   panels: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1.5" y="2.5" width="5.5" height="5" rx="1"/><rect x="9" y="2.5" width="5.5" height="5" rx="1"/><rect x="1.5" y="9.5" width="13" height="4" rx="1"/></svg>',
   data: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M2 6h12M6 6v8"/></svg>',
   pause: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 6h2.5L9 3v10L5.5 10H3z"/><path d="M11.5 6l3 4M14.5 6l-3 4"/></svg>',
@@ -392,6 +424,7 @@ function restingLine(clock: number | null): { html: string; key: string } {
 function iconsRow(): string {
   const b = (action: string, title: string, svg: string, pressed = false) => `<button data-action="${action}" title="${esc(title)}" aria-pressed="${pressed}">${svg}</button>`;
   return `<button class="modebtn" data-action="mode" title="${esc(B.icon.mode)}">${esc(modeLabel(cfg(), B))} ▾</button>`
+    + b('history', B.icon.history, ICON.history, popKind === 'history')
     + b('panels', B.icon.panels, ICON.panels, popKind === 'panels')
     + b('data', B.icon.data, ICON.data, cfg().panels.data)
     + (paused() ? b('pause', B.icon.resume, ICON.resume, true) : b('pause', B.icon.pause, ICON.pause))
@@ -408,6 +441,7 @@ function popHtml(): string {
   if (popKind === 'panels') {
     return (['minimap', 'draftGame', 'players'] as const).map((p) => `<button class="opt multi" data-panel="${p}" aria-pressed="${cfg().panels[p]}"><i class="r"></i><b>${esc(B.panel[p])}</b></button>`).join('');
   }
+  if (popKind === 'history') return historyView(logList, histFilter, B, !histUp);
   if (popKind === 'ask') {
     return `<div class="ask"><p>${esc(B.ask)}</p><button class="choice" data-ask="work">${esc(B.modeHint.work)}</button><button class="choice" data-ask="companion" style="margin-top:6px">${esc(B.modeHint.companion)}</button></div>`;
   }
@@ -482,7 +516,13 @@ function act(d: Record<string, string | undefined>): void {
     settings.update((x) => { x.panels[p] = !x.panels[p]; });
     return;
   }
-  if (d.tab) { dataTab = d.tab as DataTab; sendPanels(); return; }
+  if (d.hfilter) { histFilter = d.hfilter; delete pop.dataset.html; render(); return; }
+  if (d.tab) { dataTab = d.tab as DataTab; if (d.tab === 'teams') profile = { team: null, player: null }; sendPanels(); return; }
+  // Profiles (UI_SPEC §6): a team, a player ("CODE|id"), back one level, my team's star.
+  if (d.team) { profile = { team: d.team, player: null }; void openData('teams'); return; }
+  if (d.player) { const [team, player] = d.player.split('|') as [string, string]; profile = { team, player }; void openData('teams'); return; }
+  if (d.action === 'profile-back') { profile = profile.player ? { team: profile.team, player: null } : { team: null, player: null }; sendPanels(); return; }
+  if (d.star) { const code = d.star; settings.update((x) => { x.myTeam = x.myTeam === code ? null : code; }); return; }
   if (d.set) { const [path, value] = d.set.split(':') as [string, string]; if (path === 'mode') setMode(value as 'work' | 'companion' | 'custom'); else setPath(path, value); return; }
   if (d.toggle) { setPath(d.toggle, d.checked === 'true'); return; }
   if (d.ev) {
@@ -516,6 +556,7 @@ function act(d: Record<string, string | undefined>): void {
   switch (d.action) {
     case 'mode': void openPop('mode'); break;
     case 'panels': void openPop('panels'); break;
+    case 'history': void openPop('history'); break;
     case 'data': if (cfg().panels.data) settings.update((x) => { x.panels.data = false; }); else void openData(dataTab); break;
     case 'pause':
       if (paused()) { pausedUntil = 0; showNote(B.feedback.resumed); } else { pausedUntil = Date.now() + 30 * 60_000; void notifier.clear(); showNote(B.feedback.paused); }
@@ -540,11 +581,17 @@ for (const el of [bar, pop]) el.addEventListener('click', (e) => {
 });
 // The dot: a click on it (not a drag) goes back to the bar.
 bar.addEventListener('click', (e) => {
-  if (!(e.target as HTMLElement).closest('button') && tier() === 'dot' && !moved) settings.update((x) => { x.barTier = 'bar'; });
+  if ((e.target as HTMLElement).closest('button') || moved) return;
+  if (tier() === 'dot') settings.update((x) => { x.barTier = 'bar'; });
+  else void openPop('history');
 });
 window.addEventListener('keydown', (e) => { if (e.key === 'Escape') void closePop(); });
 // And when the user clicks elsewhere (the window loses focus). The first-run question stays until answered.
 window.addEventListener('blur', () => { if (popKind && popKind !== 'ask') void closePop(); });
+// The history folds away a minute after the mouse leaves (UI_SPEC §1).
+let leaveTimer: ReturnType<typeof setTimeout> | null = null;
+document.body.addEventListener('mouseleave', () => { if (popKind === 'history') leaveTimer = setTimeout(() => { if (popKind === 'history') void closePop(); }, 60_000); });
+document.body.addEventListener('mouseenter', () => { if (leaveTimer) clearTimeout(leaveTimer); leaveTimer = null; });
 
 // Drag with a press that moves 4 px or more; a press that does not move is a click.
 let down: { x: number; y: number } | null = null;
@@ -608,6 +655,7 @@ async function start(): Promise<void> {
     const path = pair.slice(0, i), raw = pair.slice(i + 1);
     if (i > 0) setPath(path, raw === 'true' ? true : raw === 'false' ? false : raw);
   }
+  logList = parseEntries(inTauri ? await invoke<string | null>('read_history').catch(() => null) : local.get('log-history'));
   settings.subscribe(onSettings);
   applyLanguage();
   applyBackground();

@@ -20,6 +20,9 @@ function player(v: unknown): RosterPlayer | null {
     id, role: typeof o.role === 'string' ? ROLE_OF[o.role] ?? null : null, starter: o.starter === true,
     nationality: text(o.nationality, 20), age: count(o.age, 80), worldsAppearances: count(o.worldsAppearances, 30),
     gamesThisWorlds: count(o.gamesThisWorlds), bio: text(o.bio, 200),
+    realName: text(o.name, 60), nativeName: text(o.nativeName, 40), debutYear: count(o.debutYear, 2100),
+    worldsYears: arr(o.worldsYears).map((y) => count(y, 2100)).filter((y): y is number => y !== null && y > 2000),
+    titles: Object.fromEntries(Object.entries(obj(o.titles)).flatMap(([k, n]) => { const c = count(n, 50); return c && k.length <= 20 ? [[k, c]] : []; })),
   };
 }
 
@@ -29,7 +32,8 @@ function team(v: unknown): RosterTeam | null {
   if (!code || !/^[A-Za-z0-9]+$/.test(code)) return null;
   const order = (r: Role | null) => (r ? ROLES.indexOf(r) : 9);
   return {
-    code, name: text(o.name) ?? code, league: text(o.league, 20), seedLabel: text(o.seedLabel, 20),
+    code, name: text(o.name) ?? code, league: text(o.league, 20), region: text(o.region, 30),
+    seed: typeof o.seed === 'string' || typeof o.seed === 'number' ? count(Number(o.seed), 20) : null, seedLabel: text(o.seedLabel, 20),
     startStage: text(o.startStage, 30), qualificationPath: text(o.qualificationPath, 120),
     // Top to support; within a role the starter first, as the service lists them.
     players: arr(o.players).map(player).filter((p): p is RosterPlayer => p !== null)

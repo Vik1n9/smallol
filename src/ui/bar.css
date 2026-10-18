@@ -76,6 +76,46 @@ body.up #pop { top: 0; }
 .ask p { margin: 0 2px 2px; color: var(--muted); font-size: 11px; }
 .ask .choice { display: block; width: 100%; text-align: left; padding: 7px 10px; border-radius: 7px; background: var(--panel); border: 1px solid var(--border); font-size: 12px; }
 .ask .choice:hover { border-color: var(--accent); }
+/* the history (UI_SPEC §5): 8 rows of 24, a group header per game, the filter at the far end */
+#pop.hist { padding: 4px 6px; gap: 4px; }
+.hlist { height: 192px; overflow-y: auto; display: flex; flex-direction: column; }
+.hlist.up { flex-direction: column; justify-content: flex-end; }
+.hgroup { display: flex; flex-direction: column; }
+.hhead { position: sticky; top: 0; height: 20px; line-height: 20px; font-size: 10px; color: var(--muted); background: var(--background); padding: 0 4px; z-index: 1; }
+.hrow { position: relative; display: grid; grid-template-columns: 44px 44px 1fr; align-items: center; height: 24px; flex: 0 0 24px; font-size: 12px; padding: 0 4px; animation: hrow-in .16s ease-out backwards; }
+.hrow .t { font: 11px var(--mono); color: var(--muted); }
+.hrow .who { display: inline-flex; align-items: center; gap: 3px; }
+.hrow .who .dot { width: 6px; height: 6px; flex-basis: 6px; box-shadow: none; }
+.hrow .code { font: 600 11px var(--mono); color: var(--text); padding: 0 2px; border-radius: 3px; }
+.hrow .code:hover { background: var(--border); }
+.hrow .x { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hrow.major .x { font-weight: 600; }
+.hrow.major::before { content: ''; position: absolute; left: 0; top: 4px; bottom: 4px; width: 2px; background: var(--accent); border-radius: 1px; }
+.hempty { margin: auto; color: var(--muted); font-size: 12px; }
+.hfilter { display: flex; gap: 2px; height: 24px; align-items: center; }
+.hfilter button { height: 20px; padding: 0 8px; border-radius: 6px; color: var(--muted); font-size: 11px; }
+.hfilter button[aria-pressed='true'] { background: var(--border); color: var(--text); }
+@keyframes hrow-in { from { opacity: 0; transform: translateY(-6px); } }
 #grip { display: none; }
 body:hover #grip { display: block; }
-body.has-pop #grip { display: none; }
+body.has-pop /* the history (UI_SPEC §5): 8 rows of 24, a group header per game, the filter at the far end */
+#pop.hist { padding: 4px 6px; gap: 4px; }
+.hlist { height: 192px; overflow-y: auto; display: flex; flex-direction: column; }
+.hlist.up { flex-direction: column; justify-content: flex-end; }
+.hgroup { display: flex; flex-direction: column; }
+.hhead { position: sticky; top: 0; height: 20px; line-height: 20px; font-size: 10px; color: var(--muted); background: var(--background); padding: 0 4px; z-index: 1; }
+.hrow { position: relative; display: grid; grid-template-columns: 44px 44px 1fr; align-items: center; height: 24px; flex: 0 0 24px; font-size: 12px; padding: 0 4px; animation: hrow-in .16s ease-out backwards; }
+.hrow .t { font: 11px var(--mono); color: var(--muted); }
+.hrow .who { display: inline-flex; align-items: center; gap: 3px; }
+.hrow .who .dot { width: 6px; height: 6px; flex-basis: 6px; box-shadow: none; }
+.hrow .code { font: 600 11px var(--mono); color: var(--text); padding: 0 2px; border-radius: 3px; }
+.hrow .code:hover { background: var(--border); }
+.hrow .x { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hrow.major .x { font-weight: 600; }
+.hrow.major::before { content: ''; position: absolute; left: 0; top: 4px; bottom: 4px; width: 2px; background: var(--accent); border-radius: 1px; }
+.hempty { margin: auto; color: var(--muted); font-size: 12px; }
+.hfilter { display: flex; gap: 2px; height: 24px; align-items: center; }
+.hfilter button { height: 20px; padding: 0 8px; border-radius: 6px; color: var(--muted); font-size: 11px; }
+.hfilter button[aria-pressed='true'] { background: var(--border); color: var(--text); }
+@keyframes hrow-in { from { opacity: 0; transform: translateY(-6px); } }
+#grip { display: none; }

@@ -6,7 +6,7 @@ import type { EventKind } from '../events/kinds.ts';
 import type { Channel, NotifyBase, NotifyMode, PanelName } from '../settings/schema.ts';
 import type { Lang } from './index.ts';
 
-export type DataTab = 'schedule' | 'series' | 'settings';
+export type DataTab = 'schedule' | 'teams' | 'series' | 'settings';
 
 export interface BarStrings {
   mode: Record<NotifyMode, string>;
@@ -17,7 +17,7 @@ export interface BarStrings {
   event: Record<EventKind, string>;
   panel: Record<PanelName, string>;
   tab: Record<DataTab, string>;
-  icon: Record<'mode' | 'panels' | 'data' | 'pause' | 'resume' | 'tier' | 'settings', string>;
+  icon: Record<'mode' | 'history' | 'panels' | 'data' | 'pause' | 'resume' | 'tier' | 'settings', string>;
   ask: string;
   feedback: { mode(m: string): string; paused: string; resumed: string };
   more: string;
@@ -28,6 +28,13 @@ export interface BarStrings {
   inProgress(clock: string): string;
   startingSoon: string;
   reset: string;
+  prof: {
+    search: string; today: string; mine: string; teams: string; players: string; noMatch: string; back: string;
+    star: string; unstar: string; coaches: string; starter: string; sub: string; bp: string;
+    worlds: string; msi: string; league: string; worldsTimes(n: number, last: number | null): string; allYears: string;
+    played(n: number): string; pool: string; showWins: string; hideWins: string; debut(y: number): string; noPool: string;
+  };
+  hist: { all: string; big: string; game(n: number, a: string, b: string): string; empty: string };
   sections: Record<'notify' | 'events' | 'panels' | 'reminder' | 'general' | 'corner' | 'soon' | 'milestones', string>;
   milestones: Record<'all' | 'mine', string>;
   seconds(n: number): string;
@@ -54,8 +61,15 @@ const zh: BarStrings = {
     level6: '升 6 級', level11: '升 11、16 級', firstLegendary: '第一件傳說裝',
   },
   panel: { minimap: '小地圖', draftGame: '本局 BP', players: '選手面板', data: '資料窗' },
-  tab: { schedule: '賽程', series: '全場 BP', settings: '設定' },
-  icon: { mode: '通知模式', panels: '面板', data: '資料窗', pause: '暫停通知 30 分鐘', resume: '恢復通知', tier: '切換大小', settings: '設定' },
+  tab: { schedule: '賽程', teams: '隊伍', series: '全場 BP', settings: '設定' },
+  prof: {
+    search: '搜尋隊伍、選手…', today: '今日出場', mine: '我的隊伍', teams: '隊伍', players: '選手', noMatch: '找不到', back: '←',
+    star: '設為我的隊伍', unstar: '取消我的隊伍', coaches: '教練', starter: '先發', sub: '替補', bp: '本屆 BP（常禁常選）',
+    worlds: '世界賽冠軍', msi: 'MSI 冠軍', league: '聯賽冠軍', worldsTimes: (n, y) => `世界賽 ${n} 次${y ? ` · 最近 ${y}` : ''}`, allYears: '全部年份',
+    played: (n) => `本屆上場 ${n} 局`, pool: '本屆英雄池', showWins: '顯示勝率', hideWins: '隱藏勝率', debut: (y) => `${y} 出道`, noPool: '本屆還沒上場',
+  },
+  hist: { all: '全部', big: '重要事件', game: (n, a, b) => `第 ${n} 局 · ${a} 對 ${b}`, empty: '還沒有紀錄' },
+  icon: { mode: '通知模式', history: '歷史', panels: '面板', data: '資料窗', pause: '暫停通知 30 分鐘', resume: '恢復通知', tier: '切換大小', settings: '設定' },
   ask: '你怎麼用這個小工具？之後可以從模式標籤改。',
   feedback: { mode: (m) => `通知模式：${m}`, paused: '通知已暫停 30 分鐘', resumed: '通知已恢復' },
   more: '+{n} 則 ▸',
@@ -91,8 +105,15 @@ const en: BarStrings = {
     level6: 'Level 6', level11: 'Levels 11, 16', firstLegendary: 'First legendary item',
   },
   panel: { minimap: 'Minimap', draftGame: 'Draft', players: 'Players', data: 'Data' },
-  tab: { schedule: 'Schedule', series: 'Series draft', settings: 'Settings' },
-  icon: { mode: 'Notification mode', panels: 'Panels', data: 'Data window', pause: 'Pause notifications for 30 min', resume: 'Resume notifications', tier: 'Change size', settings: 'Settings' },
+  tab: { schedule: 'Schedule', teams: 'Teams', series: 'Series draft', settings: 'Settings' },
+  prof: {
+    search: 'Search teams, players…', today: 'Playing today', mine: 'My team', teams: 'Teams', players: 'Players', noMatch: 'No match', back: '←',
+    star: 'Make my team', unstar: 'Not my team', coaches: 'Coaches', starter: 'Starter', sub: 'Substitute', bp: 'This event: bans, picks',
+    worlds: 'Worlds titles', msi: 'MSI titles', league: 'League titles', worldsTimes: (n, y) => `Worlds ${n}×${y ? ` · last ${y}` : ''}`, allYears: 'All years',
+    played: (n) => `${n} game${n === 1 ? '' : 's'} this event`, pool: 'Champions this event', showWins: 'Show wins', hideWins: 'Hide wins', debut: (y) => `debut ${y}`, noPool: 'No games this event yet',
+  },
+  hist: { all: 'All', big: 'Big events', game: (n, a, b) => `Game ${n} · ${a} vs ${b}`, empty: 'Nothing yet' },
+  icon: { mode: 'Notification mode', history: 'History', panels: 'Panels', data: 'Data window', pause: 'Pause notifications for 30 min', resume: 'Resume notifications', tier: 'Change size', settings: 'Settings' },
   ask: 'How will you use this? You can change it later from the mode label.',
   feedback: { mode: (m) => `Notifications: ${m}`, paused: 'Notifications paused for 30 min', resumed: 'Notifications back on' },
   more: '+{n} more ▸',

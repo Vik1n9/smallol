@@ -66,3 +66,38 @@ body:hover #close { opacity: .8; }
 .events { display: flex; flex-direction: column; gap: 2px; }
 .evrow { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 26px; }
 .evk { font-size: 12px; white-space: nowrap; }
+
+/* the teams tab: index, search, team and player pages (UI_SPEC §6) */
+.dbody input.search { height: 26px; padding: 0 9px; border-radius: 7px; border: 1px solid var(--border); background: var(--panel); color: var(--text); font: 12px var(--font); flex: 0 0 auto; }
+.tresults { display: flex; flex-direction: column; gap: 6px; }
+.tgroup { display: flex; flex-direction: column; gap: 3px; }
+.tgroup .k, .dbody h4 { font-size: 11px; color: var(--muted); margin: 0; font-weight: 400; }
+.tgrid { display: grid; grid-template-columns: repeat(4, 56px); gap: 4px; }
+.tcell { height: 24px; border-radius: 5px; background: var(--panel); box-shadow: inset 0 0 0 1px var(--border); font: 600 11px var(--mono); color: var(--text); }
+.tcell:hover, .prow2:hover, .mrow:hover { background: var(--border); }
+.prow2 { display: flex; gap: 8px; align-items: baseline; height: 24px; padding: 0 6px; border-radius: 5px; text-align: left; font-size: 12px; }
+.phead { display: flex; align-items: center; gap: 6px; min-height: 24px; }
+.phead .back { height: 22px; min-width: 26px; border-radius: 6px; background: var(--border); color: var(--text); }
+.pcode { font: 700 16px var(--mono); }
+.crumb { font-size: 12px; }
+.star { width: 26px; height: 24px; border-radius: 6px; font-size: 16px; color: var(--muted); }
+.star.on { color: var(--accent); }
+.pfacts { font-size: 12px; line-height: 1.5; }
+.ptags { display: flex; gap: 8px; align-items: center; font-size: 11px; }
+.tagx { padding: 0 6px; border-radius: 4px; border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent); color: var(--accent); }
+.qual { margin: 0; font-size: 11px; color: var(--muted); line-height: 1.4; }
+.coach { font-size: 11px; line-height: 1.5; }
+.coach .k { margin-right: 6px; }
+.roster { display: flex; flex-direction: column; gap: 1px; }
+.mrow { display: grid; grid-template-columns: 30px 90px 1fr; align-items: center; gap: 6px; height: 22px; padding: 0 4px; border-radius: 5px; text-align: left; font-size: 12px; }
+.mrow .muted { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+details.bp summary, details.wy summary { cursor: pointer; font-size: 11px; color: var(--muted); }
+details.bp .tl { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; font-size: 11px; margin-top: 4px; }
+.bio { margin: 0; font-size: 12px; line-height: 1.5; }
+.names { margin: 0; font-size: 11px; color: var(--muted); }
+.tboxes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+.tbox { display: flex; flex-direction: column; align-items: center; padding: 4px 0; border-radius: 6px; background: var(--panel); }
+.tbox b { font: 700 16px var(--mono); }
+.poolh { display: flex; align-items: center; gap: 6px; }
+.mini { height: 20px; padding: 0 8px; border-radius: 10px; background: var(--border); color: var(--muted); font-size: 11px; }
+.pool { display: flex; flex-wrap: wrap; gap: 4px; font-size: 11px; }

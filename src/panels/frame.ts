@@ -4,6 +4,7 @@
 
 import type { Connection } from '../data/streamcv/source.ts';
 import type { DataTab } from '../i18n/bar.ts';
+import type { ProfileNav } from '../ui/profile-views.ts';
 import type { Lang } from '../i18n/index.ts';
 import type { History } from '../model/history.ts';
 import type { RosterTeam } from '../model/roster.ts';
@@ -24,6 +25,8 @@ export interface PanelFrame {
   roster: Record<string, RosterTeam> | null;
   pickedMatch: string | null;
   dataTab: DataTab;
+  /** The team or player open in the data window's teams tab. */
+  profile: ProfileNav;
   endpointError: boolean;
 }
 
