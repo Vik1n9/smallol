@@ -138,9 +138,11 @@ export function teamLine(c: ViewCtx, t: Team, named = true): string {
   if (c.show.voidgrubs && grubs) tail.push(`<span class="count"><span class="k">${esc(c.S.ui.grubs)}</span>${grubs}</span>`);
   if (c.show.barons && team.barons) tail.push(`<span class="count"><span class="k">${esc(c.S.ui.baron)}</span>${team.barons}</span>`);
   // Who took the herald, once the service saw the kill announcement (v0.5). One herald a game: no number.
+  // The time is the first herald banner seen (v0.8): the summon banner when the broadcast missed
+  // the kill, so it can be late. Hence "~".
   const h = c.s.herald;
   if (c.show.herald && h?.team === t && (h.status === 'taken' || h.status === 'taken_or_despawned')) {
-    tail.push(`<span class="count" title="${esc(h.at === null ? c.S.ui.herald : `${c.S.ui.herald} ${fmtClock(h.at)}`)}"><span class="k">${esc(c.S.ui.herald)}</span></span>`);
+    tail.push(`<span class="count" title="${esc(h.at === null ? c.S.ui.herald : `${c.S.ui.herald} ~${fmtClock(h.at)}`)}"><span class="k">${esc(c.S.ui.herald)}</span></span>`);
   }
   if (tail.length) bits.push(`<span class="counts push">${tail.join('')}</span>`);
   return bits.join('');

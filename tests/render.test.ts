@@ -332,6 +332,7 @@ describe('views, contract v0.4', () => {
   it('herald taken (v0.5): the team that took it says so; unknown taker, nothing', () => {
     const html = mapView(ctx({ s: live2, clock: at2 }), true);
     expect(html.match(/預示者/g)).toHaveLength(2); // the label and its tooltip "預示者 15:59", once
+    expect(html).toContain('title="預示者 ~15:59"'); // approximate: may be the summon banner (v0.8)
     const rows = html.split('class="row team"');
     expect(rows[1]).toContain('預示者');
     expect(rows[2]).not.toContain('預示者');
