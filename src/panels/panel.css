@@ -104,8 +104,11 @@ details.bp .tl { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; 
 .tbox { display: flex; flex-direction: column; align-items: center; padding: 4px 0; border-radius: 6px; background: var(--panel); }
 .tbox b { font: 700 16px var(--mono); }
 .poolh { display: flex; align-items: center; gap: 6px; }
-.tblock .tlink { font: 700 12px var(--mono); padding: 0 3px; border-radius: 4px; color: var(--text); }
-.tblock .plink { font: 600 11px var(--font); padding: 0 2px; border-radius: 3px; color: var(--text); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Links as in the history (batch 2c review): player IDs dotted-underlined, team codes bold with only the
+   pointer; both take the same hover colour. */
+.tblock .tlink { font: 700 12px var(--mono); padding: 0 3px; border-radius: 4px; color: var(--text); cursor: pointer; }
+.tblock .plink { font: 600 11px var(--font); padding: 0 2px; border-radius: 3px; color: var(--text); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer;
+  text-decoration: underline dotted color-mix(in srgb, var(--muted) 60%, transparent); text-underline-offset: 2px; line-height: 17px; }
 .tblock .tlink:hover, .tblock .plink:hover { background: var(--border); }
 .mini { height: 20px; padding: 0 8px; border-radius: 10px; background: var(--border); color: var(--muted); font-size: 11px; }
 .pool { display: flex; flex-wrap: wrap; gap: 4px; font-size: 11px; }

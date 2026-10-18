@@ -209,6 +209,10 @@ button.srow2.next:hover { background: color-mix(in srgb, var(--accent) 20%, var(
 .has-card { cursor: help; text-decoration: underline dotted color-mix(in srgb, var(--muted) 55%, transparent); text-underline-offset: 3px; }
 .subtag { margin-left: 4px; font-size: 9px; font-weight: 400; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent); border-radius: 3px; padding: 0 3px; }
 .tblock .tp > * { overflow: hidden; text-overflow: ellipsis; }
+/* One line of whole champions: one that does not fit wraps to a hidden second line instead of being cut. */
+.tblock .tp > .tpool { display: flex; flex-wrap: wrap; column-gap: 8px; height: 15px; line-height: 15px; text-overflow: clip; }
+.tpool .pc { white-space: nowrap; }
+.tpool .pc i { margin-right: 0; }
 
 #grip { position: fixed; right: 0; bottom: 0; width: 14px; height: 14px; cursor: nwse-resize; z-index: 10; }
 #grip::after { content: ''; position: absolute; right: 4px; bottom: 4px; width: 6px; height: 6px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); opacity: .45; }

@@ -95,6 +95,33 @@ describe('event detection', () => {
     expect(eventText(ev.find((e) => e.kind === 'seriesEnd')!, code, 'zh-Hant', true).title).toBe('KC 贏下系列賽');
   });
 
+  it('an inhibitor read down, up, down again is announced once, until it could have respawned (batch 2c, F2)', () => {
+    const a = live(); a.clock = 1500; a.teams.R.inhibitorsDown = [];
+    const b = clone(a); b.clock = 1505; b.teams.R.inhibitorsDown = [{ lane: 'bot', respawnAt: 1805 }];
+    const c = clone(b); c.clock = 1510; c.teams.R.inhibitorsDown = [];
+    const d = clone(c); d.clock = 1515; d.teams.R.inhibitorsDown = [{ lane: 'bot', respawnAt: 1815 }];
+    const seen = new Announced();
+    const kinds = (p: MatchState, n: MatchState) => deriveEvents(p, n, seen).filter((e) => e.kind === 'inhibitor');
+    expect(kinds(a, b)).toHaveLength(1);
+    expect(kinds(b, c)).toEqual([]);
+    expect(kinds(c, d)).toEqual([]);
+    // Back up for real, and down again: a new one.
+    const e = clone(d); e.clock = 1820; e.teams.R.inhibitorsDown = [];
+    const f = clone(e); f.clock = 1900; f.teams.R.inhibitorsDown = [{ lane: 'bot', respawnAt: 2200 }];
+    kinds(d, e);
+    expect(kinds(e, f)).toHaveLength(1);
+  });
+
+  it('the end is never before the last thing that happened in the game (batch 2c, F3)', () => {
+    const seen = new Announced();
+    const a = live(); a.clock = 2175;
+    a.teams.B.towers.nexus_t1.down = false;
+    const b = clone(a); b.teams.B.towers.nexus_t1.down = true; b.teams.B.towers.nexus_t1.lostAt = 2185;
+    expect(deriveEvents(a, b, seen).find((e) => e.kind === 'nexusTower')!.at).toBe(2185);
+    const end = { ...clone(b), status: 'finished' as const };
+    expect(deriveEvents(b, end, seen).find((e) => e.kind === 'gameEnd')!.at).toBe(2185);
+  });
+
   it('the same game coming back from finished (a replay looping, a service restart) is not a new start', () => {
     const fin = { ...live(), status: 'finished' as const };
     expect(deriveEvents(fin, live()).map((e) => e.kind)).not.toContain('gameStart');

@@ -47,16 +47,41 @@ const allPicked = (s: MatchState) => {
  * a tower is announced once a game; a nexus turret again only after it could have respawned.
  */
 export class Announced {
-  private game: string | null = null;
+  game: string | null = null;
   private towers = new Map<string, number>();
+  /** Inhibitors announced, by "owner:lane", with when they come back. */
+  private inhibs = new Map<string, number>();
+  /** The latest game time announced this game: the end is never before it (batch 2c review, F3). */
+  latest = 0;
   /** Nexus turrets respawn 3:00 after falling; allow a second announcement after 2:30. */
   static readonly NEXUS_AGAIN_SEC = 150;
+  private use(game: string | null): void {
+    if (game !== this.game) { this.game = game; this.towers.clear(); this.inhibs.clear(); this.latest = 0; }
+  }
   fresh(game: string | null, key: string, at: number | null, nexus: boolean): boolean {
-    if (game !== this.game) { this.game = game; this.towers.clear(); }
+    this.use(game);
     const last = this.towers.get(key);
     if (last !== undefined && !(nexus && at !== null && at - last >= Announced.NEXUS_AGAIN_SEC)) return false;
     this.towers.set(key, at ?? 0);
+    if (at !== null) this.latest = Math.max(this.latest, at);
     return true;
+  }
+  /**
+   * An inhibitor once until it could have come back (batch 2c review, F2): the screen reading can show
+   * it down, up, down again, which a plain diff announced twice.
+   */
+  inhibFresh(game: string | null, key: string, at: number | null, respawnAt: number): boolean {
+    this.use(game);
+    const back = this.inhibs.get(key);
+    if (back !== undefined && !(at !== null && at >= back)) return false;
+    this.inhibs.set(key, respawnAt);
+    if (at !== null) this.latest = Math.max(this.latest, at);
+    return true;
+  }
+  /** Any other event's time, for the end's. */
+  saw(game: string | null, at: number | null): void {
+    this.use(game);
+    if (at !== null) this.latest = Math.max(this.latest, at);
   }
 }
 
@@ -96,7 +121,9 @@ export function deriveEvents(prev: MatchState | null, next: MatchState, seen: An
       }
       if (b.inhibitorsDown.length > a.inhibitorsDown.length) {
         const fresh = b.inhibitorsDown.filter((i) => !a.inhibitorsDown.some((j) => j.lane === i.lane && j.respawnAt === i.respawnAt));
-        for (const i of fresh.slice(0, b.inhibitorsDown.length - a.inhibitorsDown.length)) out.push({ kind: 'inhibitor', team: by, victim: owner, at, lane: i.lane, respawnIn: at === null ? undefined : i.respawnAt - at });
+        for (const i of fresh.slice(0, b.inhibitorsDown.length - a.inhibitorsDown.length)) {
+          if (seen.inhibFresh(next.gameId, `${owner}:${i.lane}`, at, i.respawnAt)) out.push({ kind: 'inhibitor', team: by, victim: owner, at, lane: i.lane, respawnIn: at === null ? undefined : i.respawnAt - at });
+        }
       }
     }
     for (const t of TEAMS) {
@@ -111,16 +138,20 @@ export function deriveEvents(prev: MatchState | null, next: MatchState, seen: An
     if (!prev.herald?.team && next.herald?.team) out.push({ kind: 'herald', team: next.herald.team, at: next.herald.at ?? at });
   }
 
+  if (prev.gameId === next.gameId && next.gameId) for (const e of out) seen.saw(next.gameId, e.at);
+
   if (prev.status === 'in_game' && next.status === 'finished') {
     const w = winnerOf(next);
-    out.push({ kind: 'gameEnd', team: w, at, n: gameNo, duration: next.clock ?? undefined });
+    // Never before the last thing that happened in it (a nexus turret read at 36:25 under an end at 36:15).
+    const end = at === null ? null : Math.max(at, seen.game === next.gameId ? seen.latest : 0);
+    out.push({ kind: 'gameEnd', team: w, at: end, n: gameNo, duration: end ?? undefined });
     const se = next.series;
     const before = w && se ? se.teams[w].wins : null;
     if (w && se && before !== null) {
       const need = Math.floor(se.bestOf / 2) + 1;
       if (before + 1 >= need) {
         const l = other(w), lw = se.teams[l].wins ?? 0;
-        out.push({ kind: 'seriesEnd', team: w, at, score: [before + 1, lw] });
+        out.push({ kind: 'seriesEnd', team: w, at: end, score: [before + 1, lw] });
       }
     }
   }

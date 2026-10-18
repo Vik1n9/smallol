@@ -104,13 +104,13 @@ describe('batch 2 dispatch', () => {
     expect(milestoneText('firstLegendary', who, 'en')).toBe('First item · MVK Jng Mid Bot · FUR Top Sup');
   });
 
-  it('my team: a raised strip goes out only while fewer than 4 strips went out in the last minute; the rest stay in the log', () => {
+  it('my team: a raised strip goes out only while fewer than 3 strips went out in the last minute; the rest stay in the log', () => {
     const d = new Dispatcher();
     const cfg = { ...DEFAULTS, mode: 'companion' as const, myTeam: 'KC' };
-    // KC's drakes (important: raised from the log to a strip in companion), 16 s apart: four go out, the fifth in the same minute stays in the log.
+    // KC's drakes (important: raised from the log to a strip in companion), 16 s apart: three go out, the fourth in the same minute stays in the log.
     const drake = (n: number, at: number) => ({ kind: 'drake' as const, team: 'B' as Team, at, element: 'infernal' as const, n });
-    for (let i = 0; i < 4; i++) expect(d.step([drake(i + 1, 100 + i * 16)], i * 16_000, cfg, code, 'zh-Hant').notices).toHaveLength(1);
-    expect(d.step([drake(5, 155)], 55_000, cfg, code, 'zh-Hant').notices).toEqual([]);
+    for (let i = 0; i < 3; i++) expect(d.step([drake(i + 1, 100 + i * 16)], i * 16_000, cfg, code, 'zh-Hant').notices).toHaveLength(1);
+    expect(d.step([drake(4, 150)], 50_000, cfg, code, 'zh-Hant').notices).toEqual([]);
     expect(d.held).toBe(1);
     // A minute on, there is room again.
     expect(d.step([drake(6, 200)], 70_000, cfg, code, 'zh-Hant').notices[0]!.kind).toBe('strip');

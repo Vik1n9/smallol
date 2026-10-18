@@ -117,8 +117,8 @@ function teamBlock(c: ScheduleCtx, code: string): string {
   const pool = (name: string) => {
     const p = findPlayer(c.history.players, code, name);
     if (!p) return '';
-    const more = p.pool.length > 3 ? `<span class="muted"> +${p.pool.length - 3}</span>` : '';
-    return p.pool.slice(0, 3).map((e) => `${esc(championName(e.champion, c.lang))}<i>${e.games}</i>`).join(' ') + more;
+    // At most two, each whole: the row shows only the ones that fit (no name cut in the middle, batch 2c review F1).
+    return p.pool.slice(0, 2).map((e) => `<span class="pc">${esc(championName(e.champion, c.lang))}<i>${e.games}</i></span>`).join('');
   };
   // The five starters from the roster (nationality and age), with this event's most played when known.
   const rows = r

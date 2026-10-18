@@ -42,8 +42,12 @@ const RANK: Record<Level, number> = { major: 3, important: 2, normal: 1 };
 export const STREAK_GAP_MS = 15_000, STREAK_LIFE_MS = 20_000;
 /** Safety valve: at most this many cards a minute; more become strips. */
 export const CARDS_PER_MIN = 3;
-/** My team's raised strips go out only while fewer strips than this went out in the last minute; the rest stay in the log (batch 2b review). */
-export const STRIPS_PER_MIN = 4;
+/**
+ * My team's raised strips go out only while fewer strips than this went out in the last minute; the rest
+ * stay in the log. 3, not 4: a raised strip cannot see the strips still to come that minute, and at 4
+ * two replayed games reached 5 (batch 2c review).
+ */
+export const RAISE_BELOW = 3;
 
 const fmt = (sec: number | null) => (sec === null ? null : `${Math.floor(Math.max(0, sec) / 60)}:${String(Math.floor(Math.max(0, sec)) % 60).padStart(2, '0')}`);
 
@@ -116,7 +120,7 @@ export class Dispatcher {
       offerLine({ text: title, level, team: e.team, at: e.at });
       if (raised && ch === 'strip' && !paused) {
         this.stripTimes = this.stripTimes.filter((x) => now - x.t < 60_000);
-        if (!this.stripTimes.some((x) => x.id === id) && this.stripTimes.length >= STRIPS_PER_MIN) { ch = 'log'; this.held++; }
+        if (!this.stripTimes.some((x) => x.id === id) && this.stripTimes.length >= RAISE_BELOW) { ch = 'log'; this.held++; }
       }
       if (ch === 'log' || ch === 'off' || paused) continue;
       if (ch === 'strip') this.sentStrip(id, now);
