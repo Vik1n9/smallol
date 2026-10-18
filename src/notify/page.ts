@@ -69,11 +69,19 @@ function drawMore(): void {
   el.innerHTML = `<span class="title">${esc(moreLabel(overflow))}</span>`;
 }
 
-let lastH = -1;
+let last = '';
+/**
+ * The window is exactly as big as what it shows: as tall as the stack and as wide as its widest item,
+ * so no see-through margin beside the strips catches clicks meant for the desktop (batch 1 review,
+ * check 2: a 316-wide window with 260-wide strips took the clicks on its empty left part).
+ */
 function report(): void {
   requestAnimationFrame(() => {
-    const h = stack.children.length ? Math.ceil(stack.getBoundingClientRect().height) : 0;
-    if (h !== lastH) { lastH = h; void emit('notify-height', h); }
+    const kids = [...stack.children] as HTMLElement[];
+    const h = kids.length ? Math.ceil(stack.getBoundingClientRect().height) : 0;
+    const w = kids.length ? Math.max(...kids.map((k) => Math.ceil(k.getBoundingClientRect().width))) : 0;
+    const key = `${w}x${h}`;
+    if (key !== last) { last = key; void emit('notify-size', { w, h }); }
   });
 }
 
@@ -104,9 +112,12 @@ void (async () => {
     for (const n of e.payload.items) upsert(n);
     report();
   });
+  await self.listen('notices-report', () => { last = ''; report(); });
   await self.listen('notices-clear', () => {
     for (const it of items.values()) retire(it);
     overflow = 0; drawMore(); report();
   });
   await emit('notify-ready');
+  // A page that (re)loads starts empty: say so, or a window left at its old size stays on screen, empty.
+  report();
 })();

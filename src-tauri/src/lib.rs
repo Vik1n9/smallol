@@ -76,12 +76,16 @@ fn set_bounds(app: tauri::AppHandle, label: String, x: f64, y: f64, w: f64, h: f
     let (px, py, pw, ph) = ((x * scale).round() as i32, (y * scale).round() as i32, (w * scale).round() as i32, (h * scale).round() as i32);
     #[cfg(windows)]
     {
-        use windows_sys::Win32::UI::WindowsAndMessaging::{SetWindowPos, SWP_NOACTIVATE, SWP_NOZORDER, SWP_SHOWWINDOW};
+        use windows_sys::Win32::UI::WindowsAndMessaging::{SetWindowPos, SWP_NOACTIVATE, SWP_NOZORDER};
         let hwnd = window.hwnd().map_err(|e| e.to_string())?;
-        let flags = SWP_NOZORDER | SWP_NOACTIVATE | if show { SWP_SHOWWINDOW } else { 0 };
-        let ok = unsafe { SetWindowPos(hwnd.0 as _, std::ptr::null_mut(), px, py, pw, ph, flags) };
+        let ok = unsafe { SetWindowPos(hwnd.0 as _, std::ptr::null_mut(), px, py, pw, ph, SWP_NOZORDER | SWP_NOACTIVATE) };
         if ok == 0 {
             return Err("SetWindowPos failed".into());
+        }
+        // Shown through Tauri, not SWP_SHOWWINDOW: a window shown behind Tauri's back left its web view
+        // thinking it was hidden, so its timers and animations were throttled (strips stayed a minute).
+        if show && !window.is_visible().unwrap_or(false) {
+            window.show().map_err(|e| e.to_string())?;
         }
         Ok(())
     }

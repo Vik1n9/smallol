@@ -158,6 +158,8 @@ async function closePop(): Promise<void> {
   popKind = null;
   pop.hidden = true;
   pop.innerHTML = '';
+  // Forget what was drawn: the same menu opened again must be drawn again (it came up empty the second time).
+  delete pop.dataset.html;
   document.body.classList.remove('has-pop');
   if (win) {
     const scale = await win.scaleFactor();
