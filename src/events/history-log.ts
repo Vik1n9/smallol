@@ -33,28 +33,33 @@ export const KEEP_GAMES = 5;
 /** Add entries, keeping the last five games. The same event twice (same game, game time and text: a game
  * replayed, or the app restarted mid-game) is kept once. */
 export function addEntries(list: LogEntry[], add: LogEntry[]): LogEntry[] {
-  const seen = new Set<string>();
-  const all = [...list, ...add].filter((e) => {
-    if (e.at === null) return true;
-    const k = `${e.game}|${e.at}|${e.text}`;
-    if (seen.has(k)) return false;
-    seen.add(k);
-    return true;
-  });
+  const all = dedupe([...list, ...add]);
   const games: string[] = [];
   for (let i = all.length - 1; i >= 0; i--) if (!games.includes(all[i]!.game)) games.push(all[i]!.game);
   const keep = new Set(games.slice(0, KEEP_GAMES));
   return all.filter((e) => keep.has(e.game)).slice(-2000);
 }
 
-/** Read a saved history back; anything malformed is dropped entry by entry. */
+function dedupe(list: LogEntry[]): LogEntry[] {
+  const seen = new Set<string>();
+  return list.filter((e) => {
+    if (e.at === null) return true;
+    const k = `${e.game}|${e.at}|${e.text}`;
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+}
+
+/** Read a saved history back; anything malformed is dropped entry by entry, and doubles kept once
+ * (a file written before they were, 2026-10-18: four "推倒 MVK 主堡塔" at 36:25 from replays). */
 export function parseEntries(text: string | null): LogEntry[] {
   if (!text) return [];
   try {
     const v = JSON.parse(text) as unknown;
     if (!Array.isArray(v)) return [];
-    return v.filter((e): e is LogEntry => !!e && typeof e === 'object' && typeof (e as LogEntry).text === 'string' && typeof (e as LogEntry).game === 'string'
-      && Array.isArray((e as LogEntry).teams) && ['major', 'important', 'normal'].includes((e as LogEntry).level));
+    return dedupe(v.filter((e): e is LogEntry => !!e && typeof e === 'object' && typeof (e as LogEntry).text === 'string' && typeof (e as LogEntry).game === 'string'
+      && Array.isArray((e as LogEntry).teams) && ['major', 'important', 'normal'].includes((e as LogEntry).level)));
   } catch { return []; }
 }
 

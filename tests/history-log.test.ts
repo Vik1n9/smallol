@@ -66,5 +66,7 @@ describe('log history', () => {
     const good = e('g', 'ok');
     expect(parseEntries(JSON.stringify([good, { text: 1 }, null]))).toEqual([good]);
     expect(parseEntries('not json')).toEqual([]);
+    const nexus = e('g', 'FUR 推倒 MVK 主堡塔', 'normal', 'FUR', 2185);
+    expect(parseEntries(JSON.stringify([nexus, { ...nexus, t: 5 }, { ...nexus, t: 9 }]))).toHaveLength(1);
   });
 });
