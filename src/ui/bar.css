@@ -22,7 +22,7 @@ body.dot #bar { border-radius: 999px; padding: 0 12px; }
 .row-a .mute { color: var(--accent); }
 .row-a .cd { display: inline-flex; align-items: center; gap: 3px; color: var(--text); }
 .row-a .cd .mono { font-size: 11px; font-weight: 600; }
-.row-a .cd .el { min-width: 14px; height: 14px; font-size: 9px; border-radius: 4px; }
+.row-a .cd .el { height: 15px; font-size: 10px; padding: 0 4px; border-radius: 4px; }
 .row-a .cd .k { font-size: 10px; }
 .row-a .conn { width: 6px; height: 6px; flex-basis: 6px; }
 /* hover: the status row cross-fades to the icon row; the bar keeps its size */
@@ -67,6 +67,10 @@ body.up #pop { top: 0; }
 .opt:hover { background: var(--panel); }
 .opt .r { width: 10px; height: 10px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--muted); flex: 0 0 10px; align-self: center; }
 .opt[aria-pressed='true'] .r { box-shadow: inset 0 0 0 3px var(--accent); }
+/* Several panels can be open: square checks, not radio dots. */
+.opt.multi .r { border-radius: 3px; }
+.opt.multi[aria-pressed='true'] .r { background: var(--accent); box-shadow: none; }
+.opt.multi[aria-pressed='true'] .r::after { content: ''; display: block; width: 3px; height: 6px; margin: 1px 0 0 3.5px; border: solid #15171C; border-width: 0 1.5px 1.5px 0; transform: rotate(45deg); }
 .opt b { font-weight: 600; flex: 0 0 auto; }
 .opt span.h { color: var(--muted); font-size: 11px; }
 .ask p { margin: 0 2px 2px; color: var(--muted); font-size: 11px; }

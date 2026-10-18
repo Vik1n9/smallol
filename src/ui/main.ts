@@ -8,7 +8,7 @@
 //   --set=path:value,...  change settings in memory (e.g. language:en,mode:companion)
 
 import { getCurrentWindow, currentMonitor } from '@tauri-apps/api/window';
-import { LogicalPosition, LogicalSize } from '@tauri-apps/api/dpi';
+import { LogicalSize } from '@tauri-apps/api/dpi';
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
 import { Poller, StateSource, type Connection } from '../data/streamcv/source.ts';
@@ -26,6 +26,7 @@ import { BAR_STRINGS, type DataTab } from '../i18n/bar.ts';
 import { DEFAULTS, normalize, PANELS, type NotifyBase, type PanelName, type Settings, type Size } from '../settings/schema.ts';
 import { SettingsStore, type SettingsBackend } from '../settings/store.ts';
 import { Announced, deriveEvents, dueReminders } from '../events/derive.ts';
+import { deriveMore, Memory } from '../events/derive2.ts';
 import { Dispatcher, replacesLine, type LineUpdate } from '../events/dispatch.ts';
 import { channelOf, EVENT_KINDS, type EventKind, type Level } from '../events/kinds.ts';
 import { Notifier } from '../notify/notifier.ts';
@@ -110,6 +111,12 @@ async function resizeTo(w: number, h: number): Promise<void> {
 }
 const wantedHeight = () => BAR_SIZE[tier()].h + (popKind ? popH + 4 : 0);
 async function fitWindow(): Promise<void> { await resizeTo(barWidth(), wantedHeight()); }
+/** Position and size together (src-tauri set_bounds): two calls made the bar flicker as a popover opened upward. */
+async function setBounds(x: number, y: number, h: number): Promise<void> {
+  resizingTo = true;
+  await invoke('set_bounds', { label: 'main', x, y, w: barWidth(), h, show: false }).catch(() => undefined);
+  setTimeout(() => { resizingTo = false; }, 300);
+}
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 window.addEventListener('resize', () => {
@@ -142,9 +149,9 @@ async function openPop(kind: Pop): Promise<void> {
     const bottom = mon ? (mon.workArea.position.y + mon.workArea.size.height) / mon.scaleFactor : Infinity;
     const up = pos.y + BAR_SIZE[tier()].h + popH + 4 > bottom;
     document.body.classList.toggle('up', up);
-    if (up) { restoreY = pos.y; await win.setPosition(new LogicalPosition(pos.x, pos.y - popH - 4)); }
+    if (up) restoreY = pos.y;
+    await setBounds(pos.x, up ? pos.y - popH - 4 : pos.y, wantedHeight());
   }
-  await fitWindow();
 }
 async function closePop(): Promise<void> {
   if (!popKind) return;
@@ -152,11 +159,10 @@ async function closePop(): Promise<void> {
   pop.hidden = true;
   pop.innerHTML = '';
   document.body.classList.remove('has-pop');
-  await fitWindow();
-  if (win && restoreY !== null) {
+  if (win) {
     const scale = await win.scaleFactor();
     const pos = (await win.outerPosition()).toLogical(scale);
-    await win.setPosition(new LogicalPosition(pos.x, restoreY));
+    await setBounds(pos.x, restoreY ?? pos.y, wantedHeight());
   }
   restoreY = null;
   document.body.classList.remove('up');
@@ -173,6 +179,7 @@ let haveLive = false;
 const flags = { sample: false, demo: false };
 
 const announced = new Announced();
+const memory = new Memory();
 const dispatcher = new Dispatcher();
 const notifier = new Notifier();
 const reminded = new Set<string>();
@@ -228,7 +235,7 @@ const source = new StateSource(DEFAULTS.endpoint, {
     sample = false;
     if (state.gameId !== s.gameId) dispatcher.reset();
     prevState = state.status === 'idle' && !haveSeen ? null : state;
-    onEvents(deriveEvents(prevState, s, announced), s);
+    onEvents([...deriveEvents(prevState, s, announced), ...deriveMore(prevState, s, memory, { soonSec: cfg().soonLead })], s);
     haveSeen = true;
     state = s;
     receivedAt = at;
@@ -318,7 +325,8 @@ function countdowns(s: MatchState, clock: number | null): string[] {
   const nd = s.nextDragon;
   if (cfg().show.nextDragon && nd) {
     const e = nd.elder ? 'elder' : nd.element;
-    const tile = e ? `<span class="el" style="--c:${ELEMENT_COLOUR[e]}">${esc(S.elementShort[e])}</span>` : '<span class="el empty">?</span>';
+    // Label and time, like 巴龍 and 預示者: the drake by its full name in its colour ("水龍 4:27").
+    const tile = e ? `<span class="el" style="--c:${ELEMENT_COLOUR[e]}">${esc(S.element[e])}</span>` : `<span class="el empty">${esc(S.ui.dragon)}</span>`;
     c.push({ at: nd.at, html: chip(tile, nd.at) });
   }
   const h = s.herald;
@@ -341,7 +349,7 @@ function statusRow(clock: number | null): string {
   if (s.status === 'waiting') {
     const g = s.series?.game ?? s.draft?.current?.game ?? 1;
     const code = codeOf(s);
-    return `${mute}${connBad}<span>${esc(B.draftOn(g))}</span><span class="score">· ${dotHtml('B')}${esc(code('B'))} ${esc(lang === 'zh-Hant' ? '對' : 'vs')} ${esc(code('R'))}${dotHtml('R')}</span>`;
+    return `${mute}${connBad}<span>${esc(B.draftOn(g))}</span><span class="muted">·</span><span class="score">${dotHtml('B')}${esc(code('B'))} ${esc(lang === 'zh-Hant' ? '對' : 'vs')} ${esc(code('R'))}${dotHtml('R')}</span>`;
   }
   if (s.status === 'finished') {
     const g = (s.series?.game ?? 0) + 1;
@@ -396,7 +404,7 @@ function popHtml(): string {
     return opt('work', B.modeHint.work) + opt('companion', B.modeHint.companion) + opt('custom', B.customOf(B.base[cfg().modeBase]));
   }
   if (popKind === 'panels') {
-    return (['minimap', 'draftGame', 'players'] as const).map((p) => `<button class="opt" data-panel="${p}" aria-pressed="${cfg().panels[p]}"><i class="r"></i><b>${esc(B.panel[p])}</b></button>`).join('');
+    return (['minimap', 'draftGame', 'players'] as const).map((p) => `<button class="opt multi" data-panel="${p}" aria-pressed="${cfg().panels[p]}"><i class="r"></i><b>${esc(B.panel[p])}</b></button>`).join('');
   }
   if (popKind === 'ask') {
     return `<div class="ask"><p>${esc(B.ask)}</p><button class="choice" data-ask="work">${esc(B.modeHint.work)}</button><button class="choice" data-ask="companion" style="margin-top:6px">${esc(B.modeHint.companion)}</button></div>`;
@@ -420,8 +428,9 @@ function render(): void {
   if (rowA.dataset.html !== a) {
     rowA.innerHTML = a;
     rowA.dataset.html = a;
-    // Too wide for the bar: the gold lead goes first, then the second countdown.
-    for (const sel of ['.gold', '.cd1']) if (rowA.scrollWidth > rowA.clientWidth) rowA.querySelector(sel)?.remove();
+    // Too wide for the bar: the second countdown goes first, then the first, then the gold lead
+    // (score > clock > gold > countdowns, UI_SPEC rev. after batch 1).
+    for (const sel of ['.cd1', '.cd0', '.gold']) if (rowA.scrollWidth > rowA.clientWidth) rowA.querySelector(sel)?.remove();
   }
   const ic = iconsRow();
   if (icons.dataset.html !== ic) { icons.innerHTML = ic; icons.dataset.html = ic; }
@@ -522,11 +531,18 @@ function onPress(e: PointerEvent): void {
   if (t) { e.preventDefault(); act({ ...t.dataset }); }
 }
 for (const el of [bar, pop]) el.addEventListener('pointerdown', onPress);
+// The keyboard (Tab, then Enter or Space) sends a click with detail 0; the mouse already acted on press.
+for (const el of [bar, pop]) el.addEventListener('click', (e) => {
+  const t = (e.target as HTMLElement).closest<HTMLElement>('button');
+  if (t && e.detail === 0) act({ ...t.dataset });
+});
 // The dot: a click on it (not a drag) goes back to the bar.
 bar.addEventListener('click', (e) => {
   if (!(e.target as HTMLElement).closest('button') && tier() === 'dot' && !moved) settings.update((x) => { x.barTier = 'bar'; });
 });
 window.addEventListener('keydown', (e) => { if (e.key === 'Escape') void closePop(); });
+// And when the user clicks elsewhere (the window loses focus). The first-run question stays until answered.
+window.addEventListener('blur', () => { if (popKind && popKind !== 'ask') void closePop(); });
 
 // Drag with a press that moves 4 px or more; a press that does not move is a click.
 let down: { x: number; y: number } | null = null;

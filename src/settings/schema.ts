@@ -39,6 +39,7 @@ export type NotifyMode = 'work' | 'companion' | 'custom';
 /** What a custom setup started from; 'major' is the "big events only" template. */
 export type NotifyBase = 'work' | 'companion' | 'major';
 export const REMINDER_LEADS = [0, 5, 15, 30] as const;
+export const SOON_LEADS = [15, 30, 60] as const;
 
 export interface Settings {
   version: typeof SETTINGS_VERSION;
@@ -72,6 +73,12 @@ export interface Settings {
   reminderLead: (typeof REMINDER_LEADS)[number];
   /** Where the notices stack: bottom-right (the spec), or top-right, clear of Windows' own notifications. */
   notifyCorner: 'br' | 'tr';
+  /** Seconds before a drake, baron or elder spawns to say it is coming. */
+  soonLead: (typeof SOON_LEADS)[number];
+  /** Level and item milestones for every player, or only my team's. */
+  milestones: 'all' | 'mine';
+  /** My team's code: its events go one step up (log → strip → card). */
+  myTeam: string | null;
 }
 
 export const DEFAULTS: Settings = {
@@ -94,6 +101,9 @@ export const DEFAULTS: Settings = {
   barTier: 'bar',
   reminderLead: 15,
   notifyCorner: 'br',
+  soonLead: 30,
+  milestones: 'all',
+  myTeam: null,
 };
 
 const oneOf = <T extends string>(v: unknown, options: readonly T[], fallback: T): T =>
@@ -148,5 +158,8 @@ export function normalize(raw: unknown): Settings {
     barTier: oneOf(o.barTier, ['bar', 'dot'], d.barTier),
     reminderLead: (REMINDER_LEADS as readonly unknown[]).includes(o.reminderLead) ? (o.reminderLead as Settings['reminderLead']) : d.reminderLead,
     notifyCorner: oneOf(o.notifyCorner, ['br', 'tr'], d.notifyCorner),
+    soonLead: (SOON_LEADS as readonly unknown[]).includes(o.soonLead) ? (o.soonLead as Settings['soonLead']) : d.soonLead,
+    milestones: oneOf(o.milestones, ['all', 'mine'], d.milestones),
+    myTeam: typeof o.myTeam === 'string' && /^[A-Za-z0-9]{2,5}$/.test(o.myTeam) ? o.myTeam : null,
   };
 }

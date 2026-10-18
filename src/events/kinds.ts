@@ -1,13 +1,17 @@
 // What can happen in a game, how much it matters, and where each preset sends it (docs/UI_SPEC_v1.md §3).
-// Batch 1: the kinds the service reports today. Pure data and lookups.
+// Batch 1 kinds come straight from the service's state; batch 2 kinds are worked out from timers, the
+// players and the gold. Pure data and lookups.
 
 import type { Channel, NotifyBase, Settings } from '../settings/schema.ts';
 import type { Element, Lane, Team } from '../model/types.ts';
 
 export const EVENT_KINDS = [
-  'reminder', 'ban', 'pick', 'bpDone', 'gameStart', 'gameEnd', 'seriesEnd',
-  'tower', 'inhibTower', 'nexusTower', 'inhibitor',
-  'drake', 'herald', 'grubs', 'soul', 'elder', 'baron',
+  'reminder', 'bpStart', 'ban', 'pick', 'bpDone', 'gameStart', 'gameEnd', 'seriesEnd',
+  'tower', 'inhibTower', 'nexusTower', 'inhibitor', 'inhibRespawn', 'nexusRespawn',
+  'drake', 'herald', 'grubs', 'soulPoint', 'soul', 'elder', 'baron',
+  'dragonSoon', 'bossSoon', 'baronBuffEnding',
+  'kill', 'goldLead5k', 'goldLead10k', 'goldFlip',
+  'level6', 'level11', 'firstLegendary',
 ] as const;
 export type EventKind = (typeof EVENT_KINDS)[number];
 
@@ -33,6 +37,22 @@ export interface GameEvent {
   score?: [number, number];
   /** Picks per side for bpDone, in slot order. */
   picks?: Record<Team, string[]>;
+  /** Players: who (short name) and where they play; the victim of a kill. */
+  player?: string;
+  role?: string | null;
+  victimPlayer?: string;
+  /** A kill nobody else had a hand in (one death, one killer, no assists). */
+  solo?: boolean;
+  /** Gold lead in thousands; seconds to go for countdowns; which boss spawns; the item finished. */
+  lead?: number;
+  secondsLeft?: number;
+  boss?: 'baron' | 'elder';
+  item?: number;
+  /** For a card's second line (UI_SPEC §2 rev.): buff time left, the gold lead, an inhibitor's respawn, a game's length. */
+  buffLeft?: number;
+  gold?: { team: Team; amount: number };
+  respawnIn?: number;
+  duration?: number;
   /** Reminder: minutes to go, and the two teams. */
   minutes?: number;
   teams?: [string, string];
@@ -44,10 +64,24 @@ export const LEVEL: Record<EventKind, Level> = {
   gameStart: 'major', gameEnd: 'major', seriesEnd: 'major',
   tower: 'normal', inhibTower: 'important', nexusTower: 'important', inhibitor: 'major',
   drake: 'important', herald: 'important', grubs: 'normal', soul: 'major', elder: 'major', baron: 'major',
+  bpStart: 'normal', inhibRespawn: 'normal', nexusRespawn: 'normal', soulPoint: 'important',
+  dragonSoon: 'normal', bossSoon: 'normal', baronBuffEnding: 'normal',
+  kill: 'normal', goldLead5k: 'normal', goldLead10k: 'normal', goldFlip: 'important',
+  level6: 'normal', level11: 'normal', firstLegendary: 'normal',
+};
+
+/** Batch 2 kinds (UI_SPEC §3): the same rows in every preset. */
+const B2: Record<'work' | 'companion' | 'major', Partial<Record<EventKind, Channel>>> = {
+  work: { bpStart: 'strip', inhibRespawn: 'log', nexusRespawn: 'log', soulPoint: 'card', dragonSoon: 'off', bossSoon: 'off', baronBuffEnding: 'off',
+    kill: 'log', goldLead5k: 'log', goldLead10k: 'log', goldFlip: 'strip', level6: 'off', level11: 'off', firstLegendary: 'off' },
+  companion: { bpStart: 'log', inhibRespawn: 'log', nexusRespawn: 'log', soulPoint: 'strip', dragonSoon: 'strip', bossSoon: 'strip', baronBuffEnding: 'strip',
+    kill: 'log', goldLead5k: 'log', goldLead10k: 'strip', goldFlip: 'strip', level6: 'strip', level11: 'log', firstLegendary: 'strip' },
+  major: { bpStart: 'log', inhibRespawn: 'log', nexusRespawn: 'log', soulPoint: 'off', dragonSoon: 'off', bossSoon: 'off', baronBuffEnding: 'off',
+    kill: 'log', goldLead5k: 'off', goldLead10k: 'off', goldFlip: 'off', level6: 'off', level11: 'off', firstLegendary: 'off' },
 };
 
 /** Work: not watching, the app is the game. Companion: watching, only what the broadcast does not say. */
-export const PRESETS: Record<NotifyBase, Record<EventKind, Channel>> = {
+export const PRESETS = {
   work: {
     reminder: 'card', ban: 'log', pick: 'strip', bpDone: 'card', gameStart: 'card', gameEnd: 'card', seriesEnd: 'card',
     tower: 'strip', inhibTower: 'strip', nexusTower: 'strip', inhibitor: 'card',
@@ -63,10 +97,16 @@ export const PRESETS: Record<NotifyBase, Record<EventKind, Channel>> = {
     tower: 'log', inhibTower: 'log', nexusTower: 'log', inhibitor: 'card',
     drake: 'log', herald: 'log', grubs: 'off', soul: 'card', elder: 'card', baron: 'card',
   },
-};
+} as Record<NotifyBase, Record<EventKind, Channel>>;
+for (const b of ['work', 'companion', 'major'] as const) Object.assign(PRESETS[b], B2[b]);
 
 /** Where this event goes under the user's settings. */
 export function channelOf(kind: EventKind, s: Pick<Settings, 'mode' | 'modeBase' | 'custom'>): Channel {
   if (s.mode !== 'custom') return PRESETS[s.mode][kind];
   return s.custom[kind] ?? PRESETS[s.modeBase][kind];
+}
+
+/** "My team" (UI_SPEC §3, batch 2): an event that touches it goes one step up — log to strip, strip to card. */
+export function raise(ch: Channel): Channel {
+  return ch === 'log' ? 'strip' : ch === 'strip' ? 'card' : ch;
 }

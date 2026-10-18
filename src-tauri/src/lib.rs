@@ -66,6 +66,36 @@ fn write_settings(app: tauri::AppHandle, text: String) -> Result<(), String> {
     std::fs::rename(&tmp, &path).map_err(|e| e.to_string())
 }
 
+/// Move and resize a window in one step (logical pixels on the window's own screen), without
+/// activating it; `show` also shows it. Two separate calls (size, then position) left one frame where
+/// the notification stack or the bar jumped (interaction designer's batch 1 review, item A/H).
+#[tauri::command]
+fn set_bounds(app: tauri::AppHandle, label: String, x: f64, y: f64, w: f64, h: f64, show: bool) -> Result<(), String> {
+    let window = app.get_webview_window(&label).ok_or("no such window")?;
+    let scale = window.scale_factor().map_err(|e| e.to_string())?;
+    let (px, py, pw, ph) = ((x * scale).round() as i32, (y * scale).round() as i32, (w * scale).round() as i32, (h * scale).round() as i32);
+    #[cfg(windows)]
+    {
+        use windows_sys::Win32::UI::WindowsAndMessaging::{SetWindowPos, SWP_NOACTIVATE, SWP_NOZORDER, SWP_SHOWWINDOW};
+        let hwnd = window.hwnd().map_err(|e| e.to_string())?;
+        let flags = SWP_NOZORDER | SWP_NOACTIVATE | if show { SWP_SHOWWINDOW } else { 0 };
+        let ok = unsafe { SetWindowPos(hwnd.0 as _, std::ptr::null_mut(), px, py, pw, ph, flags) };
+        if ok == 0 {
+            return Err("SetWindowPos failed".into());
+        }
+        Ok(())
+    }
+    #[cfg(not(windows))]
+    {
+        window.set_size(tauri::PhysicalSize::new(pw as u32, ph as u32)).map_err(|e| e.to_string())?;
+        window.set_position(tauri::PhysicalPosition::new(px, py)).map_err(|e| e.to_string())?;
+        if show {
+            window.show().map_err(|e| e.to_string())?;
+        }
+        Ok(())
+    }
+}
+
 pub fn run() {
     // Size is per view (game, settings) and handled by the web view.
     // The notification window is placed by the main window (bottom-right corner); the others remember where the user put them.
@@ -83,7 +113,7 @@ pub fn run() {
                 window.app_handle().exit(0);
             }
         })
-        .invoke_handler(tauri::generate_handler![launch_args, config_info, read_settings, write_settings])
+        .invoke_handler(tauri::generate_handler![launch_args, config_info, read_settings, write_settings, set_bounds])
         .setup(|app| {
             let toggle = MenuItem::with_id(app, "toggle", "Show / hide", true, None::<&str>)?;
             let settings = MenuItem::with_id(app, "settings", "Settings…", true, None::<&str>)?;

@@ -5,7 +5,7 @@
 import type { Strings } from '../i18n/index.ts';
 import type { BarStrings } from '../i18n/bar.ts';
 import { channelOf, EVENT_KINDS } from '../events/kinds.ts';
-import { CHANNELS, FEATURES, REMINDER_LEADS, type Settings } from '../settings/schema.ts';
+import { CHANNELS, FEATURES, REMINDER_LEADS, SOON_LEADS, type Settings } from '../settings/schema.ts';
 import { esc } from './views.ts';
 
 const seg = (path: string, current: string, options: [string, string][]) =>
@@ -35,6 +35,8 @@ export function settingsView(cfg: Settings, S: Strings, B: BarStrings, endpointE
     <div class="srow"><span class="k">${esc(B.reset)}</span><span class="seg sm">${(['work', 'companion', 'major'] as const).map((b) => `<button data-reset="${b}">${esc(B.base[b])}</button>`).join('')}</span></div>
     <div class="events">${events}</div>
     <div class="srow"><span class="k">${esc(B.sections.reminder)}</span>${seg('reminderLead', String(cfg.reminderLead), REMINDER_LEADS.map((n) => [String(n), n === 0 ? B.atStart : B.minutes(n)]))}</div>
+    <div class="srow"><span class="k">${esc(B.sections.soon)}</span>${seg('soonLead', String(cfg.soonLead), SOON_LEADS.map((n) => [String(n), B.seconds(n)]))}</div>
+    <div class="srow"><span class="k">${esc(B.sections.milestones)}</span>${seg('milestones', cfg.milestones, [['all', B.milestones.all], ['mine', B.milestones.mine]])}</div>
     <div class="srow"><span class="k">${esc(B.sections.corner)}</span>${seg('notifyCorner', cfg.notifyCorner, [['br', B.corner.br], ['tr', B.corner.tr]])}</div>
     <h3>${esc(B.sections.panels)}</h3>
     <div class="chips">${(['minimap', 'draftGame', 'players'] as const).map((p) => check(`panels.${p}`, cfg.panels[p], B.panel[p])).join('')}</div>

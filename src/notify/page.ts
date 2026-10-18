@@ -98,8 +98,9 @@ stack.addEventListener('click', (e) => {
 
 const self = getCurrentWebviewWindow();
 void (async () => {
-  await self.listen<{ items: Notice[]; more: string }>('notices', (e) => {
+  await self.listen<{ items: Notice[]; more: string; corner: 'br' | 'tr' }>('notices', (e) => {
     moreLabel = (n) => e.payload.more.replace('{n}', String(n));
+    document.body.classList.toggle('tr', e.payload.corner === 'tr');
     for (const n of e.payload.items) upsert(n);
     report();
   });

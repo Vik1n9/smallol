@@ -4,7 +4,7 @@
 
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { emitTo, listen } from '@tauri-apps/api/event';
-import { LogicalPosition, LogicalSize } from '@tauri-apps/api/dpi';
+import { invoke } from '@tauri-apps/api/core';
 import { currentMonitor } from '@tauri-apps/api/window';
 import type { Notice } from '../events/dispatch.ts';
 
@@ -27,7 +27,7 @@ export class Notifier {
     if (!items.length) return;
     try {
       await this.open();
-      await emitTo(LABEL, 'notices', { items, more: this.more });
+      await emitTo(LABEL, 'notices', { items, more: this.more, corner: this.corner });
     } catch (e) {
       console.warn('notification window:', e);
     }
@@ -61,9 +61,8 @@ export class Notifier {
     if (!mon) return;
     const s = mon.scaleFactor;
     const area = { x: mon.workArea.position.x / s, y: mon.workArea.position.y / s, w: mon.workArea.size.width / s, h: mon.workArea.size.height / s };
-    await w.setSize(new LogicalSize(WIDTH, this.height));
     const y = this.corner === 'tr' ? area.y + MARGIN : area.y + area.h - this.height - MARGIN;
-    await w.setPosition(new LogicalPosition(Math.round(area.x + area.w - WIDTH - MARGIN), Math.round(y)));
-    await w.show();
+    // One SetWindowPos for both (src-tauri set_bounds): size then position separately showed the stack jump for a frame.
+    await invoke('set_bounds', { label: LABEL, x: Math.round(area.x + area.w - WIDTH - MARGIN), y: Math.round(y), w: WIDTH, h: this.height, show: true });
   }
 }

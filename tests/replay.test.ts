@@ -7,7 +7,8 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { adapt } from '../src/data/streamcv/adapter.ts';
-import { Announced, deriveEvents } from '../src/events/derive.ts';
+import { Announced, deriveEvents, winnerOf } from '../src/events/derive.ts';
+import { deriveMore, Memory } from '../src/events/derive2.ts';
 import { Dispatcher } from '../src/events/dispatch.ts';
 import type { MatchState, Team } from '../src/model/types.ts';
 import { DEFAULTS, type NotifyMode } from '../src/settings/schema.ts';
@@ -18,16 +19,19 @@ const rows = existsSync(path)
     .filter((r) => String(r.updated) >= '2026-10-16T17' && !String(r.game ?? '').startsWith('1171338'))
   : [];
 
+let unknownWinners = 0;
 function run(mode: NotifyMode) {
   const d = new Dispatcher();
   const seen = new Announced();
+  const mem = new Memory();
   let prev: MatchState | null = null;
   const perGame = new Map<string, { cards: number; strips: number; kinds: Record<string, number>; peakStrips: number; peakCards: number }>();
   const shown: { t: number; kind: 'card' | 'strip'; id: string; game: string }[] = [];
   for (const r of rows) {
     const s = adapt(r);
     const t = Date.parse(String(r.updated));
-    const evs = deriveEvents(prev, s, seen);
+    const evs = [...deriveEvents(prev, s, seen), ...deriveMore(prev, s, mem)];
+    if (prev?.status === 'in_game' && s.status === 'finished' && winnerOf(s) === null) unknownWinners++;
     const code = (x: Team) => s.series?.teams[x].code ?? x;
     const res = d.step(evs, t, { ...DEFAULTS, mode }, code, 'zh-Hant');
     const g = s.gameId ?? (s.series ? `${s.series.matchId}-${s.series.game}` : 'none');
@@ -51,6 +55,8 @@ describe.skipIf(!rows.length)('replay of Day 2/3 (recorded state log)', () => {
     it(`${mode}: per game counts, and at most 3 cards and 4 strips in any minute`, () => {
       const games = [...run(mode)].filter(([g, st]) => g !== 'none' && (st.cards || st.strips || Object.keys(st.kinds).length));
       for (const [g, st] of games) console.log(mode, g.slice(-3), JSON.stringify(st));
+      console.log(mode, 'games where the winner could not be told:', unknownWinners);
+      unknownWinners = 0;
       expect(games.length).toBeGreaterThan(5);
       for (const [, st] of games) {
         expect(st.peakCards).toBeLessThanOrEqual(3);

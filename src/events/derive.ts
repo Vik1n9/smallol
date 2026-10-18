@@ -25,6 +25,17 @@ export function winnerOf(s: MatchState): Team | null {
   return lost.length === 1 ? other(lost[0]!) : null;
 }
 
+/** The gold lead now, for a card's second line: who leads and by how much (gold). */
+export function goldLead(s: MatchState): GameEvent['gold'] {
+  const b = s.teams.B.gold, r = s.teams.R.gold;
+  if (b === null || r === null || b === r) return undefined;
+  return { team: b > r ? 'B' : 'R', amount: Math.abs(b - r) };
+}
+const buffAndGold = (s: MatchState, t: Team, kind: 'baron' | 'elder'): Partial<GameEvent> => {
+  const buff = s.buffs.find((x) => x.team === t && x.kind === kind);
+  return { buffLeft: buff && s.clock !== null ? Math.max(0, buff.until - s.clock) : undefined, gold: goldLead(s) };
+};
+
 const allPicked = (s: MatchState) => {
   const c = s.draft?.current;
   return !!c && TEAMS.every((t) => c.sides[t].picks.length === 5 && c.sides[t].picks.every(Boolean));
@@ -70,7 +81,8 @@ export function deriveEvents(prev: MatchState | null, next: MatchState, seen: An
 
   // Not when the same game comes back from "finished" (a replay looping, the service restarting).
   const back = prev.status === 'finished' && prev.gameId === next.gameId;
-  if (prev.status !== 'in_game' && next.status === 'in_game' && !back) out.push({ kind: 'gameStart', team: null, at, n: gameNo });
+  // No time on it: the clock when it was seen is not when it began (batch 1 review, item F).
+  if (prev.status !== 'in_game' && next.status === 'in_game' && !back) out.push({ kind: 'gameStart', team: null, at: null, n: gameNo });
 
   // In-game changes only within one game.
   if (prev.gameId === next.gameId && next.gameId) {
@@ -84,24 +96,24 @@ export function deriveEvents(prev: MatchState | null, next: MatchState, seen: An
       }
       if (b.inhibitorsDown.length > a.inhibitorsDown.length) {
         const fresh = b.inhibitorsDown.filter((i) => !a.inhibitorsDown.some((j) => j.lane === i.lane && j.respawnAt === i.respawnAt));
-        for (const i of fresh.slice(0, b.inhibitorsDown.length - a.inhibitorsDown.length)) out.push({ kind: 'inhibitor', team: by, victim: owner, at, lane: i.lane });
+        for (const i of fresh.slice(0, b.inhibitorsDown.length - a.inhibitorsDown.length)) out.push({ kind: 'inhibitor', team: by, victim: owner, at, lane: i.lane, respawnIn: at === null ? undefined : i.respawnAt - at });
       }
     }
     for (const t of TEAMS) {
       const a = prev.teams[t], b = next.teams[t];
       for (let k = a.dragons.length; k < b.dragons.length; k++) out.push({ kind: 'drake', team: t, at, element: b.dragons[k]!, n: k + 1 });
-      if ((b.elders ?? 0) > (a.elders ?? 0)) out.push({ kind: 'elder', team: t, at });
-      if ((b.barons ?? 0) > (a.barons ?? 0)) out.push({ kind: 'baron', team: t, at });
+      if ((b.elders ?? 0) > (a.elders ?? 0)) out.push({ kind: 'elder', team: t, at, ...buffAndGold(next, t, 'elder') });
+      if ((b.barons ?? 0) > (a.barons ?? 0)) out.push({ kind: 'baron', team: t, at, ...buffAndGold(next, t, 'baron') });
       const ga = prev.voidgrubs?.[t] ?? 0, gb = next.voidgrubs?.[t] ?? 0;
       if (gb > ga) out.push({ kind: 'grubs', team: t, at, n: gb });
     }
-    if (!prev.soul && next.soul) out.push({ kind: 'soul', team: next.soul.team, at, element: next.soul.element });
+    if (!prev.soul && next.soul) out.push({ kind: 'soul', team: next.soul.team, at, element: next.soul.element, gold: goldLead(next) });
     if (!prev.herald?.team && next.herald?.team) out.push({ kind: 'herald', team: next.herald.team, at: next.herald.at ?? at });
   }
 
   if (prev.status === 'in_game' && next.status === 'finished') {
     const w = winnerOf(next);
-    out.push({ kind: 'gameEnd', team: w, at, n: gameNo });
+    out.push({ kind: 'gameEnd', team: w, at, n: gameNo, duration: next.clock ?? undefined });
     const se = next.series;
     const before = w && se ? se.teams[w].wins : null;
     if (w && se && before !== null) {

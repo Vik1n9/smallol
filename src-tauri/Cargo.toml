@@ -17,6 +17,10 @@ tauri = { version = "2", features = ["tray-icon"] }
 tauri-plugin-window-state = "2"
 serde_json = "1"
 
+[target.'cfg(windows)'.dependencies]
+# One SetWindowPos for position and size together: two calls (set_size, then set_position) showed a frame in between.
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging"] }
+
 [profile.release]
 opt-level = "s"
 lto = true

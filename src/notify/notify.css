@@ -7,7 +7,11 @@
   --mono: 'Cascadia Mono', Consolas, ui-monospace, monospace;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; background: transparent; overflow: hidden; }
+html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
+/* Pinned to the corner's edge: bottom-right sticks to the bottom, top-right to the top, so items already
+   shown stay put while the window grows or shrinks around them (batch 1 review, item A). */
+body { display: flex; flex-direction: column; justify-content: flex-end; }
+body.tr { justify-content: flex-start; }
 body { color: var(--text); font: 12px/1.35 var(--font); user-select: none; -webkit-user-select: none; }
 #stack { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; padding: 0 0 0 0; }
 
