@@ -197,18 +197,31 @@ fn write_history(app: tauri::AppHandle, text: String) -> Result<(), String> {
     std::fs::rename(&tmp, dir.join("log-history.json")).map_err(|e| e.to_string())
 }
 
-/// Checking aid (`--animlog`): append animation start/end records to `anim-log.jsonl` in the config
-/// folder, to time the animations without screen captures (batch 2 review: throttling shows as long ends).
+/// Checking aid (`--anim-log=<file>`): append animation start/end/cancel records to that file in the
+/// config folder, to time the animations without screen captures (throttling shows as late ends). The
+/// name is a plain file name; anything else falls back to `anim-log.jsonl`.
 #[tauri::command]
-fn append_anim_log(app: tauri::AppHandle, text: String) -> Result<(), String> {
+fn append_anim_log(app: tauri::AppHandle, text: String, file: Option<String>) -> Result<(), String> {
     use std::io::Write;
     if text.len() > 256 * 1024 {
         return Err("too long".into());
     }
+    let name = file
+        .filter(|f| !f.is_empty() && f.len() <= 64 && f.chars().all(|c| c.is_ascii_alphanumeric() || "._-".contains(c)) && !f.starts_with('.'))
+        .unwrap_or_else(|| "anim-log.jsonl".into());
     let (dir, _) = config_dir(&app).ok_or("no config folder")?;
     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
-    let mut f = std::fs::OpenOptions::new().create(true).append(true).open(dir.join("anim-log.jsonl")).map_err(|e| e.to_string())?;
+    let mut f = std::fs::OpenOptions::new().create(true).append(true).open(dir.join(name)).map_err(|e| e.to_string())?;
     f.write_all(text.as_bytes()).map_err(|e| e.to_string())
+}
+
+/// Checking aid (`--devlog`): one line into the dev log (debug builds only), e.g. what a step sent.
+#[tauri::command]
+fn dev_log(text: String) {
+    #[cfg(debug_assertions)]
+    eprintln!("devlog: {}", text.chars().take(400).collect::<String>());
+    #[cfg(not(debug_assertions))]
+    let _ = text;
 }
 
 /// Move and resize a window in one step (logical pixels on the window's own screen), without
@@ -277,7 +290,7 @@ pub fn run() {
                 window.app_handle().exit(0);
             }
         })
-        .invoke_handler(tauri::generate_handler![launch_args, config_info, read_settings, write_settings, set_bounds, read_history, write_history, append_anim_log, set_hotkeys, notify_state, alt_down, open_watch_url])
+        .invoke_handler(tauri::generate_handler![launch_args, config_info, read_settings, write_settings, set_bounds, read_history, write_history, append_anim_log, set_hotkeys, notify_state, alt_down, open_watch_url, dev_log])
         .setup(move |app| {
             let toggle = MenuItem::with_id(app, "toggle", "Show / hide", true, None::<&str>)?;
             let lowkey = MenuItem::with_id(app, "lowkey", "Low-key", true, None::<&str>)?;

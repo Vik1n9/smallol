@@ -9,14 +9,19 @@
 //   --open=history|mode|panels|ask   open that popover once started (screenshots without clicking)
 //   --tab=teams|schedule|series|settings, --team=GEN, --player=GEN:Canyon   open the data window there
 //   --match=<matchId>|next   with --tab=schedule: that match picked (both teams, their links)
-//   --animlog      write every animation's start and end (bar and notices) to anim-log.jsonl
+//   --anim-log=<file>   every animation's start, end and cancel (bar and notices) into that file in the config folder
 //   --press=hide|lowkey[:seconds],...   run what a hotkey runs, at those seconds after start (else one every 3 s; no keys sent)
 //   --notify-state=busy|d3d|presentation|quiet|app|away|ok[:seconds],...   stand in for Windows' answer
+//   --drag=main|minimap|draftGame|players|data,<x>,<y>[,alt]   move that window there (logical px) and let it go
+//   --inject=<event kind>[:seconds],...   feed that event (team blue) at those seconds, as if the game made it
+//   --click=watch|body[:seconds],...   click the newest card's "▶ 看" or its body in the notification window
+//   --devlog       each step's notices, quiet state and tones into the dev log
 //   --no-tray      (read by the shell too) no tray icon: hiding everything is refused unless a hotkey can undo it
 
 import { getCurrentWindow, currentMonitor } from '@tauri-apps/api/window';
-import { LogicalSize } from '@tauri-apps/api/dpi';
-import { listen } from '@tauri-apps/api/event';
+import { LogicalPosition, LogicalSize, PhysicalPosition } from '@tauri-apps/api/dpi';
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
+import { emitTo, listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
 import { Poller, StateSource, type Connection } from '../data/streamcv/source.ts';
 import { adaptSchedule, nextMatch, scheduleUrl } from '../data/streamcv/schedule.ts';
@@ -40,13 +45,14 @@ import { eventText } from '../events/text.ts';
 import { addEntries, historyView, parseEntries, type HistFilter, type LogEntry } from '../events/history-log.ts';
 import { Notifier } from '../notify/notifier.ts';
 import { Panels } from '../panels/manager.ts';
-import { PANEL_SIZE, type PanelFrame } from '../panels/frame.ts';
+import { panelLabel, PANEL_SIZE, type PanelFrame } from '../panels/frame.ts';
 import { TEAM_COLOUR } from '../render/map-svg.ts';
 import { ELEMENT_COLOUR } from '../render/dragons.ts';
 import { fmtStart } from './schedule-views.ts';
 import { modeLabel } from './settings-view.ts';
 import { AutoLow, detectionMode, OS_STATES, type OsState } from './autolow.ts';
 import { playTone } from './sound.ts';
+import { snap, type Target } from './snap.ts';
 import { esc, fmtGold } from './views.ts';
 
 const inTauri = '__TAURI_INTERNALS__' in window;
@@ -122,6 +128,7 @@ let resizingTo = false;
 async function resizeTo(w: number, h: number): Promise<void> {
   if (!win) return;
   resizingTo = true;
+  selfMoveUntil.set('main', Date.now() + 500);
   await win.setSize(new LogicalSize(w, h)).catch(() => undefined);
   setTimeout(() => { resizingTo = false; }, 300);
 }
@@ -130,9 +137,14 @@ async function fitWindow(): Promise<void> { await resizeTo(winWidth(), wantedHei
 /** Position and size together (src-tauri set_bounds): two calls made the bar flicker as a popover opened upward. */
 async function setBounds(x: number, y: number, h: number): Promise<void> {
   resizingTo = true;
+  // The app's own moves (a popover opening upward and closing) are not the user letting go: no snapping.
+  selfMoveUntil.set('main', Date.now() + 500);
   await invoke('set_bounds', { label: 'main', x, y, w: winWidth(), h, show: false }).catch(() => undefined);
   setTimeout(() => { resizingTo = false; }, 300);
 }
+
+/** Until when a window's moves are the app's own (ms), per window label. */
+const selfMoveUntil = new Map<string, number>();
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 window.addEventListener('resize', () => {
@@ -261,12 +273,16 @@ function onEvents(events: ReturnType<typeof deriveEvents>, s: MatchState): void 
     const card = res.notices.find((n) => n.kind === 'card');
     if (card && cfg().cardSound && card.level !== 'normal') { soundCalls++; playTone(card.level, cfg().soundVolume); }
   }
+  if (devlog) void invoke('dev_log', { text: `step kinds=${events.map((e) => e.kind).join('+')} notices=${res.notices.map((n) => n.kind).join('+') || '-'} sent=${!quiet() && res.notices.length > 0} quiet=${quiet()} (paused ${paused()} low ${lowKeyOn()} hidden ${hiddenByKey}) tones=${soundCalls}` });
 }
 
 /** Tones played, for the checking runs (low-key, paused and hidden must play none). */
 let soundCalls = 0;
+let devlog = false;
 
 let lineEl: HTMLElement | null = null;
+/** Each log line's number, so the animation log can tell lines apart. */
+let lineSeq = 0;
 function lineHtml(l: { text: string; at: number | null; team: Team | null }): string {
   const t = l.at === null ? '' : `<span class="t">${fmtClock(l.at)}</span>`;
   return `${t}<i class="mark" style="--c:${l.team ? TEAM_COLOUR[l.team] : 'var(--accent)'}"></i><span class="x">${esc(l.text)}</span>`;
@@ -286,11 +302,13 @@ function swapLine(html: string, level: Level | null, quiet: boolean): void {
   const old = lineEl;
   const el = document.createElement('div');
   el.className = `line in${level && level !== 'normal' ? ' flash' : ''}${quiet ? ' quiet' : ''}`;
+  el.dataset.n = String(++lineSeq);
   el.innerHTML = html;
   el.dataset.html = html;
   rowB.appendChild(el);
   lineEl = el;
-  if (old) { old.classList.add('out'); setTimeout(() => old.remove(), 120); }
+  // Removed when its fade ends (at exactly 120 ms the timer cut it short of its end), or at 400 ms at most.
+  if (old) { old.classList.add('out'); old.addEventListener('animationend', (e) => { if (e.target === old) old.remove(); }); setTimeout(() => old.remove(), 400); }
 }
 
 const source = new StateSource(DEFAULTS.endpoint, {
@@ -726,14 +744,14 @@ async function start(): Promise<void> {
   const q = new URLSearchParams(location.search);
   if (inTauri) {
     for (const a of await invoke<string[]>('launch_args').catch(() => [] as string[])) {
-      const m = /^--(set|sample|open|tab|team|player|match|press|notify-state)=(.+)$/.exec(a);
+      const m = /^--(set|sample|open|tab|team|player|match|press|notify-state|drag|inject|click|anim-log)=(.+)$/.exec(a);
       if (m) q.set(m[1]!, m[2]!);
-      for (const flag of ['sample', 'demo', 'animlog', 'no-tray']) if (a === `--${flag}`) q.set(flag, '1');
+      for (const flag of ['sample', 'demo', 'no-tray', 'devlog', 'pause']) if (a === `--${flag}`) q.set(flag, '1');
     }
   }
   flags.sample = q.has('sample');
   flags.demo = q.has('demo');
-  const checking = ['sample', 'demo', 'set', 'open', 'tab', 'team', 'player', 'match', 'animlog', 'press', 'notify-state', 'no-tray'].some((k) => q.has(k));
+  const checking = ['sample', 'demo', 'set', 'open', 'tab', 'team', 'player', 'match', 'anim-log', 'press', 'notify-state', 'no-tray', 'drag', 'inject', 'click', 'devlog', 'pause'].some((k) => q.has(k));
   settings = await SettingsStore.open(backend, () => DEFAULTS);
   settings.persist = !checking;
   for (const pair of (q.get('set') ?? '').split(',').filter(Boolean)) {
@@ -762,12 +780,24 @@ async function start(): Promise<void> {
   const tab = q.get('tab') as DataTab | null, team = q.get('team'), player = q.get('player');
   if (player) { const [t, p] = player.split(/[|:]/) as [string, string]; profile = { team: t, player: p }; }
   else if (team) profile = { team, player: null };
-  if (q.has('animlog') && inTauri) startAnimLog();
+  if (q.has('anim-log') && inTauri) startAnimLog(q.get('anim-log')!);
   noTray = q.has('no-tray');
   osPlan = (q.get('notify-state') ?? '').split(',').filter(Boolean).map((x) => { const [st, sec] = x.split(':'); return { st: st as OsState, sec: Number(sec ?? Infinity) }; }).filter((x) => OS_STATES.includes(x.st));
   osPlanStart = Date.now();
   syncLow();
   void applyHotkeys();
+  devlog = q.has('devlog');
+  for (const [i, x] of (q.get('inject') ?? '').split(',').filter(Boolean).entries()) {
+    const [kind, sec] = x.split(':') as [EventKind, string | undefined];
+    if (EVENT_KINDS.includes(kind)) setTimeout(() => onEvents([{ kind, team: 'B', victim: 'R', at: state.clock ?? 600, n: 1 } as GameEvent], state), (sec ? Number(sec) : 6 + i * 4) * 1000);
+  }
+  for (const [i, x] of (q.get('click') ?? '').split(',').filter(Boolean).entries()) {
+    const [what, sec] = x.split(':');
+    setTimeout(() => void emitTo('notify', 'notify-click', what), (sec ? Number(sec) : 8 + i * 4) * 1000);
+  }
+  if (q.has('pause')) pausedUntil = Date.now() + 30 * 60_000;
+  const drag = (q.get('drag') ?? '').split(',');
+  if (drag.length >= 3) setTimeout(() => void dragAid(drag[0]!, Number(drag[1]), Number(drag[2]), drag[3] === 'alt'), 5000);
   (q.get('press') ?? '').split(',').forEach((x, i) => {
     const [k, sec] = x.split(':');
     if (k === 'hide' || k === 'lowkey') setTimeout(() => onHotkey(k), sec ? Number(sec) * 1000 : 4000 + i * 3000);
@@ -850,17 +880,81 @@ setInterval(() => {
   })();
 }, 2000);
 
+// ---------- edge snapping (batch 3 §5) ----------
+
+const SNAP_LABELS = ['main', ...(['minimap', 'draftGame', 'players', 'data'] as const).map(panelLabel)];
+const watched = new Map<string, () => void>();
+const snapTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const windowOf = async (label: string) => (label === 'main' ? win : await WebviewWindow.getByLabel(label));
+
+/** Follow the moves of the bar and the open windows (they come and go; checked every 2 s). */
+async function watchMoves(): Promise<void> {
+  for (const label of SNAP_LABELS) {
+    const w = await windowOf(label).catch(() => null);
+    if (!w) { watched.get(label)?.(); watched.delete(label); continue; }
+    if (watched.has(label)) continue;
+    watched.set(label, () => undefined);
+    watched.set(label, await w.onMoved(() => {
+      if (Date.now() < (selfMoveUntil.get(label) ?? 0)) return;
+      // Let go: 150 ms after the last move event (snapping during the system's drag loop fights it).
+      clearTimeout(snapTimers.get(label));
+      snapTimers.set(label, setTimeout(() => void snapNow(label), 150));
+    }));
+  }
+}
+if (win) setInterval(() => void watchMoves(), 2000);
+
+const rectOf = async (w: NonNullable<Awaited<ReturnType<typeof windowOf>>>) => {
+  const [p, z] = await Promise.all([w.outerPosition(), w.outerSize()]);
+  return { x: p.x, y: p.y, w: z.width, h: z.height };
+};
+
+/** Line a window up with the bar screen's work area or the app's other windows, if within 12 px. */
+async function snapNow(label: string, alt?: boolean): Promise<void> {
+  const w = await windowOf(label);
+  if (!w || !win) return;
+  const mon = await currentMonitor();
+  if (!mon) return;
+  const r = await rectOf(w);
+  const others: Target[] = [];
+  for (const l of SNAP_LABELS) {
+    if (l === label) continue;
+    const o = await windowOf(l).catch(() => null);
+    if (o) others.push({ ...(await rectOf(o)), visible: await o.isVisible(), minimized: await o.isMinimized() });
+  }
+  const area = { x: mon.workArea.position.x, y: mon.workArea.position.y, w: mon.workArea.size.width, h: mon.workArea.size.height };
+  const out = snap(r, others, area, mon.scaleFactor, {
+    alt: alt ?? (await invoke<boolean>('alt_down').catch(() => false)),
+    // The bar's history or menu open: its size is about to change back.
+    expanded: label === 'main' && popKind !== null,
+  });
+  if (out.x === r.x && out.y === r.y) return;
+  selfMoveUntil.set(label, Date.now() + 500);
+  await w.setPosition(new PhysicalPosition(out.x, out.y));
+}
+
+/** --drag: put a window somewhere (logical px) as if the user had dragged it there, and let it go. */
+async function dragAid(name: string, x: number, y: number, alt: boolean): Promise<void> {
+  const label = name === 'main' ? 'main' : panelLabel(name as PanelName);
+  const w = await windowOf(label);
+  if (!w) return;
+  selfMoveUntil.set(label, Date.now() + 400);
+  await w.setPosition(new LogicalPosition(x, y));
+  setTimeout(() => void snapNow(label, alt), 450);
+}
+
 /**
  * Checking aid: every animation's start and end in the bar and the notices, one JSON line each, so their
  * real durations can be read without screen captures (a throttled window shows as ends far too late).
  */
-function startAnimLog(): void {
+function startAnimLog(file: string): void {
   let buf: string[] = [];
-  const add = (r: Record<string, unknown>) => buf.push(JSON.stringify({ ...r, wall: Date.now() }));
-  for (const type of ['animationstart', 'animationend'] as const) {
+  // The notification window stamps its own wall clock (the event's trip here would add to its times).
+  const add = (r: Record<string, unknown>) => buf.push(JSON.stringify({ wall: Date.now(), ...r }));
+  for (const type of ['animationstart', 'animationend', 'animationcancel'] as const) {
     document.addEventListener(type, (e) => {
       const el = e.target as HTMLElement;
-      add({ w: 'bar', ev: type === 'animationstart' ? 'start' : 'end', name: e.animationName, cls: `${el.id ? `#${el.id} ` : ''}${el.className}`, t: performance.now() });
+      add({ w: 'bar', ev: type.slice(9), name: e.animationName, cls: `${el.id ? `#${el.id} ` : ''}${el.className}`, id: el.closest<HTMLElement>('.line')?.dataset.n ?? '', elapsed: e.elapsedTime, t: performance.now() });
     }, true);
   }
   void listen<Record<string, unknown>>('notify-anim', (e) => add({ w: 'notify', ...e.payload }));
@@ -868,7 +962,7 @@ function startAnimLog(): void {
     if (!buf.length) return;
     const text = buf.map((l) => `${l}\n`).join('');
     buf = [];
-    void invoke('append_anim_log', { text }).catch(() => undefined);
+    void invoke('append_anim_log', { text, file }).catch(() => undefined);
   }, 2000);
 }
 

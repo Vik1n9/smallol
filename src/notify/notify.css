@@ -45,8 +45,9 @@ body { color: var(--text); font: 12px/1.35 var(--font); user-select: none; -webk
 /* A tower streak counting up: only the text changes, in place. */
 .title.bump { animation: bump .12s ease-out; }
 .item.out { animation: out .16s ease-in forwards; }
-/* Held at its first frame until the window has grown to take it, so the entrance is seen whole. */
-.item.wait { animation-play-state: paused; }
+/* Held, invisible and not yet animating, until the window has grown to take it: the entrance then starts
+   (and its animationstart fires) only when it can be seen whole. */
+.item.wait { animation: none; opacity: 0; }
 
 @keyframes in-card { from { transform: translateY(8px); opacity: 0; } }
 @keyframes in-strip { from { transform: translateY(8px); opacity: 0; } }

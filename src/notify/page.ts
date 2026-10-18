@@ -42,7 +42,12 @@ function retire(it: Item): void {
   if (it.gone) return;
   it.gone = true;
   it.el.classList.add('out');
-  setTimeout(() => { it.el.remove(); items.delete(it.n.id); report(); }, 160);
+  // Gone when its fade ends (removing it at exactly 160 ms cut the animation short of its end), or at
+  // 400 ms should the end never come.
+  let done = false;
+  const drop = () => { if (done) return; done = true; it.el.remove(); items.delete(it.n.id); report(); };
+  it.el.addEventListener('animationend', (e) => { if (e.target === it.el && it.el.classList.contains('out')) drop(); });
+  setTimeout(drop, 400);
 }
 
 function live(kind: 'card' | 'strip'): Item[] {
@@ -126,11 +131,11 @@ stack.addEventListener('click', (e) => {
 });
 
 // Animation start and end, for the main window's --animlog checking aid (it ignores them otherwise).
-for (const type of ['animationstart', 'animationend'] as const) {
-  stack.addEventListener(type, (e) => {
+for (const type of ['animationstart', 'animationend', 'animationcancel'] as const) {
+  document.addEventListener(type, (e) => {
     const el = e.target as HTMLElement;
-    void emit('notify-anim', { ev: type === 'animationstart' ? 'start' : 'end', name: e.animationName, cls: el.className, id: el.closest<HTMLElement>('.item')?.dataset.id ?? '', t: performance.now() });
-  });
+    void emit('notify-anim', { ev: type.slice(9), name: e.animationName, cls: el.className, id: el.closest<HTMLElement>('.item')?.dataset.id ?? '', elapsed: e.elapsedTime, t: performance.now(), wall: Date.now() });
+  }, true);
 }
 
 const self = getCurrentWebviewWindow();
@@ -143,6 +148,12 @@ void (async () => {
     report();
   });
   await self.listen('notices-report', () => { last = ''; report(); });
+  // Checking aid (--click): a click on the newest card's "▶ 看" or its body, through the same handler.
+  await self.listen<string>('notify-click', (e) => {
+    const cards = [...stack.querySelectorAll<HTMLElement>('.card')];
+    const card = cards[cards.length - 1];
+    (e.payload === 'watch' ? card?.querySelector<HTMLElement>('.watch') : card?.querySelector<HTMLElement>('.title'))?.click();
+  });
   await self.listen('notify-placed', () => requestAnimationFrame(release));
   await self.listen('notices-clear', () => {
     for (const it of items.values()) retire(it);
