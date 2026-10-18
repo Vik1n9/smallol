@@ -58,3 +58,18 @@ describe('official feed down (2026-10-19)', () => {
     expect(adapt({ status: 'waiting' }).feedMissing).toBeUndefined();
   });
 });
+
+describe('the score as the broadcast shows it (2026-10-19)', () => {
+  it('team kills are the players\' kills, not the feed total that also counts executions', async () => {
+    const { adapt } = await import('../src/data/streamcv/adapter.ts');
+    const p = (kills: number, deaths: number, role: string) => ({ name: 'X', role, kills, deaths, assists: 0, level: 9 });
+    const roles = ['top', 'jungle', 'mid', 'bot', 'support'];
+    const s = adapt({
+      status: 'in_game', kills: { B: 6, R: 2 },
+      players: { B: [4, 2, 0, 0, 0].map((k, i) => p(k, i === 1 || i === 2 ? 1 : 0, roles[i]!)), R: [0, 0, 1, 0, 0].map((k, i) => p(k, 1, roles[i]!)) },
+    });
+    expect([s.teams.B.kills, s.teams.R.kills]).toEqual([6, 1]);
+    // No players: the feed's totals stay.
+    expect(adapt({ status: 'in_game', kills: { B: 6, R: 2 } }).teams.R.kills).toBe(2);
+  });
+});

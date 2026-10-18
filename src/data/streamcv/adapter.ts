@@ -232,6 +232,13 @@ function readPlayers(raw: Record<string, unknown>, s: MatchState): void {
   }
   s.players = out;
   s.playersAsOf = typeof ps.asOf === 'string' && ps.asOf.length <= 40 ? ps.asOf : null;
+  // The score as the broadcast shows it: kills the players were credited with. The feed's team total
+  // also counts deaths to towers, minions and monsters (2026-10-19, Day 4 game 2: the feed said 6:2,
+  // the broadcast 6:1, one death was an execution).
+  for (const t of TEAMS) {
+    const ks = out[t].map((p) => p.kills);
+    if (out[t].length === 5 && ks.every((k) => k !== null)) s.teams[t].kills = ks.reduce((a, b) => a! + b!, 0);
+  }
 }
 
 // ---------- the broadcast's objective box: contract v0.4 ("轉播畫面物件") ----------
