@@ -33,8 +33,10 @@ describe('stream address (batch 3 §4)', () => {
 describe('hotkeys and low-key in the settings tab (batch 3 §1–2)', () => {
   it('a hotkey another program holds is named; none held, no note', () => {
     const busy = settingsView(DEFAULTS, S, B, false, { lowNow: false, hotkeyBusy: ['Ctrl+Alt+Shift+H'], watchError: null });
-    expect(busy).toContain(B.b3.hotkeyBusy('Ctrl+Alt+Shift+H'));
-    expect(settingsView(DEFAULTS, S, B, false, { lowNow: false, hotkeyBusy: [], watchError: null })).not.toContain('熱鍵被其他程式占用');
+    // Beside the taken one only, in the accent colour.
+    expect(busy).toContain(`${B.b3.hotkeyHide} <span class="busy">${B.b3.hotkeyTaken}</span>`);
+    expect(busy).not.toContain(`${B.b3.hotkeyLow} <span class="busy">`);
+    expect(settingsView(DEFAULTS, S, B, false, { lowNow: false, hotkeyBusy: [], watchError: null })).not.toContain('class="busy"');
   });
 
   it('the low-key box shows low-key now, whichever way it came on', () => {

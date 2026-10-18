@@ -45,7 +45,7 @@ export interface BarStrings {
   atStart: string;
   /** Batch 3: low-key, hotkeys, presentation detection, card sound, stream address. */
   b3: {
-    lowKey: string; lowKeyTip: string; hotkeys: string; hotkeyHide: string; hotkeyLow: string; hotkeyBusy(keys: string): string;
+    lowKey: string; lowKeyTip: string; hotkeys: string; hotkeyHide: string; hotkeyLow: string; hotkeyBusy(keys: string): string; hotkeyTaken: string;
     autoLow: string; autoLowNote: string; sound: string; volume: Record<'low' | 'mid' | 'high', string>; test: string;
     watchUrl: string; watchNote: string; watchBad: Record<'scheme' | 'credentials' | 'long' | 'bad', string>; watch: string; hideRefused: string;
   };
@@ -95,7 +95,7 @@ const zh: BarStrings = {
   atStart: '開打時',
   b3: {
     lowKey: '低調模式', lowKeyTip: '雙擊恢復', hotkeys: '全域熱鍵',
-    hotkeyHide: '隱藏全部視窗 Ctrl+Alt+Shift+H', hotkeyLow: '低調模式 Ctrl+Alt+Shift+Q', hotkeyBusy: (k) => `熱鍵被其他程式占用：${k}`,
+    hotkeyHide: '隱藏全部視窗 Ctrl+Alt+Shift+H', hotkeyLow: '低調模式 Ctrl+Alt+Shift+Q', hotkeyBusy: (k) => `熱鍵被其他程式占用：${k}`, hotkeyTaken: '被其他程式占用',
     autoLow: '全螢幕、簡報或勿擾時自動低調', autoLowNote: '上班模式包含自己全螢幕看轉播時；陪看模式只在簡報與勿擾時。',
     sound: '卡片音效', volume: { low: '小', mid: '中', high: '大' }, test: '試聽',
     watchUrl: '轉播網址', watchNote: '有填時，卡片滑過會出現「▶ 看」，點了用預設瀏覽器開這個網址。',
@@ -148,7 +148,7 @@ const en: BarStrings = {
   atStart: 'At start',
   b3: {
     lowKey: 'Low-key', lowKeyTip: 'Double-click to restore', hotkeys: 'Global hotkeys',
-    hotkeyHide: 'Hide every window Ctrl+Alt+Shift+H', hotkeyLow: 'Low-key Ctrl+Alt+Shift+Q', hotkeyBusy: (k) => `Hotkey taken by another program: ${k}`,
+    hotkeyHide: 'Hide every window Ctrl+Alt+Shift+H', hotkeyLow: 'Low-key Ctrl+Alt+Shift+Q', hotkeyBusy: (k) => `Hotkey taken by another program: ${k}`, hotkeyTaken: 'taken by another program',
     autoLow: 'Go low-key in full screen, presentations and quiet hours', autoLowNote: 'At work this includes your own full-screen stream; watching along, only presentations and quiet hours.',
     sound: 'Card sound', volume: { low: 'Low', mid: 'Medium', high: 'High' }, test: 'Play',
     watchUrl: 'Stream address', watchNote: 'When set, cards show "▶ Watch" on hover; it opens this address in your browser.',
