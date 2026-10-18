@@ -192,6 +192,20 @@ const BARON_COL = '#9A6AD8', HERALD_COL = '#4FB6C2', GRUB_COL = '#B58AE6';
 /** When each top-pit monster comes and goes (patch 26.x; the service's RULES). */
 const GRUBS_AT = 8 * 60, GRUBS_GONE = 14 * 60 + 45, HERALD_AT = 15 * 60, HERALD_GONE = 19 * 60 + 45, BARON_AT = 20 * 60;
 
+/**
+ * The herald, not a dragon: a low shell with one big eye on its front (its best-known feature), in the
+ * map's 2.5D style (maintainer, 2026-10-19: the dragon-head herald read as another drake).
+ */
+function heraldShell(x: number, y: number, w: number, col: string): string {
+  const r = w * 0.55, h = w * 0.5;
+  const dome = `M${n(x - r)} ${n(y)} A${n(r)} ${n(h * 1.6)} 0 0 1 ${n(x + r)} ${n(y)} A${n(r)} ${n(r * ER)} 0 0 1 ${n(x - r)} ${n(y)} Z`;
+  return `<ellipse cx="${n(x + 0.3)}" cy="${n(y + 0.4)}" rx="${n(r * 1.1)}" ry="${n(r * 0.4)}" fill="rgba(0,0,0,.45)"/>`
+    + `<path d="${dome}" fill="${col}" ${RIM}/>`
+    + `<path d="M${n(x - r)} ${n(y)} A${n(r)} ${n(r * ER)} 0 0 0 ${n(x + r)} ${n(y)}" fill="none" stroke="${shade(col, 0.5)}" stroke-width="0.5"/>`
+    + `<ellipse cx="${n(x)}" cy="${n(y - h * 0.8)}" rx="${n(r * 0.48)}" ry="${n(r * 0.36)}" fill="#F2F4F7" ${RIM}/>`
+    + `<ellipse cx="${n(x)}" cy="${n(y - h * 0.8)}" rx="${n(r * 0.2)}" ry="${n(r * 0.28)}" fill="#141418"/>`;
+}
+
 function plinth(x: number, y: number): string {
   return cylinder(x, y, 4, 0.9, '#2A2F38', '#16191F', 'stroke="rgba(10,12,16,.65)" stroke-width="0.3"');
 }
@@ -227,7 +241,7 @@ function pits(s: MatchState, clock: number | null, timing: boolean, o: NonNullab
     } else if (kind === 'herald') {
       const gone = s.herald?.status === 'taken' || s.herald?.status === 'taken_or_despawned';
       if (clock < HERALD_AT) until = HERALD_AT;
-      else if (!gone) body = drakeHead(x, y - 0.9, DRAKE_W, HERALD_COL, RIM);
+      else if (!gone) body = heraldShell(x, y - 0.9, DRAKE_W, HERALD_COL);
     } else {
       const due = s.nextBaron?.at ?? BARON_AT;
       if (clock < due) until = due;
