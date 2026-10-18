@@ -85,6 +85,11 @@ describe('event detection', () => {
     expect(eventText(ev.find((e) => e.kind === 'seriesEnd')!, code, 'zh-Hant', true).title).toBe('KC 贏下系列賽');
   });
 
+  it('the same game coming back from finished (a replay looping, a service restart) is not a new start', () => {
+    const fin = { ...live(), status: 'finished' as const };
+    expect(deriveEvents(fin, live()).map((e) => e.kind)).not.toContain('gameStart');
+  });
+
   it('nothing on the first snapshot (the bar shows a baseline instead of replaying the game)', () => {
     expect(deriveEvents(null, live())).toEqual([]);
   });

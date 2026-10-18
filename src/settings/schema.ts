@@ -70,6 +70,8 @@ export interface Settings {
   barTier: 'bar' | 'dot';
   /** Minutes before a match to remind (0 = when it starts). */
   reminderLead: (typeof REMINDER_LEADS)[number];
+  /** Where the notices stack: bottom-right (the spec), or top-right, clear of Windows' own notifications. */
+  notifyCorner: 'br' | 'tr';
 }
 
 export const DEFAULTS: Settings = {
@@ -91,6 +93,7 @@ export const DEFAULTS: Settings = {
   panels: { minimap: false, draftGame: false, players: false, data: false },
   barTier: 'bar',
   reminderLead: 15,
+  notifyCorner: 'br',
 };
 
 const oneOf = <T extends string>(v: unknown, options: readonly T[], fallback: T): T =>
@@ -144,5 +147,6 @@ export function normalize(raw: unknown): Settings {
     panels: Object.fromEntries(PANELS.map((p) => [p, bool(panels[p], d.panels[p])])) as Record<PanelName, boolean>,
     barTier: oneOf(o.barTier, ['bar', 'dot'], d.barTier),
     reminderLead: (REMINDER_LEADS as readonly unknown[]).includes(o.reminderLead) ? (o.reminderLead as Settings['reminderLead']) : d.reminderLead,
+    notifyCorner: oneOf(o.notifyCorner, ['br', 'tr'], d.notifyCorner),
   };
 }

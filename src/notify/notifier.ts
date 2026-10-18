@@ -16,6 +16,8 @@ export class Notifier {
   private height = 0;
   /** "+{n} 則 ▸" in the user's language. */
   more = '+{n} ▸';
+  /** Bottom-right (spec), or top-right when Windows' own notifications cover the bottom corner. */
+  corner: 'br' | 'tr' = 'br';
 
   constructor() {
     void listen<number>('notify-height', (e) => { this.height = Math.min(MAX_H, e.payload); void this.place(); });
@@ -50,7 +52,7 @@ export class Notifier {
     return this.ready;
   }
 
-  /** Bottom-right of the work area, as tall as the content; hidden when empty. */
+  /** A corner of the work area, as tall as the content; hidden when empty. */
   private async place(): Promise<void> {
     const w = await WebviewWindow.getByLabel(LABEL);
     if (!w) return;
@@ -60,7 +62,8 @@ export class Notifier {
     const s = mon.scaleFactor;
     const area = { x: mon.workArea.position.x / s, y: mon.workArea.position.y / s, w: mon.workArea.size.width / s, h: mon.workArea.size.height / s };
     await w.setSize(new LogicalSize(WIDTH, this.height));
-    await w.setPosition(new LogicalPosition(Math.round(area.x + area.w - WIDTH - MARGIN), Math.round(area.y + area.h - this.height - MARGIN)));
+    const y = this.corner === 'tr' ? area.y + MARGIN : area.y + area.h - this.height - MARGIN;
+    await w.setPosition(new LogicalPosition(Math.round(area.x + area.w - WIDTH - MARGIN), Math.round(y)));
     await w.show();
   }
 }

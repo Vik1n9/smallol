@@ -8,6 +8,7 @@
 import { LANES, TEAMS, TOWER_SITES, isNexusTurret, type Lane, type MatchState, type Team, type TowerSite } from '../model/types.ts';
 import { fmtClock, left, timersOn, towerDown } from '../model/clock.ts';
 import { shade } from './colour.ts';
+import { ELEMENT_COLOUR } from './dragons.ts';
 
 type Pt = readonly [number, number];
 
@@ -126,6 +127,29 @@ export interface MapOptions {
   unnamed: (n: number) => string;
   unnamedTitle: string;
   unknownTitle: string;
+  /** The drakes each team took, as small coins along its edge of the board (minimap window). */
+  drakes?: { titles: (e: string) => string };
+}
+
+/**
+ * A team's drakes as coins in the map's own 2.5D style, smaller than a tower, off the board so they never
+ * sit among the towers: blue's on the ledge in front of the board, red's behind its far edge, in the order
+ * taken; elders after them. With the soul, a gold rim.
+ */
+function drakeCoins(s: MatchState, o: NonNullable<MapOptions['drakes']>): Piece[] {
+  const out: Piece[] = [];
+  for (const t of TEAMS) {
+    const team = s.teams[t];
+    const coins: string[] = [...team.dragons, ...Array<string>(team.elders ?? 0).fill('elder')];
+    const soul = s.soul?.team === t;
+    coins.forEach((e, i) => {
+      const [x, y] = P(t === 'B' ? [40 + i * 5, 104.2] : [60 - i * 5, -4.6]);
+      const c = ELEMENT_COLOUR[e as keyof typeof ELEMENT_COLOUR] ?? '#999';
+      const rim = soul && e !== 'elder' ? 'stroke="#E8B04A" stroke-width="0.55"' : RIM;
+      out.push({ y: t === 'B' ? y + 200 : y - 200, svg: `<g class="drake"><title>${o.titles(e)}</title>${shadow(x, y, 1.8)}${cylinder(x, y, 1.8, 1.2, c, shade(c, 0.55), rim)}${gloss(x, y - 1.2, 1.8)}</g>` });
+    });
+  }
+  return out;
 }
 
 function ground(): string {
@@ -171,6 +195,7 @@ export function mapSvg(s: MatchState, clock: number | null, o: MapOptions): stri
     const rest = soonest !== null && timing && o.nexusTimers ? left(soonest, clock) : null;
     if (rest !== null) pieces.push(tag(nexusAt(t), 8.4, fmtClock(rest), t));
   }
+  if (o.drakes) pieces.push(...drakeCoins(s, o.drakes));
   pieces.sort((a, b) => a.y - b.y);
 
   const notes: string[] = [];

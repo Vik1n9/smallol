@@ -32,6 +32,7 @@ import { Notifier } from '../notify/notifier.ts';
 import { Panels } from '../panels/manager.ts';
 import { PANEL_SIZE, type PanelFrame } from '../panels/frame.ts';
 import { TEAM_COLOUR } from '../render/map-svg.ts';
+import { ELEMENT_COLOUR } from '../render/dragons.ts';
 import { fmtStart } from './schedule-views.ts';
 import { modeLabel } from './settings-view.ts';
 import { esc, fmtGold } from './views.ts';
@@ -68,6 +69,7 @@ function applyLanguage(): void {
   B = BAR_STRINGS[lang];
   document.documentElement.lang = lang;
   notifier.more = B.more;
+  notifier.corner = cfg().notifyCorner;
 }
 function applyBackground(): void {
   for (const el of [bar, pop]) { el.classList.remove('bg-solid', 'bg-semi', 'bg-clear'); el.classList.add(`bg-${cfg().background}`); }
@@ -302,6 +304,30 @@ function goldText(s: MatchState): string {
   return `<span class="gold">${esc(S.ui.gold)} <span class="mono${lead ? ` lead-${lead}` : ''}">${d === 0 ? '±0' : `+${fmtGold(Math.abs(d))}`}</span></span>`;
 }
 
+/**
+ * The objectives counting down, nearest first, at most two: the next drake (or elder), the herald, the
+ * baron (the broadcast says which of herald and baron the top pit holds next). "在場" once one is up.
+ */
+function countdowns(s: MatchState, clock: number | null): string[] {
+  if (s.status !== 'in_game' || clock === null) return [];
+  const c: { at: number; html: string }[] = [];
+  const chip = (label: string, at: number) => {
+    const l = at - clock;
+    return `<span class="cd">${label}<span class="mono">${l > 0 ? fmtClock(l) : esc(B.up)}</span></span>`;
+  };
+  const nd = s.nextDragon;
+  if (cfg().show.nextDragon && nd) {
+    const e = nd.elder ? 'elder' : nd.element;
+    const tile = e ? `<span class="el" style="--c:${ELEMENT_COLOUR[e]}">${esc(S.elementShort[e])}</span>` : '<span class="el empty">?</span>';
+    c.push({ at: nd.at, html: chip(tile, nd.at) });
+  }
+  const h = s.herald;
+  if (cfg().show.herald && s.pitNext === 'herald' && h && (h.status === 'upcoming' || h.status === 'alive_or_upcoming')) c.push({ at: 15 * 60, html: chip(`<span class="k">${esc(S.ui.herald)}</span>`, 15 * 60) });
+  const nb = s.nextBaron;
+  if (cfg().show.nextBaron && nb && s.pitNext !== 'grubs' && s.pitNext !== 'herald') c.push({ at: nb.at, html: chip(`<span class="k">${esc(S.ui.baron)}</span>`, nb.at) });
+  return c.sort((a, b) => a.at - b.at).slice(0, 2).map((x) => x.html);
+}
+
 /** Row A: what state the event is in (UI_SPEC §1, §7). */
 function statusRow(clock: number | null): string {
   const s = state;
@@ -309,7 +335,8 @@ function statusRow(clock: number | null): string {
   const connBad = conn === 'retrying' && !sample ? `<i class="conn" title="${esc(S.connection.retrying)}"></i>` : '';
   if (s.status === 'in_game') {
     const clk = clock === null || !cfg().show.clock ? '' : `<span class="clock">${fmtClock(clock)}</span>`;
-    return `${mute}${connBad}${scoreHtml(s, false)}${clk}${window.innerWidth >= 320 ? goldText(s) : ''}`;
+    const cds = countdowns(s, clock).map((h, i) => h.replace('class="cd"', `class="cd cd${i}"`)).join('');
+    return `${mute}${connBad}${scoreHtml(s, false)}${clk}${cds}${goldText(s)}`;
   }
   if (s.status === 'waiting') {
     const g = s.series?.game ?? s.draft?.current?.game ?? 1;
@@ -390,7 +417,12 @@ function render(): void {
     if (el.innerHTML !== html) el.innerHTML = html;
   }
   const a = statusRow(clock);
-  if (rowA.innerHTML !== a) rowA.innerHTML = a;
+  if (rowA.dataset.html !== a) {
+    rowA.innerHTML = a;
+    rowA.dataset.html = a;
+    // Too wide for the bar: the gold lead goes first, then the second countdown.
+    for (const sel of ['.gold', '.cd1']) if (rowA.scrollWidth > rowA.clientWidth) rowA.querySelector(sel)?.remove();
+  }
   const ic = iconsRow();
   if (icons.dataset.html !== ic) { icons.innerHTML = ic; icons.dataset.html = ic; }
   // Row B: a 3-second note, else the log line of this game (or the last game's, between games), else a resting line.
@@ -482,13 +514,18 @@ function act(d: Record<string, string | undefined>): void {
   }
 }
 
-function onClick(e: MouseEvent): void {
+// Buttons act on press: a button redrawn between press and release (the icon row redraws when a
+// panel opens) lost its click, so a press did nothing (2026-10-18 check).
+function onPress(e: PointerEvent): void {
+  if (e.button !== 0) return;
   const t = (e.target as HTMLElement).closest<HTMLElement>('button');
-  if (t) { act({ ...t.dataset }); return; }
-  // The dot: a click on it goes back to the bar.
-  if (tier() === 'dot' && !moved) settings.update((x) => { x.barTier = 'bar'; });
+  if (t) { e.preventDefault(); act({ ...t.dataset }); }
 }
-for (const el of [bar, pop]) el.addEventListener('click', onClick);
+for (const el of [bar, pop]) el.addEventListener('pointerdown', onPress);
+// The dot: a click on it (not a drag) goes back to the bar.
+bar.addEventListener('click', (e) => {
+  if (!(e.target as HTMLElement).closest('button') && tier() === 'dot' && !moved) settings.update((x) => { x.barTier = 'bar'; });
+});
 window.addEventListener('keydown', (e) => { if (e.key === 'Escape') void closePop(); });
 
 // Drag with a press that moves 4 px or more; a press that does not move is a click.
@@ -528,6 +565,7 @@ function onSettings(now: Settings, before: Settings): void {
     rosterPoller.setUrl(rosterUrl(now.endpoint));
   }
   if (now.barTier !== before.barTier) void fitWindow();
+  notifier.corner = now.notifyCorner;
   if (PANELS.some((p) => now.panels[p] !== before.panels[p])) void panels?.sync(now.panels);
   sendPanels();
   render();

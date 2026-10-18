@@ -20,6 +20,10 @@ body.dot #bar { border-radius: 999px; padding: 0 12px; }
 .row-a .clock { font-family: var(--mono); }
 .row-a .gold .mono { font-weight: 600; }
 .row-a .mute { color: var(--accent); }
+.row-a .cd { display: inline-flex; align-items: center; gap: 3px; color: var(--text); }
+.row-a .cd .mono { font-size: 11px; font-weight: 600; }
+.row-a .cd .el { min-width: 14px; height: 14px; font-size: 9px; border-radius: 4px; }
+.row-a .cd .k { font-size: 10px; }
 .row-a .conn { width: 6px; height: 6px; flex-basis: 6px; }
 /* hover: the status row cross-fades to the icon row; the bar keeps its size */
 .icons { position: absolute; left: 11px; right: 11px; top: 4px; opacity: 0; pointer-events: none; gap: 2px; transition: opacity .12s .3s; }

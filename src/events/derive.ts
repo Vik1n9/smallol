@@ -68,7 +68,9 @@ export function deriveEvents(prev: MatchState | null, next: MatchState, seen: An
     }
   }
 
-  if (prev.status !== 'in_game' && next.status === 'in_game') out.push({ kind: 'gameStart', team: null, at, n: gameNo });
+  // Not when the same game comes back from "finished" (a replay looping, the service restarting).
+  const back = prev.status === 'finished' && prev.gameId === next.gameId;
+  if (prev.status !== 'in_game' && next.status === 'in_game' && !back) out.push({ kind: 'gameStart', team: null, at, n: gameNo });
 
   // In-game changes only within one game.
   if (prev.gameId === next.gameId && next.gameId) {

@@ -13,6 +13,8 @@ body:hover #close { opacity: .8; }
 /* minimap: the map fills the window */
 #panel.minimap { padding: 4px; }
 #panel.minimap svg.map { flex: 1; width: 100%; min-height: 0; display: block; overflow: visible; }
+.mtimers { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; flex: 0 0 auto; }
+.mtimers .chip { height: 17px; font-size: 10px; padding: 0 6px; background: var(--panel); }
 
 /* this game's draft: per team a ban row and a pick row */
 #panel.draftGame { gap: 3px; padding: 5px 8px; }

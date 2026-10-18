@@ -12,7 +12,7 @@ import type { PanelName } from '../settings/schema.ts';
 import { draftPanel, playersPanel } from '../ui/panel-views.ts';
 import { scheduleView } from '../ui/schedule-views.ts';
 import { settingsView } from '../ui/settings-view.ts';
-import { draftSeriesView, esc, schedCtx, type ViewCtx } from '../ui/views.ts';
+import { draftSeriesView, esc, schedCtx, timerChips, type ViewCtx } from '../ui/views.ts';
 import type { PanelFrame } from './frame.ts';
 
 const name = (location.hash.slice(1) || 'minimap') as PanelName;
@@ -35,10 +35,14 @@ function body(f: PanelFrame): string {
   const hasGame = f.state.status === 'in_game' || f.state.status === 'finished';
   if (name === 'minimap') {
     if (!hasGame) return `<p class="none muted">${esc(c.S.status[f.state.status])}</p>`;
-    return mapSvg(f.state, c.clock, {
+    const map = mapSvg(f.state, c.clock, {
       inhibitors: c.show.inhibitors, inhibTimers: c.show.inhibitors, nexusTimers: c.show.nexusTimers,
       unnamed: c.S.unnamed, unnamedTitle: esc(c.S.ui.towersUnnamed), unknownTitle: esc(c.S.ui.towersUnknown),
+      drakes: c.show.dragons ? { titles: (e) => esc(c.S.element[e as keyof typeof c.S.element] ?? e) } : undefined,
     });
+    // Buffs and the inhibitors the map cannot place: one small line under it.
+    const chips = timerChips(c, true);
+    return `${map}${chips ? `<div class="mtimers">${chips}</div>` : ''}`;
   }
   if (name === 'draftGame') return draftPanel(c);
   if (name === 'players') return playersPanel(c, window.innerWidth >= 400);

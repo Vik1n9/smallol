@@ -28,7 +28,10 @@ export interface BarStrings {
   inProgress(clock: string): string;
   startingSoon: string;
   reset: string;
-  sections: Record<'notify' | 'events' | 'panels' | 'reminder' | 'general', string>;
+  sections: Record<'notify' | 'events' | 'panels' | 'reminder' | 'general' | 'corner', string>;
+  corner: Record<'br' | 'tr', string>;
+  /** An objective that has spawned, on the bar's countdown chips. */
+  up: string;
   minutes(n: number): string;
   atStart: string;
 }
@@ -57,7 +60,9 @@ const zh: BarStrings = {
   inProgress: (c) => `已進行 ${c}`,
   startingSoon: '即將開打',
   reset: '重設為',
-  sections: { notify: '通知模式', events: '事件', panels: '面板', reminder: '開賽提醒', general: '一般' },
+  sections: { notify: '通知模式', events: '事件', panels: '面板', reminder: '開賽提醒', general: '一般', corner: '通知位置' },
+  corner: { br: '右下', tr: '右上' },
+  up: '在場',
   minutes: (n) => `${n} 分`,
   atStart: '開打時',
 };
@@ -86,7 +91,9 @@ const en: BarStrings = {
   inProgress: (c) => `In progress ${c}`,
   startingSoon: 'Starting soon',
   reset: 'Reset to',
-  sections: { notify: 'Notifications', events: 'Events', panels: 'Panels', reminder: 'Match reminder', general: 'General' },
+  sections: { notify: 'Notifications', events: 'Events', panels: 'Panels', reminder: 'Match reminder', general: 'General', corner: 'Notices at' },
+  corner: { br: 'Bottom right', tr: 'Top right' },
+  up: 'up',
   minutes: (n) => `${n} min`,
   atStart: 'At start',
 };
