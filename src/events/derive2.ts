@@ -10,8 +10,10 @@ import type { GameEvent } from './kinds.ts';
 /** Gold lead steps (in gold), and how far the lead must drop before a step can be announced again. */
 export const GOLD_STEPS = [5000, 10000] as const;
 const REARM = 0.7;
-/** A lead change counts once the old leader had led by this much. */
+/** A lead change counts once the old leader had led by this much, and the new one leads by FLIP_NEW. */
 export const FLIP_MIN = 3000;
+/** At the crossing itself the lead is near zero ("+0k"): wait until the new leader is clearly ahead. */
+export const FLIP_NEW = 1000;
 
 export class Memory {
   private game: string | null = null;
@@ -27,6 +29,9 @@ export class Memory {
     this.ever.add(key);
     return true;
   }
+
+  /** Start this game over (its clock went back: a replay looping, a service restart). */
+  restart(): void { this.game = null; }
 
   /** True the first time a key is seen this game. */
   once(game: string | null, key: string): boolean {
@@ -49,12 +54,13 @@ export class Memory {
         else if (!armed && lead < step * REARM) this.armed.set(key, true);
       }
     }
-    const now: Team | null = diff > 0 ? 'B' : diff < 0 ? 'R' : null;
+    // The leader changes only once the new one is FLIP_NEW ahead (no flapping around zero).
+    const now: Team | null = diff >= FLIP_NEW ? 'B' : diff <= -FLIP_NEW ? 'R' : null;
     if (now && this.leader && now !== this.leader && this.peak >= FLIP_MIN) {
       out.push({ kind: 'goldFlip', team: now, victim: this.leader, at: null, lead: Math.round(Math.abs(diff) / 100) / 10 });
     }
     if (now && now !== this.leader) { this.leader = now; this.peak = 0; }
-    this.peak = Math.max(this.peak, Math.abs(diff));
+    if (this.leader && (this.leader === 'B' ? diff : -diff) > this.peak) this.peak = Math.abs(diff);
     return out;
   }
 }
@@ -77,6 +83,8 @@ export function deriveMore(prev: MatchState | null, next: MatchState, mem: Memor
   }
 
   if (next.status !== 'in_game' || clock === null || prev.gameId !== g) return out;
+  // The clock went back: what was said belongs to the game's later part, forget it.
+  if (prev.clock !== null && clock < prev.clock - 30) mem.restart();
 
   // Countdowns: once per spawn time.
   const nd = next.nextDragon;

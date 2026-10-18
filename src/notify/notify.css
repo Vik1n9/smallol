@@ -1,5 +1,5 @@
 /* The corner notices (docs/UI_SPEC_v1.md §2): cards (300×56, 300×84 for a finished draft) and
-   strips (260×32), newest at the bottom, right-aligned in a window as tall as its content. */
+   strips (32 tall, 260 to 340 wide to fit their text), newest at the bottom, right-aligned in a window as tall as its content. */
 :root {
   --background: #15171C; --panel: #1B1E24; --border: #2A2E37; --text: #E8EAEE; --muted: #A0A6B1;
   --accent: #E8B04A; --blue: #4C93E6; --red: #E0574C;
@@ -29,7 +29,9 @@ body { color: var(--text); font: 12px/1.35 var(--font); user-select: none; -webk
 .card.tall .sub { line-height: 17px; }
 .card.tall .sub.tight { font-size: 10px; }
 
-.strip { width: 260px; height: 32px; align-items: center; gap: 8px; padding: 0 10px 0 13px; animation: in-strip .18s ease-out; }
+/* As wide as its text, 260 to 340: at 260 a first item's name was cut in 41 of 125 items (111 in English);
+   at 340 in none (measured in Edge with the longest names). */
+.strip { min-width: 260px; max-width: 340px; height: 32px; align-items: center; gap: 8px; padding: 0 10px 0 13px; animation: in-strip .18s ease-out; }
 .strip .title { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .strip .time { font: 11px var(--mono); color: var(--muted); }
 .strip.more { cursor: pointer; color: var(--muted); }
@@ -38,6 +40,8 @@ body { color: var(--text); font: 12px/1.35 var(--font); user-select: none; -webk
 /* A tower streak counting up: only the text changes, in place. */
 .title.bump { animation: bump .12s ease-out; }
 .item.out { animation: out .16s ease-in forwards; }
+/* Held at its first frame until the window has grown to take it, so the entrance is seen whole. */
+.item.wait { animation-play-state: paused; }
 
 @keyframes in-card { from { transform: translateY(8px); opacity: 0; } }
 @keyframes in-strip { from { transform: translateY(8px); opacity: 0; } }

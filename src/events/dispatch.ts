@@ -76,6 +76,7 @@ export class Dispatcher {
       const level = LEVEL[e.kind];
       let { title, sub } = eventText(e, code, lang, cfg.spoilerFree);
       let id = `e${this.seq++}`;
+      let side = e.team;
       // R1: towers by the same team in a row are one strip, counted, updated in place.
       if (TOWER_KINDS.includes(e.kind) && e.team) {
         const s = this.streaks.get(e.team);
@@ -96,6 +97,8 @@ export class Dispatcher {
         else this.gatherings.set(e.kind, { id, startedAt: now, who: [who] });
         const list = this.gatherings.get(e.kind)!.who;
         if (list.length > 1) title = milestoneText(e.kind as 'level6' | 'firstLegendary', list, lang);
+        // Both teams in it: the neutral colour, not the colour of whoever came last (it flipped in place).
+        if (new Set(list.map((w) => w.team)).size > 1) side = null;
       }
       // R2: an inhibitor card says how many towers the streak has taken so far.
       if (e.kind === 'inhibitor' && e.team) {
@@ -104,7 +107,7 @@ export class Dispatcher {
       }
       offerLine({ text: title, level, team: e.team, at: e.at });
       if (ch === 'log' || ch === 'off' || paused) continue;
-      const n: Notice = { id, kind: ch, title, sub, team: e.team, time: fmt(e.at), level, tall: e.kind === 'bpDone' };
+      const n: Notice = { id, kind: ch, title, sub, team: side, time: fmt(e.at), level, tall: e.kind === 'bpDone' };
       if (ch === 'card') cards.push(n); else notices.push(n);
     }
     // R5: the cards of one step are one card, the most important first, the next as its note.

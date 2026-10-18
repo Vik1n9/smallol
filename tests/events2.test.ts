@@ -34,7 +34,7 @@ describe('batch 2 detection', () => {
     const ev = deriveMore(a, b, new Memory());
     expect(ev.map((e) => e.kind)).toEqual(expect.arrayContaining(['inhibRespawn', 'soulPoint']));
     expect(eventText(ev.find((e) => e.kind === 'inhibRespawn')!, code, 'zh-Hant').title).toBe('MVK 中路水晶重生');
-    expect(eventText(ev.find((e) => e.kind === 'soulPoint')!, code, 'zh-Hant').title).toBe('KC 龍魂聽牌 · 下一條海克斯龍 5:00');
+    expect(eventText(ev.find((e) => e.kind === 'soulPoint')!, code, 'zh-Hant').title).toBe('KC 龍魂聽牌 · 海克斯龍 5:00');
   });
 
   it('a solo kill when one died, one enemy got the kill and nobody assisted; otherwise "down"', () => {
@@ -44,7 +44,7 @@ describe('batch 2 detection', () => {
     b.players!.B[2]!.kills = (a.players!.B[2]!.kills ?? 0) + 1;
     const solo = deriveMore(a, b, new Memory()).find((e) => e.kind === 'kill')!;
     expect(solo).toMatchObject({ solo: true, team: 'B', victim: 'R' });
-    expect(eventText(solo, code, 'zh-Hant').title).toBe(`KC ${a.players!.B[2]!.name} 單殺 MVK ${a.players!.R[2]!.name}`);
+    expect(eventText(solo, code, 'zh-Hant').title).toBe(`KC ${a.players!.B[2]!.name} 單殺 ${a.players!.R[2]!.name}`);
     const c = clone(b); c.players!.B[1]!.assists = (a.players!.B[1]!.assists ?? 0) + 1;
     const down = deriveMore(a, c, new Memory()).find((e) => e.kind === 'kill')!;
     expect(eventText(down, code, 'zh-Hant').title).toBe(`MVK ${a.players!.R[2]!.name} 倒下`);
@@ -59,7 +59,8 @@ describe('batch 2 detection', () => {
     expect(g(5100)).toEqual([]);
     expect(g(3000)).toEqual([]);
     expect(g(5000)).toEqual(['goldLead5k:B']);
-    expect(g(-200)).toEqual(['goldFlip:R']);
+    expect(g(-200)).toEqual([]);
+    expect(g(-1200)).toEqual(['goldFlip:R']);
   });
 
   it('level 6 and the first legendary, once per player', () => {
@@ -69,7 +70,7 @@ describe('batch 2 detection', () => {
     const m = new Memory();
     const ev = deriveMore(a, b, m);
     expect(ev.map((e) => e.kind)).toEqual(expect.arrayContaining(['level6', 'firstLegendary']));
-    expect(eventText(ev.find((e) => e.kind === 'firstLegendary')!, code, 'zh-Hant').title).toBe(`KC ${a.players!.B[0]!.name} 完成第一件傳說裝 · 無盡之刃`);
+    expect(eventText(ev.find((e) => e.kind === 'firstLegendary')!, code, 'zh-Hant').title).toBe(`KC ${a.players!.B[0]!.name} 首件成裝 · 無盡之刃`);
     expect(kinds(a, b, m)).toEqual([]);
   });
 
@@ -92,6 +93,9 @@ describe('batch 2 dispatch', () => {
     expect(a.notices[0]!.kind).toBe('strip');
     expect(b.notices.at(-1)!.id).toBe(a.notices[0]!.id);
     expect(b.notices.at(-1)!.title).toBe('升 6 級 · KC 上、MVK 中 +1');
+    // Both teams in it: neutral colour, not the colour of whoever came last.
+    expect(a.notices[0]!.team).toBe('B');
+    expect(b.notices.at(-1)!.team).toBeNull();
   });
 
   it('my team: an important event in the log becomes a strip; normal events and cards stay', () => {

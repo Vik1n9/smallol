@@ -6,7 +6,7 @@
 //   --sample       show the bundled sample instead of asking the service (dev builds only)
 //   --demo         with the sample: treat it as a game in progress, so countdowns run
 //   --set=path:value,...  change settings in memory (e.g. language:en,mode:companion)
-//   --open=history|mode|panels   open that popover once started (screenshots without clicking)
+//   --open=history|mode|panels|ask   open that popover once started (screenshots without clicking)
 //   --tab=teams|schedule|series|settings, --team=GEN, --player=GEN:Canyon   open the data window there
 
 import { getCurrentWindow, currentMonitor } from '@tauri-apps/api/window';
@@ -211,7 +211,8 @@ function saveHistory(): void {
 }
 function logEvents(events: GameEvent[], s: MatchState): void {
   const code = codeOf(s);
-  const game = s.gameId ?? `${s.series?.matchId ?? 'm'}-${s.series?.game ?? s.draft?.current?.game ?? 0}`;
+  // One group per game of the series: the draft (no game id yet) and the game itself together.
+  const game = s.series?.matchId ? `${s.series.matchId}-${s.series.game}` : s.gameId ?? `m-${s.draft?.current?.game ?? 0}`;
   const add = events.filter((e) => e.kind !== 'reminder' && channelOf(e.kind, cfg()) !== 'off').map((e): LogEntry => ({
     game, n: s.series?.game ?? s.draft?.current?.game ?? null, teams: [code('B'), code('R')], at: e.at, text: eventText(e, code, lang, cfg().spoilerFree).title,
     level: LEVEL[e.kind], side: e.team, code: e.team ? code(e.team) : null, victim: e.victim ? code(e.victim) : null, t: Date.now(),
@@ -682,7 +683,7 @@ async function start(): Promise<void> {
   if (!cfg().asked && !checking) void openPop('ask');
   // Checking aids: open a popover or the data window without clicking.
   const open = q.get('open');
-  if (open === 'history' || open === 'mode' || open === 'panels') { keepOpen = true; setTimeout(() => void openPop(open), 2500); }
+  if (open === 'history' || open === 'mode' || open === 'panels' || open === 'ask') { keepOpen = true; setTimeout(() => void openPop(open), 2500); }
   const tab = q.get('tab') as DataTab | null, team = q.get('team'), player = q.get('player');
   if (player) { const [t, p] = player.split(/[|:]/) as [string, string]; profile = { team: t, player: p }; }
   else if (team) profile = { team, player: null };

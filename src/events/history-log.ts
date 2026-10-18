@@ -96,7 +96,8 @@ export function historyView(list: LogEntry[], filter: HistFilter, B: BarStrings,
       + `<span class="x" title="${esc(e.text)}">${html}</span></div>`;
   };
   const block = (g: { rows: LogEntry[] }) => {
-    const f = g.rows[0]!;
+    // The header names the sides as they ended up (the draft can carry the official sides the wrong way round).
+    const f = g.rows[g.rows.length - 1]!;
     const sorted = [...g.rows].sort(byGameTime);
     const rows = newestFirst ? sorted.reverse() : sorted;
     return `<div class="hgroup"><div class="hhead">${esc(f.n === null ? `${f.teams[0]} vs ${f.teams[1]}` : B.hist.game(f.n, f.teams[0], f.teams[1]))}</div>${rows.map(row).join('')}</div>`;

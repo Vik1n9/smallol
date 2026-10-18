@@ -9,7 +9,7 @@ import { currentMonitor } from '@tauri-apps/api/window';
 import type { Notice } from '../events/dispatch.ts';
 
 const LABEL = 'notify';
-const WIDTH = 316, MARGIN = 12, MAX_H = 260;
+const WIDTH = 340, MARGIN = 12, MAX_H = 260;
 
 export class Notifier {
   private ready: Promise<void> | null = null;
@@ -73,5 +73,7 @@ export class Notifier {
     const y = this.corner === 'tr' ? area.y + MARGIN : area.y + area.h - this.height - MARGIN;
     // One SetWindowPos for both (src-tauri set_bounds): size then position separately showed the stack jump for a frame.
     await invoke('set_bounds', { label: LABEL, x: Math.round(area.x + area.w - this.width - MARGIN), y: Math.round(y), w: this.width, h: this.height, show: true });
+    // The page holds new items' entrance until now.
+    await emitTo(LABEL, 'notify-placed', null);
   }
 }

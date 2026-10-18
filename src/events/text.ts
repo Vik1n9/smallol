@@ -90,9 +90,9 @@ export function eventText(e: GameEvent, code: (t: Team) => string, lang: Lang, s
     case 'inhibRespawn': return { title: zh ? `${V} ${lane}水晶重生` : `${V} ${lane ? `${lane} ` : ''}inhibitor respawns` };
     case 'nexusRespawn': return { title: zh ? `${V} 主堡塔重生` : `${V} Nexus turret respawns` };
     case 'soulPoint': {
-      const next = e.element ? (zh ? ` · 下一條${S.element[e.element]}` : ` · next ${DRAKE_EN[e.element]}`) : '';
+      const next = e.element ? (zh ? ` · ${S.element[e.element]}` : ` · ${DRAKE_EN[e.element]}`) : '';
       const when = e.secondsLeft !== undefined && e.secondsLeft > 0 ? ` ${clock(e.secondsLeft)}` : '';
-      return { title: zh ? `${T} 龍魂聽牌${next}${when}` : `${T} one drake from Soul${next}${when}` };
+      return { title: zh ? `${T} 龍魂聽牌${next}${when}` : `${T} at Soul point${next}${when}` };
     }
     case 'dragonSoon': {
       const el = e.element ? (zh ? S.element[e.element] : DRAKE_EN[e.element]) : (zh ? '小龍' : 'Drake');
@@ -104,7 +104,8 @@ export function eventText(e: GameEvent, code: (t: Team) => string, lang: Lang, s
     }
     case 'baronBuffEnding': return { title: zh ? `${T} 巴龍增益剩 ${e.secondsLeft} 秒` : `${T} Baron buff ends in ${e.secondsLeft}s` };
     case 'kill':
-      if (e.solo && e.player) return { title: zh ? `${T} ${e.player} 單殺 ${V} ${e.victimPlayer}` : `${T} ${e.player} solo-kills ${V} ${e.victimPlayer}` };
+      // The victim's team is the other one: left out, so long names still fit a strip.
+      if (e.solo && e.player) return { title: zh ? `${T} ${e.player} 單殺 ${e.victimPlayer}` : `${T} ${e.player} solos ${e.victimPlayer}` };
       return { title: zh ? `${V} ${e.victimPlayer} 倒下` : `${V} ${e.victimPlayer} down` };
     case 'goldLead5k':
     case 'goldLead10k': return { title: zh ? `${T} 經濟領先 ${e.lead}k` : `${T} up ${e.lead}k gold` };
@@ -113,7 +114,7 @@ export function eventText(e: GameEvent, code: (t: Team) => string, lang: Lang, s
     case 'level11': return { title: zh ? `${T} ${e.player} 升 ${e.n} 級` : `${T} ${e.player} hits level ${e.n}` };
     case 'firstLegendary': {
       const it = e.item ? ` · ${itemName(e.item, lang)}` : '';
-      return { title: zh ? `${T} ${e.player} 完成第一件傳說裝${it}` : `${T} ${e.player} completes first Legendary${it}` };
+      return { title: zh ? `${T} ${e.player} 首件成裝${it}` : `${T} ${e.player} first item${it}` };
     }
   }
 }
@@ -135,7 +136,7 @@ export function milestoneText(kind: 'level6' | 'firstLegendary', who: { team: st
   const zh = lang === 'zh-Hant';
   const S = STRINGS[lang];
   const name = (w: { team: string; role: string | null; player: string }) => `${w.team} ${w.role && w.role in S.role ? S.role[w.role as keyof typeof S.role] : w.player}`;
-  const head = kind === 'level6' ? (zh ? '升 6 級' : 'Level 6') : (zh ? '第一件成裝' : 'First Legendary');
+  const head = kind === 'level6' ? (zh ? '升 6 級' : 'Level 6') : (zh ? '首件成裝' : 'First item');
   const shown = who.slice(0, 2).map(name).join(zh ? '、' : ', ');
   const more = who.length > 2 ? ` +${who.length - 2}` : '';
   return `${head} · ${shown}${more}`;

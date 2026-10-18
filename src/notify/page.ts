@@ -58,6 +58,7 @@ function upsert(n: Notice): void {
   const el = document.createElement('div');
   el.dataset.id = n.id;
   fill(el, n);
+  el.classList.add('wait');
   stack.appendChild(el);
   items.set(n.id, { n, el, left: LIFE[n.kind], gone: false });
 }
@@ -81,8 +82,20 @@ function report(): void {
     const h = kids.length ? Math.ceil(stack.getBoundingClientRect().height) : 0;
     const w = kids.length ? Math.max(...kids.map((k) => Math.ceil(k.getBoundingClientRect().width))) : 0;
     const key = `${w}x${h}`;
-    if (key !== last) { last = key; void emit('notify-size', { w, h }); }
+    if (key !== last) { last = key; void emit('notify-size', { w, h }); clearTimeout(holdTimer); holdTimer = setTimeout(release, 400); }
+    else release();
   });
+}
+
+/**
+ * New items wait for the window to take their size before they play their entrance: otherwise the
+ * first ~80 ms of it ran while the window was still small or hidden (batch 2 captures: the first
+ * visible frame was already at about two thirds). 400 ms at most, should the answer not come.
+ */
+let holdTimer: ReturnType<typeof setTimeout> | undefined;
+function release(): void {
+  clearTimeout(holdTimer);
+  for (const el of stack.querySelectorAll<HTMLElement>('.wait')) el.classList.remove('wait');
 }
 
 let lastTick = performance.now();
@@ -113,6 +126,7 @@ void (async () => {
     report();
   });
   await self.listen('notices-report', () => { last = ''; report(); });
+  await self.listen('notify-placed', () => requestAnimationFrame(release));
   await self.listen('notices-clear', () => {
     for (const it of items.values()) retire(it);
     overflow = 0; drawMore(); report();
