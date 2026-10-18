@@ -129,12 +129,31 @@ export interface MapOptions {
   unknownTitle: string;
   /** The drakes each team took, as small coins along its edge of the board (minimap window). */
   drakes?: { titles: (e: string) => string };
+  /** Team codes at each team's edge of the board, at the head of its drake row (minimap window). */
+  teams?: Record<Team, string>;
+}
+
+/** A dragon's head seen from the front on a 20x20 box: two horns sweeping out, a wide brow, a narrowing snout. */
+const HEAD: Pt[] = [[10, 6], [13, 5], [17.5, 0.5], [16, 5.5], [18, 8], [16.5, 11], [14, 13], [12.5, 18], [10, 19.5], [7.5, 18], [6, 13], [3.5, 11], [2, 8], [4, 5.5], [2.5, 0.5], [7, 5]];
+
+/** One drake as a dragon's head standing on the ledge, in the map's 2.5D style: a darker side below, eyes and nostrils. */
+function drakeHead(x: number, y: number, w: number, col: string, rim: string): string {
+  const k = w / 20, x0 = x - w / 2, y0 = y - w;
+  const at = ([px, py]: Pt, dy = 0) => `${n(x0 + px * k)},${n(y0 + py * k + dy)}`;
+  const depth = w * 0.13;
+  const eyes = [7.6, 12.4].map((ex) => `<ellipse cx="${n(x0 + ex * k)}" cy="${n(y0 + 10.2 * k)}" rx="${n(0.95 * k)}" ry="${n(0.65 * k)}" fill="#141418"/>`).join('');
+  const nose = [9, 11].map((nx) => `<circle cx="${n(x0 + nx * k)}" cy="${n(y0 + 17 * k)}" r="${n(0.45 * k)}" fill="${shade(col, 0.45)}"/>`).join('');
+  return `<ellipse cx="${n(x + 0.3)}" cy="${n(y + 0.4)}" rx="${n(w * 0.42)}" ry="${n(w * 0.16)}" fill="rgba(0,0,0,.45)"/>`
+    + `<polygon points="${HEAD.map((p) => at(p, depth)).join(' ')}" fill="${shade(col, 0.5)}" ${RIM}/>`
+    + `<polygon points="${HEAD.map((p) => at(p)).join(' ')}" fill="${col}" ${rim}/>${eyes}${nose}`;
 }
 
 /**
- * A team's drakes as coins in the map's own 2.5D style, smaller than a tower, off the board so they never
- * sit among the towers: blue's on the ledge in front of the board, red's behind its far edge, in the order
- * taken; elders after them. With the soul, a gold rim.
+ * A team's drakes as small dragon heads in the map's own 2.5D style (front view; the maintainer chose
+ * it over a coin and a side view, 2026-10-18), on the ledge in front of the board like a scoreboard,
+ * never among the towers: blue's from the left after its code, red's from the right before its code
+ * (red's row behind the far edge sat among the top lane's towers). In the order taken; elders after
+ * them. With the soul, a gold rim.
  */
 function drakeCoins(s: MatchState, o: NonNullable<MapOptions['drakes']>): Piece[] {
   const out: Piece[] = [];
@@ -143,10 +162,10 @@ function drakeCoins(s: MatchState, o: NonNullable<MapOptions['drakes']>): Piece[
     const coins: string[] = [...team.dragons, ...Array<string>(team.elders ?? 0).fill('elder')];
     const soul = s.soul?.team === t;
     coins.forEach((e, i) => {
-      const [x, y] = P(t === 'B' ? [40 + i * 5, 104.2] : [60 - i * 5, -4.6]);
+      const [x, y] = P(t === 'B' ? [15 + i * 5, 105.5] : [87 - i * 5, 105.5]);
       const c = ELEMENT_COLOUR[e as keyof typeof ELEMENT_COLOUR] ?? '#999';
-      const rim = soul && e !== 'elder' ? 'stroke="#E8B04A" stroke-width="0.55"' : RIM;
-      out.push({ y: t === 'B' ? y + 200 : y - 200, svg: `<g class="drake"><title>${o.titles(e)}</title>${shadow(x, y, 1.8)}${cylinder(x, y, 1.8, 1.2, c, shade(c, 0.55), rim)}${gloss(x, y - 1.2, 1.8)}</g>` });
+      const rim = soul && e !== 'elder' ? 'stroke="#E8B04A" stroke-width="0.45"' : RIM;
+      out.push({ y: y + 200, svg: `<g class="drake"><title>${o.titles(e)}</title>${drakeHead(x, y, 3.8, c, rim)}</g>` });
     });
   }
   return out;
@@ -196,6 +215,12 @@ export function mapSvg(s: MatchState, clock: number | null, o: MapOptions): stri
     if (rest !== null) pieces.push(tag(nexusAt(t), 8.4, fmtClock(rest), t));
   }
   if (o.drakes) pieces.push(...drakeCoins(s, o.drakes));
+  if (o.teams) {
+    // On the front ledge: blue's code at the left end, red's at the right, each beside its drakes.
+    const [bx, by] = P([1.5, 105.5]), [rx, ry] = P([100.5, 105.5]);
+    pieces.push({ y: 999, svg: `<text class="tcode" x="${n(bx)}" y="${n(by)}" text-anchor="start" font-size="4.2" fill="${TEAM_HEX.B}">${o.teams.B}</text>` });
+    pieces.push({ y: 999, svg: `<text class="tcode" x="${n(rx)}" y="${n(ry)}" text-anchor="end" font-size="4.2" fill="${TEAM_HEX.R}">${o.teams.R}</text>` });
+  }
   pieces.sort((a, b) => a.y - b.y);
 
   const notes: string[] = [];

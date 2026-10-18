@@ -96,7 +96,9 @@ function setPath(path: string, value: unknown): void {
 
 // ---------- window size ----------
 
-const BAR_SIZE: Record<'bar' | 'dot', Size> = { bar: { w: 340, h: 48 }, dot: { w: 220, h: 28 } };
+// 380 wide by default: score, clock, gold lead and two countdowns fit (340 dropped the gold lead in play;
+// maintainer and interaction designer, 2026-10-18). The user can still pull it from 300 to 600.
+const BAR_SIZE: Record<'bar' | 'dot', Size> = { bar: { w: 380, h: 48 }, dot: { w: 220, h: 28 } };
 const WIDTH_RANGE: Record<'bar' | 'dot', [number, number]> = { bar: [300, 600], dot: [180, 600] };
 const tier = () => cfg().barTier;
 const barWidth = () => cfg().sizes[`size-${tier()}`]?.w ?? BAR_SIZE[tier()].w;

@@ -40,6 +40,7 @@ function body(f: PanelFrame): string {
       inhibitors: c.show.inhibitors, inhibTimers: c.show.inhibitors, nexusTimers: c.show.nexusTimers,
       unnamed: c.S.unnamed, unnamedTitle: esc(c.S.ui.towersUnnamed), unknownTitle: esc(c.S.ui.towersUnknown),
       drakes: c.show.dragons ? { titles: (e) => esc(c.S.element[e as keyof typeof c.S.element] ?? e) } : undefined,
+      teams: f.state.series ? { B: esc(f.state.series.teams.B.code), R: esc(f.state.series.teams.R.code) } : undefined,
     });
     // Buffs and the inhibitors the map cannot place: one small line under it.
     const chips = timerChips(c, true);
