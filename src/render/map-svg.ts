@@ -42,14 +42,19 @@ export const TEAM_COLOUR: Record<Team, string> = { B: 'var(--blue)', R: 'var(--r
 
 /** Ground squash (Basesmall uses 0.5 for its field; a map wants a little more depth). */
 const K = 0.64;
+/**
+ * The ground's scale: places are drawn at 85 % of the 100x100 plan while buildings keep their size, so the
+ * two sides sit closer and the whole map is smaller (maintainer, 2026-10-19).
+ */
+const S = 0.85;
 /** Room above the far edge for the tallest pieces. */
 const TOP = 8;
 /** Ellipse ratio of a round top seen from the camera. */
 const ER = 0.5;
 const SLAB = 3.2;
-export const VIEW_W = 102, VIEW_H = TOP + 100 * K + SLAB + 3;
+export const VIEW_W = +(102 * S).toFixed(2), VIEW_H = TOP + 100 * K * S + SLAB + 3;
 
-const P = ([x, y]: Pt): Pt => [x, TOP + y * K];
+const P = ([x, y]: Pt): Pt => [x * S, TOP + y * S * K];
 const n = (v: number) => +v.toFixed(2);
 
 // ---------- pieces ----------
@@ -103,14 +108,14 @@ function nexus(at: Pt, team: Team): Piece {
   };
 }
 
-/** A countdown tag above a building. */
-function tag(at: Pt, lift: number, text: string, team: Team): Piece {
+/** A countdown tag above a building (team colour), or above a pit (neutral). */
+function tag(at: Pt, lift: number, text: string, team: Team | null): Piece {
   const [x, y0] = P(at);
   const y = y0 - lift;
   const w = text.length * 2.45 + 2.6;
   return {
     y: 1000 + y,
-    svg: `<g class="tag"><rect x="${n(x - w / 2)}" y="${n(y - 4.6)}" width="${n(w)}" height="5.2" rx="2.6" fill="var(--panel)" stroke="${TEAM_COLOUR[team]}" stroke-width="0.4"/>`
+    svg: `<g class="tag"><rect x="${n(x - w / 2)}" y="${n(y - 4.6)}" width="${n(w)}" height="5.2" rx="2.6" fill="var(--panel)" stroke="${team ? TEAM_COLOUR[team] : 'var(--accent)'}" stroke-width="0.4"/>`
       + `<text x="${n(x)}" y="${n(y - 0.95)}" text-anchor="middle" font-size="3.9">${text}</text></g>`,
   };
 }
@@ -129,6 +134,8 @@ export interface MapOptions {
   unknownTitle: string;
   /** The drakes each team took, as small coins along its edge of the board (minimap window). */
   drakes?: { titles: (e: string) => string };
+  /** The two pits on the river (minimap window): the drake pit, and the top pit (grubs, herald, baron). */
+  pits?: { dragon: boolean; top: boolean; titles: (k: 'baron' | 'herald' | 'grubs' | 'elder' | string) => string };
   /** Team codes at each team's edge of the board, at the head of its drake row (minimap window). */
   teams?: Record<Team, string>;
   /** Leave out the "+1 unread" notes (the minimap window: the feed counts a fallen tower 0–15 s before
@@ -137,6 +144,8 @@ export interface MapOptions {
 }
 
 /** A dragon's head seen from the front on a 20x20 box: two horns sweeping out, a wide brow, a narrowing snout. */
+/** A drake head's width on the ground (4.45: 2 px bigger than 3.8 on the 220-wide minimap at 150 %, 2026-10-19). */
+const DRAKE_W = 4.45;
 const HEAD: Pt[] = [[10, 6], [13, 5], [17.5, 0.5], [16, 5.5], [18, 8], [16.5, 11], [14, 13], [12.5, 18], [10, 19.5], [7.5, 18], [6, 13], [3.5, 11], [2, 8], [4, 5.5], [2.5, 0.5], [7, 5]];
 
 /** One drake as a dragon's head standing on the ledge, in the map's 2.5D style: a darker side below, eyes and nostrils. */
@@ -165,11 +174,67 @@ function drakeCoins(s: MatchState, o: NonNullable<MapOptions['drakes']>): Piece[
     const coins: string[] = [...team.dragons, ...Array<string>(team.elders ?? 0).fill('elder')];
     const soul = s.soul?.team === t;
     coins.forEach((e, i) => {
-      const [x, y] = P(t === 'B' ? [15 + i * 5, 105.5] : [87 - i * 5, 105.5]);
+      const [x0, y] = P(t === 'B' ? [15, 105.5] : [87, 105.5]);
+      const x = t === 'B' ? x0 + i * 5 : x0 - i * 5;
       const c = ELEMENT_COLOUR[e as keyof typeof ELEMENT_COLOUR] ?? '#999';
       const rim = soul && e !== 'elder' ? 'stroke="#E8B04A" stroke-width="0.45"' : RIM;
-      out.push({ y: y + 200, svg: `<g class="drake"><title>${o.titles(e)}</title>${drakeHead(x, y, 3.8, c, rim)}</g>` });
+      out.push({ y: y + 200, svg: `<g class="drake"><title>${o.titles(e)}</title>${drakeHead(x, y, DRAKE_W, c, rim)}</g>` });
     });
+  }
+  return out;
+}
+
+// ---------- the pits ----------
+
+/** On the river: the top pit (grubs, then herald, then baron) up-left, the drake pit down-right. */
+const PIT_TOP: Pt = [30, 30], PIT_BOT: Pt = [70, 70];
+const BARON_COL = '#9A6AD8', HERALD_COL = '#4FB6C2', GRUB_COL = '#B58AE6';
+/** When each top-pit monster comes and goes (patch 26.x; the service's RULES). */
+const GRUBS_AT = 8 * 60, GRUBS_GONE = 14 * 60 + 45, HERALD_AT = 15 * 60, HERALD_GONE = 19 * 60 + 45, BARON_AT = 20 * 60;
+
+function plinth(x: number, y: number): string {
+  return cylinder(x, y, 4, 0.9, '#2A2F38', '#16191F', 'stroke="rgba(10,12,16,.65)" stroke-width="0.3"');
+}
+
+/**
+ * The pits: the monster standing there when it is up, an empty pit with a countdown when it is not
+ * (drakes from the feed and the respawn rules; the top pit by the clock, or the broadcast's objective box).
+ */
+function pits(s: MatchState, clock: number | null, timing: boolean, o: NonNullable<MapOptions['pits']>): Piece[] {
+  const out: Piece[] = [];
+  const at = (pt: Pt) => P(pt);
+  const wait = (pt: Pt, until: number) => {
+    const rest = timing ? left(until, clock) : null;
+    if (rest !== null) out.push(tag(pt, 3.2, fmtClock(rest), null));
+  };
+  if (o.dragon) {
+    const [x, y] = at(PIT_BOT);
+    const d = s.nextDragon;
+    const up = d !== null && clock !== null && clock >= d.at;
+    const col = d?.elder ? ELEMENT_COLOUR.elder : d?.element ? ELEMENT_COLOUR[d.element] : '#8B93A1';
+    const name = d?.elder ? o.titles('elder') : d?.element ? o.titles(d.element) : '';
+    out.push({ y, svg: `<g class="pit">${name ? `<title>${name}</title>` : ''}${plinth(x, y)}${up ? drakeHead(x, y - 0.9, DRAKE_W, col, RIM) : ''}</g>` });
+    if (d && !up) wait(PIT_BOT, d.at);
+  }
+  if (o.top && clock !== null) {
+    const [x, y] = at(PIT_TOP);
+    const grubsLeft = 3 - ((s.voidgrubs?.B ?? 0) + (s.voidgrubs?.R ?? 0));
+    const kind = s.pitNext ?? (clock < GRUBS_GONE ? 'grubs' : clock < HERALD_GONE ? 'herald' : 'baron');
+    let body = '', title = o.titles(kind), until: number | null = null;
+    if (kind === 'grubs') {
+      if (clock < GRUBS_AT) until = GRUBS_AT;
+      else if (grubsLeft > 0) body = Array.from({ length: grubsLeft }, (_, i) => cylinder(x + (i - (grubsLeft - 1) / 2) * 2.7, y - 0.9, 1.25, 1.3, GRUB_COL, shade(GRUB_COL, 0.55), RIM)).join('');
+    } else if (kind === 'herald') {
+      const gone = s.herald?.status === 'taken' || s.herald?.status === 'taken_or_despawned';
+      if (clock < HERALD_AT) until = HERALD_AT;
+      else if (!gone) body = drakeHead(x, y - 0.9, DRAKE_W, HERALD_COL, RIM);
+    } else {
+      const due = s.nextBaron?.at ?? BARON_AT;
+      if (clock < due) until = due;
+      else body = drakeHead(x, y - 0.9, DRAKE_W * 1.15, BARON_COL, RIM);
+    }
+    out.push({ y, svg: `<g class="pit"><title>${title}</title>${plinth(x, y)}${body}</g>` });
+    if (until !== null) wait(PIT_TOP, until);
   }
   return out;
 }
@@ -178,13 +243,14 @@ function ground(): string {
   const corner = (pts: Pt[]) => pts.map((p) => P(p).map(n).join(',')).join(' ');
   const [, y0] = P([0, 0]), [, y1] = P([0, 100]);
   const lanes = [[[7, 86], [7, 7], [86, 7]], [[14, 93], [93, 93], [93, 14]], [[16, 84], [84, 16]]] as Pt[][];
-  const base = (t: Team) => { const [x, y] = P(nexusAt(t)); return `<ellipse cx="${x}" cy="${n(y)}" rx="17" ry="${n(17 * K)}" fill="${TEAM_HEX[t]}" fill-opacity=".09"/>`; };
-  const board = `x="0.5" y="${n(y0)}" width="101" height="${n(y1 - y0 + 0.5)}" rx="6" ry="${n(6 * K)}"`;
+  // The base tint reaches past the inhibitor turrets (about 22 from the nexus), so the base reads as the area they guard (2026-10-19).
+  const base = (t: Team) => { const [x, y] = P(nexusAt(t)); return `<ellipse cx="${x}" cy="${n(y)}" rx="${n(26 * S)}" ry="${n(26 * S * K)}" fill="${TEAM_HEX[t]}" fill-opacity=".09"/>`; };
+  const board = `x="0.5" y="${n(y0)}" width="${n(101 * S)}" height="${n(y1 - y0 + 0.5)}" rx="6" ry="${n(6 * K)}"`;
   // The base tints stay on the board.
   return `<defs><clipPath id="lolmap-board"><rect ${board}/></clipPath></defs>`
-    + `<rect x="0.5" y="${n(y1)}" width="101" height="${SLAB + 0.5}" rx="2" fill="#121418"/>`
+    + `<rect x="0.5" y="${n(y1)}" width="${n(101 * S)}" height="${SLAB + 0.5}" rx="2" fill="#121418"/>`
     + `<rect ${board} fill="var(--board)" stroke="var(--border)" stroke-width="0.5"/>`
-    + `<g clip-path="url(#lolmap-board)"><polyline points="${corner([[16, 16], [84, 84]])}" fill="none" stroke="var(--river)" stroke-width="6" stroke-linecap="round"/>`
+    + `<g clip-path="url(#lolmap-board)"><polyline points="${corner([[16, 16], [84, 84]])}" fill="none" stroke="var(--river)" stroke-width="${n(6 * S)}" stroke-linecap="round"/>`
     + `${base('B')}${base('R')}</g>`
     + lanes.map((l) => `<polyline points="${corner(l)}" fill="none" stroke="var(--lane)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`).join('');
 }
@@ -218,6 +284,7 @@ export function mapSvg(s: MatchState, clock: number | null, o: MapOptions): stri
     if (rest !== null) pieces.push(tag(nexusAt(t), 8.4, fmtClock(rest), t));
   }
   if (o.drakes) pieces.push(...drakeCoins(s, o.drakes));
+  if (o.pits) pieces.push(...pits(s, clock, timing, o.pits));
   if (o.teams) {
     // On the front ledge: blue's code at the left end, red's at the right, each beside its drakes.
     const [bx, by] = P([1.5, 105.5]), [rx, ry] = P([100.5, 105.5]);
@@ -230,7 +297,7 @@ export function mapSvg(s: MatchState, clock: number | null, o: MapOptions): stri
   for (const t of TEAMS) {
     const u = s.teams[t].unnamedLost;
     if (!s.towersKnown || u <= 0 || o.noUnnamed) continue;
-    const [x, y, anchor] = t === 'B' ? [3, VIEW_H - 1.5, 'start'] : [99, 5, 'end'];
+    const [x, y, anchor] = t === 'B' ? [3, VIEW_H - 1.5, 'start'] : [99 * S, 5, 'end'];
     notes.push(`<text class="unnamed" x="${x}" y="${n(y)}" text-anchor="${anchor}" font-size="4.6"><title>${o.unnamedTitle}</title>${o.unnamed(u)}</text>`);
   }
   const title = s.towersKnown ? '' : `<title>${o.unknownTitle}</title>`;

@@ -42,5 +42,5 @@ export const panelLabel = (name: PanelName) => `panel-${name}`;
 
 /** Logical sizes the windows open at (UI_SPEC §6). The user can resize; the window remembers. */
 export const PANEL_SIZE: Record<PanelName, { w: number; h: number }> = {
-  minimap: { w: 220, h: 176 }, draftGame: { w: 300, h: 100 }, players: { w: 320, h: 150 }, data: { w: 340, h: 360 },
+  minimap: { w: 188, h: 150 }, draftGame: { w: 300, h: 100 }, players: { w: 320, h: 150 }, data: { w: 340, h: 360 },
 };
