@@ -5,6 +5,17 @@
 export interface Rect { x: number; y: number; w: number; h: number }
 export interface Target extends Rect { visible: boolean; minimized: boolean }
 
+/**
+ * When a moved window counts as let go: no move for 150 ms and the left button up. A pause mid-drag with
+ * the button still down is not a let-go (snapping inside the system's drag loop made the window jump);
+ * look again every 50 ms until the button is up (batch 3 review, C1).
+ */
+export const LET_GO_MS = 150, RECHECK_MS = 50;
+export function letGo(sinceMove: number, buttonDown: boolean): 'wait' | 'recheck' | 'snap' {
+  if (sinceMove < LET_GO_MS) return 'wait';
+  return buttonDown ? 'recheck' : 'snap';
+}
+
 /** Logical pixels: how near counts, and the gap between two windows side by side (as the notices stack). */
 export const SNAP_PX = 12;
 export const GAP_PX = 6;

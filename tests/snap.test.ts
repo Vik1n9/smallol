@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { snap, type Rect, type Target } from '../src/ui/snap.ts';
+import { letGo, snap, type Rect, type Target } from '../src/ui/snap.ts';
 
 const AREA: Rect = { x: 0, y: 0, w: 1920, h: 1040 };
 const win = (x: number, y: number, w = 300, h = 100): Rect => ({ x, y, w, h });
@@ -33,6 +33,13 @@ describe('edge snapping (batch 3 §5)', () => {
     // At 150%, the gap is 9 physical pixels.
     const area150: Rect = { x: 0, y: 0, w: 2880, h: 1560 };
     expect(snap(win(812, 310), [o], area150, 1.5).x).toBe(809);
+  });
+
+  it('a pause of 150 ms or more with the button still down is not a let-go; the button up is (C1)', () => {
+    expect(letGo(100, false)).toBe('wait');
+    expect(letGo(150, true)).toBe('recheck');
+    expect(letGo(400, true)).toBe('recheck');
+    expect(letGo(150, false)).toBe('snap');
   });
 
   it('Alt held, or the bar expanded: no snapping', () => {

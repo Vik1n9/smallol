@@ -49,29 +49,52 @@ async fn set_hotkeys(app: tauri::AppHandle, on: bool) -> Vec<(String, bool)> {
 /// "app" (a full-screen Store app), "away" (screen saver, locked) or "ok". Elsewhere always "ok".
 #[tauri::command]
 fn notify_state() -> &'static str {
+    state_name(query_notify_state())
+}
+
+/// The raw QUERY_USER_NOTIFICATION_STATE (5, "accepts notifications", when it cannot be asked).
+fn query_notify_state() -> i32 {
     #[cfg(windows)]
     {
-        use windows_sys::Win32::UI::Shell::{
-            SHQueryUserNotificationState, QUNS_APP, QUNS_BUSY, QUNS_NOT_PRESENT, QUNS_PRESENTATION_MODE, QUNS_QUIET_TIME,
-            QUNS_RUNNING_D3D_FULL_SCREEN,
-        };
+        use windows_sys::Win32::UI::Shell::SHQueryUserNotificationState;
         let mut state = 0;
         if unsafe { SHQueryUserNotificationState(&mut state) } != 0 {
-            return "ok";
+            return 5;
         }
-        match state {
-            QUNS_BUSY => "busy",
-            QUNS_RUNNING_D3D_FULL_SCREEN => "d3d",
-            QUNS_PRESENTATION_MODE => "presentation",
-            QUNS_QUIET_TIME => "quiet",
-            QUNS_APP => "app",
-            QUNS_NOT_PRESENT => "away",
-            _ => "ok",
-        }
+        state
     }
     #[cfg(not(windows))]
     {
-        "ok"
+        5
+    }
+}
+
+/// Windows' numbers: 1 not present, 2 busy, 3 D3D full screen, 4 presentation, 5 accepts
+/// notifications, 6 quiet time, 7 Store app. Anything else counts as accepting.
+fn state_name(n: i32) -> &'static str {
+    match n {
+        1 => "away",
+        2 => "busy",
+        3 => "d3d",
+        4 => "presentation",
+        6 => "quiet",
+        7 => "app",
+        _ => "ok",
+    }
+}
+
+/// Whether the left mouse button is down: a window paused mid-drag is not let go yet (batch 3 C1).
+/// Reads the button's state only.
+#[tauri::command]
+fn left_button_down() -> bool {
+    #[cfg(windows)]
+    {
+        use windows_sys::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_LBUTTON};
+        (unsafe { GetAsyncKeyState(VK_LBUTTON as i32) } as u16 & 0x8000) != 0
+    }
+    #[cfg(not(windows))]
+    {
+        false
     }
 }
 
@@ -290,7 +313,7 @@ pub fn run() {
                 window.app_handle().exit(0);
             }
         })
-        .invoke_handler(tauri::generate_handler![launch_args, config_info, read_settings, write_settings, set_bounds, read_history, write_history, append_anim_log, set_hotkeys, notify_state, alt_down, open_watch_url, dev_log])
+        .invoke_handler(tauri::generate_handler![launch_args, config_info, read_settings, write_settings, set_bounds, read_history, write_history, append_anim_log, set_hotkeys, notify_state, alt_down, open_watch_url, dev_log, left_button_down])
         .setup(move |app| {
             let toggle = MenuItem::with_id(app, "toggle", "Show / hide", true, None::<&str>)?;
             let lowkey = MenuItem::with_id(app, "lowkey", "Low-key", true, None::<&str>)?;
@@ -350,6 +373,13 @@ pub fn run() {
                     .build(app)?;
             }
 
+            // In the dev log: what Windows really answers on this machine (batch 3 C3).
+            #[cfg(debug_assertions)]
+            {
+                let n = query_notify_state();
+                eprintln!("notify state at start: {n} = {}", state_name(n));
+            }
+
             // Shown once the web view has had a moment to draw, so it never flashes blank.
             if let Some(window) = app.get_webview_window("main") {
                 std::thread::spawn(move || {
@@ -361,4 +391,35 @@ pub fn run() {
         })
         .run(tauri::generate_context!())
         .expect("error while running DesktopLOL");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The numbers are Windows' own (shellapi.h); the names are what the web view expects.
+    #[test]
+    fn notify_states() {
+        #[cfg(windows)]
+        {
+            use windows_sys::Win32::UI::Shell::*;
+            assert_eq!(
+                [QUNS_NOT_PRESENT, QUNS_BUSY, QUNS_RUNNING_D3D_FULL_SCREEN, QUNS_PRESENTATION_MODE, QUNS_ACCEPTS_NOTIFICATIONS, QUNS_QUIET_TIME, QUNS_APP],
+                [1, 2, 3, 4, 5, 6, 7]
+            );
+        }
+        let names: Vec<_> = (1..=7).map(state_name).collect();
+        assert_eq!(names, ["away", "busy", "d3d", "presentation", "ok", "quiet", "app"]);
+        assert_eq!(state_name(0), "ok");
+    }
+
+    #[test]
+    fn watch_urls() {
+        assert!(watch_url_ok("https://www.youtube.com/@lolesports/live").is_some());
+        assert!(watch_url_ok("http://example.com/").is_some());
+        for bad in ["", "ftp://example.com/", "javascript:alert(1)", "file:///C:/x", "https://u:p@example.com/"] {
+            assert!(watch_url_ok(bad).is_none(), "{bad}");
+        }
+        assert!(watch_url_ok(&format!("https://example.com/{}", "a".repeat(2048))).is_none());
+    }
 }

@@ -67,6 +67,9 @@ function teamsTab(f: PanelFrame, c: ViewCtx): string {
 }
 
 let lastHtml = '';
+let scrolled: string | null = null;
+const f2scroll = (f: PanelFrame) => (f.dataTab === 'settings' && f.scrollTo && /^[a-z]+$/.test(f.scrollTo) ? f.scrollTo : null);
+
 function draw(): void {
   if (!frame) return;
   document.documentElement.lang = frame.lang;
@@ -83,6 +86,9 @@ function draw(): void {
   lastHtml = html;
   const again = root.querySelector('.dbody');
   if (again) again.scrollTop = top;
+  // Checking aid (--scroll): once, to the named section.
+  const sec = f2scroll(frame);
+  if (sec && sec !== scrolled) { root.querySelector(`[data-sec="${sec}"]`)?.scrollIntoView({ block: 'start' }); scrolled = sec; }
 }
 
 // Timers move every second (the minimap's respawn tags); the data window's countdowns each minute.

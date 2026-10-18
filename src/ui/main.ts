@@ -12,8 +12,10 @@
 //   --anim-log=<file>   every animation's start, end and cancel (bar and notices) into that file in the config folder
 //   --press=hide|lowkey[:seconds],...   run what a hotkey runs, at those seconds after start (else one every 3 s; no keys sent)
 //   --notify-state=busy|d3d|presentation|quiet|app|away|ok[:seconds],...   stand in for Windows' answer
-//   --drag=main|minimap|draftGame|players|data,<x>,<y>[,alt]   move that window there (logical px) and let it go
-//   --inject=<event kind>[:seconds],...   feed that event (team blue) at those seconds, as if the game made it
+//   --drag=main|minimap|draftGame|players|data,<x>,<y>[,alt][,held]   move that window there (logical px) and let
+//                  it go (held: as if the button stayed down for a second first)
+//   --scroll=general   with --tab=settings: the settings tab scrolled to that section
+//   --inject=<event kind>[+kind][:seconds],...   feed those events (team blue) in one step at those seconds, as if the game made them
 //   --click=watch|body[:seconds],...   click the newest card's "▶ 看" or its body in the notification window
 //   --devlog       each step's notices, quiet state and tones into the dev log
 //   --no-tray      (read by the shell too) no tray icon: hiding everything is refused unless a hotkey can undo it
@@ -52,7 +54,7 @@ import { fmtStart } from './schedule-views.ts';
 import { modeLabel } from './settings-view.ts';
 import { AutoLow, detectionMode, OS_STATES, type OsState } from './autolow.ts';
 import { playTone } from './sound.ts';
-import { snap, type Target } from './snap.ts';
+import { LET_GO_MS, letGo, RECHECK_MS, snap, type Target } from './snap.ts';
 import { esc, fmtGold } from './views.ts';
 
 const inTauri = '__TAURI_INTERNALS__' in window;
@@ -357,6 +359,8 @@ let profile: { team: string | null; player: string | null } = { team: null, play
 let pickedMatch: string | null = null;
 let endpointError = false;
 let watchError: ReturnType<typeof watchUrlProblem> = null;
+/** --scroll: a settings section for the data window to scroll to (screenshots without scrolling by hand). */
+let scrollTo: string | null = null;
 /** Hotkeys by name and whether they are registered (src-tauri set_hotkeys). */
 let hotkeyState: Record<string, boolean> = {};
 const HOTKEY_LABEL: Record<string, string> = { hide: 'Ctrl+Alt+Shift+H', lowkey: 'Ctrl+Alt+Shift+Q' };
@@ -364,6 +368,7 @@ const panels = inTauri ? new Panels((n) => cfg().sizes[`size-panel-${n}`] ?? PAN
 function sendPanels(): void {
   if (!panels) return;
   const f: PanelFrame = { state, receivedAt, settings: cfg(), lang, conn, sample, schedule, history, roster, pickedMatch, dataTab, profile, endpointError,
+    scrollTo,
     settingsExtra: { lowNow: lowKeyOn(), hotkeyBusy: cfg().hotkeys ? Object.entries(hotkeyState).filter(([, on]) => !on).map(([k]) => HOTKEY_LABEL[k] ?? k) : [], watchError } };
   panels.send(f);
 }
@@ -530,7 +535,8 @@ function render(): void {
   const clock = clockNow(state, receivedAt, Date.now(), cfg().tickClock);
   const low = lowKeyOn();
   document.body.classList.toggle('low', low);
-  bar.title = low ? B.b3.lowKeyTip : '';
+  // "雙擊恢復 · Ctrl+Alt+Shift+Q" while that hotkey works; the system decides the delay (review: kept as title).
+  bar.title = low ? (cfg().hotkeys && hotkeyState.lowkey ? `${B.b3.lowKeyTip} · ${HOTKEY_LABEL.lowkey}` : B.b3.lowKeyTip) : '';
   if (low) {
     let el = bar.querySelector<HTMLElement>('.lowrow');
     if (!el) { el = document.createElement('div'); el.className = 'lowrow'; bar.appendChild(el); }
@@ -744,14 +750,14 @@ async function start(): Promise<void> {
   const q = new URLSearchParams(location.search);
   if (inTauri) {
     for (const a of await invoke<string[]>('launch_args').catch(() => [] as string[])) {
-      const m = /^--(set|sample|open|tab|team|player|match|press|notify-state|drag|inject|click|anim-log)=(.+)$/.exec(a);
+      const m = /^--(set|sample|open|tab|team|player|match|press|notify-state|drag|inject|click|anim-log|scroll)=(.+)$/.exec(a);
       if (m) q.set(m[1]!, m[2]!);
       for (const flag of ['sample', 'demo', 'no-tray', 'devlog', 'pause']) if (a === `--${flag}`) q.set(flag, '1');
     }
   }
   flags.sample = q.has('sample');
   flags.demo = q.has('demo');
-  const checking = ['sample', 'demo', 'set', 'open', 'tab', 'team', 'player', 'match', 'anim-log', 'press', 'notify-state', 'no-tray', 'drag', 'inject', 'click', 'devlog', 'pause'].some((k) => q.has(k));
+  const checking = ['sample', 'demo', 'set', 'open', 'tab', 'team', 'player', 'match', 'anim-log', 'press', 'notify-state', 'no-tray', 'drag', 'inject', 'click', 'devlog', 'pause', 'scroll'].some((k) => q.has(k));
   settings = await SettingsStore.open(backend, () => DEFAULTS);
   settings.persist = !checking;
   for (const pair of (q.get('set') ?? '').split(',').filter(Boolean)) {
@@ -788,8 +794,11 @@ async function start(): Promise<void> {
   void applyHotkeys();
   devlog = q.has('devlog');
   for (const [i, x] of (q.get('inject') ?? '').split(',').filter(Boolean).entries()) {
-    const [kind, sec] = x.split(':') as [EventKind, string | undefined];
-    if (EVENT_KINDS.includes(kind)) setTimeout(() => onEvents([{ kind, team: 'B', victim: 'R', at: state.clock ?? 600, n: 1 } as GameEvent], state), (sec ? Number(sec) : 6 + i * 4) * 1000);
+    // "tower+drake:20": both in one step.
+    const [kinds, sec] = x.split(':') as [string, string | undefined];
+    const evs = kinds.split('+').filter((k): k is EventKind => EVENT_KINDS.includes(k as EventKind))
+      .map((kind, j) => ({ kind, team: 'B', victim: 'R', at: state.clock ?? 600, n: 1, lane: (['top', 'mid', 'bot'] as const)[j % 3], tower: 'outer', element: 'infernal' }) as GameEvent);
+    if (evs.length) setTimeout(() => onEvents(evs, state), (sec ? Number(sec) : 6 + i * 4) * 1000);
   }
   for (const [i, x] of (q.get('click') ?? '').split(',').filter(Boolean).entries()) {
     const [what, sec] = x.split(':');
@@ -797,7 +806,8 @@ async function start(): Promise<void> {
   }
   if (q.has('pause')) pausedUntil = Date.now() + 30 * 60_000;
   const drag = (q.get('drag') ?? '').split(',');
-  if (drag.length >= 3) setTimeout(() => void dragAid(drag[0]!, Number(drag[1]), Number(drag[2]), drag[3] === 'alt'), 5000);
+  if (drag.length >= 3) setTimeout(() => void dragAid(drag[0]!, Number(drag[1]), Number(drag[2]), drag.includes('alt'), drag.includes('held')), 5000);
+  scrollTo = q.get('scroll');
   (q.get('press') ?? '').split(',').forEach((x, i) => {
     const [k, sec] = x.split(':');
     if (k === 'hide' || k === 'lowkey') setTimeout(() => onHotkey(k), sec ? Number(sec) * 1000 : 4000 + i * 3000);
@@ -896,13 +906,27 @@ async function watchMoves(): Promise<void> {
     watched.set(label, () => undefined);
     watched.set(label, await w.onMoved(() => {
       if (Date.now() < (selfMoveUntil.get(label) ?? 0)) return;
-      // Let go: 150 ms after the last move event (snapping during the system's drag loop fights it).
-      clearTimeout(snapTimers.get(label));
-      snapTimers.set(label, setTimeout(() => void snapNow(label), 150));
+      afterMove(label);
     }));
   }
 }
 if (win) setInterval(() => void watchMoves(), 2000);
+
+/** --drag held: the left button counts as down until then. */
+let heldUntil = 0;
+const buttonDown = async () => (Date.now() < heldUntil ? true : await invoke<boolean>('left_button_down').catch(() => false));
+
+/** A window moved: snap once it is let go (no move for 150 ms and the button up). */
+function afterMove(label: string, alt?: boolean): void {
+  clearTimeout(snapTimers.get(label));
+  const movedAt = Date.now();
+  const check = async () => {
+    const d = letGo(Date.now() - movedAt, await buttonDown());
+    if (d === 'snap') void snapNow(label, alt);
+    else snapTimers.set(label, setTimeout(() => void check(), d === 'recheck' ? RECHECK_MS : LET_GO_MS));
+  };
+  snapTimers.set(label, setTimeout(() => void check(), LET_GO_MS));
+}
 
 const rectOf = async (w: NonNullable<Awaited<ReturnType<typeof windowOf>>>) => {
   const [p, z] = await Promise.all([w.outerPosition(), w.outerSize()]);
@@ -934,13 +958,15 @@ async function snapNow(label: string, alt?: boolean): Promise<void> {
 }
 
 /** --drag: put a window somewhere (logical px) as if the user had dragged it there, and let it go. */
-async function dragAid(name: string, x: number, y: number, alt: boolean): Promise<void> {
+async function dragAid(name: string, x: number, y: number, alt: boolean, held: boolean): Promise<void> {
   const label = name === 'main' ? 'main' : panelLabel(name as PanelName);
   const w = await windowOf(label);
   if (!w) return;
-  selfMoveUntil.set(label, Date.now() + 400);
+  if (held) heldUntil = Date.now() + 1000;
+  selfMoveUntil.set(label, Date.now() + 100);
   await w.setPosition(new LogicalPosition(x, y));
-  setTimeout(() => void snapNow(label, alt), 450);
+  // The same path as a real move: let go once 150 ms have passed and the button is up.
+  afterMove(label, alt);
 }
 
 /**

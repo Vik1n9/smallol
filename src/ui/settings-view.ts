@@ -48,7 +48,7 @@ export function settingsView(cfg: Settings, S: Strings, B: BarStrings, endpointE
     <p class="note">${esc(x.watchError ? b.watchBad[x.watchError] : b.watchNote)}</p>
     <h3>${esc(B.sections.panels)}</h3>
     <div class="chips">${(['minimap', 'draftGame', 'players'] as const).map((p) => check(`panels.${p}`, cfg.panels[p], B.panel[p])).join('')}</div>
-    <h3>${esc(B.sections.general)}</h3>
+    <h3 data-sec="general">${esc(B.sections.general)}</h3>
     <div class="srow"><span class="k">${esc(t.language)}</span>${seg('language', cfg.language, [['auto', t.auto], ['zh-Hant', '中文'], ['en', 'English']])}</div>
     <div class="srow"><span class="k">${esc(t.background)}</span>${seg('background', cfg.background, [['solid', t.solid], ['semi', t.semi], ['clear', t.clear]])}</div>
     <div class="srow">${check('spoilerFree', cfg.spoilerFree, t.spoilerFree)}</div>

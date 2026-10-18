@@ -29,6 +29,8 @@ export interface PanelFrame {
   /** The team or player open in the data window's teams tab. */
   profile: ProfileNav;
   endpointError: boolean;
+  /** Checking aid (--scroll): the settings section to scroll to. */
+  scrollTo: string | null;
   /** Low-key now, hotkeys another program holds, a refused stream address (the settings tab). */
   settingsExtra: SettingsExtra;
 }
