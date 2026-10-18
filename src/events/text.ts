@@ -131,15 +131,28 @@ function buffLine(e: GameEvent, code: (t: Team) => string, zh: boolean): string 
   return parts.length ? parts.join(' · ') : undefined;
 }
 
-/** Several players reaching the same milestone close together (UI_SPEC R3, R4): "升 6 級 · MVK 中、FUR 上 +2". */
+/**
+ * Several players reaching the same milestone close together (UI_SPEC R3, R4), grouped by team with
+ * every position: "首件成裝 · MVK 野中下 · FUR 上輔" (batch 2b review: a "+N" hid that the rest were
+ * the other team's). At most two codes and ten positions, so no "+N" is needed.
+ */
+const ROLE_ORDER = ['top', 'jungle', 'mid', 'bot', 'support'];
+const ROLE_EN3: Record<string, string> = { top: 'Top', jungle: 'Jng', mid: 'Mid', bot: 'Bot', support: 'Sup' };
 export function milestoneText(kind: 'level6' | 'firstLegendary', who: { team: string; role: string | null; player: string }[], lang: Lang): string {
   const zh = lang === 'zh-Hant';
   const S = STRINGS[lang];
-  const name = (w: { team: string; role: string | null; player: string }) => `${w.team} ${w.role && w.role in S.role ? S.role[w.role as keyof typeof S.role] : w.player}`;
   const head = kind === 'level6' ? (zh ? '升 6 級' : 'Level 6') : (zh ? '首件成裝' : 'First item');
-  const shown = who.slice(0, 2).map(name).join(zh ? '、' : ', ');
-  const more = who.length > 2 ? ` +${who.length - 2}` : '';
-  return `${head} · ${shown}${more}`;
+  const teams: string[] = [];
+  for (const w of who) if (!teams.includes(w.team)) teams.push(w.team);
+  const label = (w: { role: string | null; player: string }) => (w.role && w.role in S.role ? (zh ? S.role[w.role as keyof typeof S.role] : ROLE_EN3[w.role]!) : w.player);
+  const rank = (r: string | null) => (r ? ROLE_ORDER.indexOf(r) : 9);
+  const groups = teams.map((t) => {
+    const ws = who.filter((w) => w.team === t).sort((a, b) => rank(a.role) - rank(b.role));
+    // Single characters run together in Chinese ("野中下"); names (no position known) and English words take spaces.
+    const parts = ws.map(label);
+    return `${t} ${zh && ws.every((w) => w.role && w.role in S.role) ? parts.join('') : parts.join(' ')}`;
+  });
+  return [head, ...groups].join(' · ');
 }
 
 /** The tower streak (UI_SPEC R1): "FUR 連推 3 塔 · MVK 中路高地塔". */

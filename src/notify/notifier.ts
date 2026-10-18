@@ -9,7 +9,7 @@ import { currentMonitor } from '@tauri-apps/api/window';
 import type { Notice } from '../events/dispatch.ts';
 
 const LABEL = 'notify';
-const WIDTH = 340, MARGIN = 12, MAX_H = 260;
+const WIDTH = 300, MARGIN = 12, MAX_H = 260;
 
 export class Notifier {
   private ready: Promise<void> | null = null;

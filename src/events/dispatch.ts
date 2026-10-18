@@ -42,6 +42,8 @@ const RANK: Record<Level, number> = { major: 3, important: 2, normal: 1 };
 export const STREAK_GAP_MS = 15_000, STREAK_LIFE_MS = 20_000;
 /** Safety valve: at most this many cards a minute; more become strips. */
 export const CARDS_PER_MIN = 3;
+/** My team's raised strips go out only while fewer strips than this went out in the last minute; the rest stay in the log (batch 2b review). */
+export const STRIPS_PER_MIN = 4;
 
 const fmt = (sec: number | null) => (sec === null ? null : `${Math.floor(Math.max(0, sec) / 60)}:${String(Math.floor(Math.max(0, sec)) % 60).padStart(2, '0')}`);
 
@@ -54,6 +56,10 @@ export class Dispatcher {
   private streaks = new Map<Team, Streak>();
   private gatherings = new Map<EventKind, Gathering>();
   private cardTimes: number[] = [];
+  /** Strips sent in the last minute, by id (an update in place does not count again). */
+  private stripTimes: { id: string; t: number }[] = [];
+  /** My team's events kept in the log by the strip limit, for replay numbers. */
+  held = 0;
   private seq = 0;
 
   /** A new game: streaks do not carry over. */
@@ -70,7 +76,9 @@ export class Dispatcher {
       if (ch === 'off') continue;
       // My team: an event it is part of goes one step up (log → strip → card).
       const mine = !!cfg.myTeam && ((e.team && code(e.team) === cfg.myTeam) || (e.victim && code(e.victim) === cfg.myTeam));
+      const base = ch;
       if (mine) ch = raise(ch, LEVEL[e.kind]);
+      const raised = ch !== base;
       // Milestones only for my team, when the user narrowed them (custom); the log still has them.
       if (cfg.milestones === 'mine' && MILESTONE_MS[e.kind] && !mine && ch !== 'log') ch = 'log';
       const level = LEVEL[e.kind];
@@ -106,7 +114,12 @@ export class Dispatcher {
         if (s && now - s.lastAt <= STREAK_GAP_MS && s.n > 1) sub = [lang === 'zh-Hant' ? `已連推 ${s.n} 塔` : `${s.n} turrets down`, sub].filter(Boolean).join(' · ');
       }
       offerLine({ text: title, level, team: e.team, at: e.at });
+      if (raised && ch === 'strip' && !paused) {
+        this.stripTimes = this.stripTimes.filter((x) => now - x.t < 60_000);
+        if (!this.stripTimes.some((x) => x.id === id) && this.stripTimes.length >= STRIPS_PER_MIN) { ch = 'log'; this.held++; }
+      }
       if (ch === 'log' || ch === 'off' || paused) continue;
+      if (ch === 'strip') this.sentStrip(id, now);
       const n: Notice = { id, kind: ch, title, sub, team: side, time: fmt(e.at), level, tall: e.kind === 'bpDone' };
       if (ch === 'card') cards.push(n); else notices.push(n);
     }
@@ -116,10 +129,14 @@ export class Dispatcher {
       const head = cards[0]!;
       const card: Notice = cards.length > 1 && !head.tall ? { ...head, sub: head.sub ?? cards[1]!.title } : head;
       this.cardTimes = this.cardTimes.filter((t) => now - t < 60_000);
-      if (this.cardTimes.length >= CARDS_PER_MIN) notices.push({ ...card, kind: 'strip', sub: undefined, tall: false });
+      if (this.cardTimes.length >= CARDS_PER_MIN) { notices.push({ ...card, kind: 'strip', sub: undefined, tall: false }); this.sentStrip(card.id, now); }
       else { this.cardTimes.push(now); notices.push(card); }
     }
     return { line, notices };
+  }
+
+  private sentStrip(id: string, now: number): void {
+    if (!this.stripTimes.some((x) => x.id === id)) this.stripTimes.push({ id, t: now });
   }
 }
 

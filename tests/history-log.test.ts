@@ -13,6 +13,12 @@ describe('log history', () => {
     expect([...new Set(list.map((x) => x.game))]).toEqual(['g3', 'g4', 'g5', 'g6', 'g7']);
   });
 
+  it('keeps the same event once (a replayed game, or a restart mid-game)', () => {
+    const nexus = e('g', 'FUR 推倒 MVK 主堡塔', 'normal', 'KC', 2185);
+    expect(addEntries(addEntries([nexus], [{ ...nexus, t: 9 }]), [{ ...nexus, t: 10 }])).toHaveLength(1);
+    expect(addEntries([e('g', 'BP', 'normal', null, null)], [e('g', 'BP', 'normal', null, null)])).toHaveLength(2);
+  });
+
   it('filters by importance or team; newest next to the bar either way', () => {
     const list = [e('g', 'KC 推倒 MVK 中路外塔', 'normal', 'KC', 700), e('g', 'MVK 拿下巴龍', 'major', 'MVK', 1500)];
     const down = historyView(list, 'all', B, true);
@@ -33,6 +39,14 @@ describe('log history', () => {
     const up = historyView(list, 'all', B, false);
     expect(up.indexOf('拿下巴龍')).toBeLessThan(up.indexOf('推倒 MVK 中路外塔'));
     expect(up.indexOf('推倒 MVK 中路外塔')).toBeLessThan(up.indexOf('拿下火龍'));
+  });
+
+  it('rows without a game time (draft, start) come before the clock, even when logged late', () => {
+    const list = [e('g', 'MVK 單殺', 'normal', 'MVK', 2156, 1), e('g', '第 3 局開打', 'major', null, null, 5), e('g', 'FUR 摧毀 MVK 下路水晶', 'important', 'FUR', 2165, 2)];
+    const up = historyView(list, 'all', B, false);
+    // The subject column takes the leading code, so the rows read "單殺" and "摧毀 …".
+    expect(up.indexOf('第 3 局開打')).toBeLessThan(up.indexOf('>單殺'));
+    expect(up.indexOf('>單殺')).toBeLessThan(up.indexOf('摧毀'));
   });
 
   it('the subject column holds the code once; a death names the team that died; the bar line is not repeated (review H2)', () => {

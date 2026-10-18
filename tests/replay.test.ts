@@ -25,7 +25,7 @@ function run(mode: NotifyMode) {
   const seen = new Announced();
   const mem = new Memory();
   let prev: MatchState | null = null;
-  const perGame = new Map<string, { cards: number; strips: number; kinds: Record<string, number>; peakStrips: number; peakCards: number }>();
+  const perGame = new Map<string, { cards: number; strips: number; kinds: Record<string, number>; peakStrips: number; peakCards: number; held: number; mine: boolean }>();
   const shown: { t: number; kind: 'card' | 'strip'; id: string; game: string }[] = [];
   for (const r of rows) {
     const s = adapt(r);
@@ -33,9 +33,12 @@ function run(mode: NotifyMode) {
     const evs = [...deriveEvents(prev, s, seen), ...deriveMore(prev, s, mem)];
     if (prev?.status === 'in_game' && s.status === 'finished' && winnerOf(s) === null) unknownWinners++;
     const code = (x: Team) => s.series?.teams[x].code ?? x;
+    const heldBefore = d.held;
     const res = d.step(evs, t, { ...DEFAULTS, mode, myTeam: process.env.MYTEAM ?? null }, code, 'zh-Hant');
     const g = s.gameId ?? (s.series ? `${s.series.matchId}-${s.series.game}` : 'none');
-    const st = perGame.get(g) ?? { cards: 0, strips: 0, kinds: {}, peakStrips: 0, peakCards: 0 };
+    const st = perGame.get(g) ?? { cards: 0, strips: 0, kinds: {}, peakStrips: 0, peakCards: 0, held: 0, mine: false };
+    st.held += d.held - heldBefore;
+    if (process.env.MYTEAM && (code('B') === process.env.MYTEAM || code('R') === process.env.MYTEAM)) st.mine = true;
     for (const e of evs) st.kinds[e.kind] = (st.kinds[e.kind] ?? 0) + 1;
     for (const n of res.notices) {
       // An update of a strip already on screen (a tower streak) is not a new strip.
@@ -56,8 +59,10 @@ describe.skipIf(!rows.length)('replay of Day 2/3 (recorded state log)', () => {
       const games = [...run(mode)].filter(([g, st]) => g !== 'none' && (st.cards || st.strips || Object.keys(st.kinds).length));
       for (const [g, st] of games) console.log(mode, g.slice(-3), JSON.stringify(st));
       const real = games.filter(([, st]) => st.cards || st.strips > 1);
-      const q = (k: 'cards' | 'strips' | 'peakStrips' | 'peakCards') => { const v = real.map(([, st]) => st[k]).sort((a, b) => a - b); return `${v[0]}/${v[Math.floor(v.length / 2)]}/${v[v.length - 1]}`; };
-      console.log(`SUMMARY myTeam=${process.env.MYTEAM ?? '-'} ${mode}: games ${real.length} cards ${q('cards')} strips ${q('strips')} peak strips ${q('peakStrips')} peak cards ${q('peakCards')} (min/median/max)`);
+      const q = (k: 'cards' | 'strips' | 'peakStrips' | 'peakCards' | 'held', list = real) => { const v = list.map(([, st]) => st[k]).sort((a, b) => a - b); return `${v[0]}/${v[Math.floor(v.length / 2)]}/${v[v.length - 1]}`; };
+      const mine = real.filter(([, st]) => st.mine);
+      console.log(`SUMMARY myTeam=${process.env.MYTEAM ?? '-'} ${mode}: games ${real.length} cards ${q('cards')} strips ${q('strips')} peak strips ${q('peakStrips')} peak cards ${q('peakCards')} (min/median/max)`
+        + (mine.length ? ` | games with my team ${mine.length}: strips ${q('strips', mine)} peak strips ${q('peakStrips', mine)} held in the log ${q('held', mine)}` : ''));
       console.log(mode, 'games where the winner could not be told:', unknownWinners);
       unknownWinners = 0;
       expect(games.length).toBeGreaterThan(5);

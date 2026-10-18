@@ -30,9 +30,17 @@ export interface LogEntry {
 
 export const KEEP_GAMES = 5;
 
-/** Add entries, keeping the last five games. */
+/** Add entries, keeping the last five games. The same event twice (same game, game time and text: a game
+ * replayed, or the app restarted mid-game) is kept once. */
 export function addEntries(list: LogEntry[], add: LogEntry[]): LogEntry[] {
-  const all = [...list, ...add];
+  const seen = new Set<string>();
+  const all = [...list, ...add].filter((e) => {
+    if (e.at === null) return true;
+    const k = `${e.game}|${e.at}|${e.text}`;
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
   const games: string[] = [];
   for (let i = all.length - 1; i >= 0; i--) if (!games.includes(all[i]!.game)) games.push(all[i]!.game);
   const keep = new Set(games.slice(0, KEEP_GAMES));
@@ -55,8 +63,13 @@ export type HistFilter = 'all' | 'big' | string;
 /** A player's roster id for a name in the text, or null (no link: a name the roster does not know would be a dead link). */
 export type PlayerLink = (code: string, name: string) => string | null;
 
-/** Within a game, by game time; entries without one (the draft) by when they were logged (review H1). */
+/**
+ * Within a game, by game time (review H1). Entries without one (the draft, the start) come before the
+ * clock, among themselves by when they were logged: comparing them by log time against timed entries
+ * put a late-logged draft row between two plays.
+ */
 function byGameTime(a: LogEntry, b: LogEntry): number {
+  if ((a.at === null) !== (b.at === null)) return a.at === null ? -1 : 1;
   if (a.at !== null && b.at !== null && a.at !== b.at) return a.at - b.at;
   return a.t - b.t;
 }

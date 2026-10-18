@@ -8,6 +8,7 @@
 //   --set=path:value,...  change settings in memory (e.g. language:en,mode:companion)
 //   --open=history|mode|panels|ask   open that popover once started (screenshots without clicking)
 //   --tab=teams|schedule|series|settings, --team=GEN, --player=GEN:Canyon   open the data window there
+//   --match=<matchId>|next   with --tab=schedule: that match picked (both teams, their links)
 
 import { getCurrentWindow, currentMonitor } from '@tauri-apps/api/window';
 import { LogicalSize } from '@tauri-apps/api/dpi';
@@ -27,7 +28,7 @@ import { detectLang, STRINGS, type Lang } from '../i18n/index.ts';
 import { BAR_STRINGS, type DataTab } from '../i18n/bar.ts';
 import { DEFAULTS, normalize, PANELS, type NotifyBase, type PanelName, type Settings, type Size } from '../settings/schema.ts';
 import { SettingsStore, type SettingsBackend } from '../settings/store.ts';
-import { Announced, deriveEvents, dueReminders } from '../events/derive.ts';
+import { Announced, deriveEvents, dueReminders, winnerOf } from '../events/derive.ts';
 import { deriveMore, Memory } from '../events/derive2.ts';
 import { Dispatcher, replacesLine, type LineUpdate } from '../events/dispatch.ts';
 import { channelOf, EVENT_KINDS, LEVEL, type EventKind, type GameEvent, type Level } from '../events/kinds.ts';
@@ -420,8 +421,13 @@ function restingLine(clock: number | null): { html: string; key: string } {
     const text = B.picksSoFar(n);
     return { html: lineHtml({ text, at: null, team: null }), key: text };
   }
-  // Started mid-game: one baseline line, the game so far is not replayed.
   const code = codeOf(s);
+  // Started after the game ended: who won, not "in progress" (2026-10-18 check: "已進行 36:15" under "第 4 局準備中").
+  if (s.status === 'finished') {
+    const text = eventText({ kind: 'gameEnd', team: winnerOf(s) ?? undefined, at: null, n: s.series?.game ?? undefined } as GameEvent, code, lang, cfg().spoilerFree).title;
+    return { html: lineHtml({ text, at: null, team: null }), key: `end-${s.gameId}` };
+  }
+  // Started mid-game: one baseline line, the game so far is not replayed.
   const k = (t: Team) => s.teams[t].kills ?? 0;
   const text = `${B.inProgress(clock === null ? '–' : fmtClock(clock))} · ${code('B')} ${k('B')}:${k('R')} ${code('R')}`;
   return { html: lineHtml({ text, at: null, team: null }), key: `base-${s.gameId}` };
@@ -651,14 +657,14 @@ async function start(): Promise<void> {
   const q = new URLSearchParams(location.search);
   if (inTauri) {
     for (const a of await invoke<string[]>('launch_args').catch(() => [] as string[])) {
-      const m = /^--(set|sample|open|tab|team|player)=(.+)$/.exec(a);
+      const m = /^--(set|sample|open|tab|team|player|match)=(.+)$/.exec(a);
       if (m) q.set(m[1]!, m[2]!);
       for (const flag of ['sample', 'demo']) if (a === `--${flag}`) q.set(flag, '1');
     }
   }
   flags.sample = q.has('sample');
   flags.demo = q.has('demo');
-  const checking = ['sample', 'demo', 'set', 'open', 'tab', 'team', 'player'].some((k) => q.has(k));
+  const checking = ['sample', 'demo', 'set', 'open', 'tab', 'team', 'player', 'match'].some((k) => q.has(k));
   settings = await SettingsStore.open(backend, () => DEFAULTS);
   settings.persist = !checking;
   for (const pair of (q.get('set') ?? '').split(',').filter(Boolean)) {
@@ -687,6 +693,14 @@ async function start(): Promise<void> {
   const tab = q.get('tab') as DataTab | null, team = q.get('team'), player = q.get('player');
   if (player) { const [t, p] = player.split(/[|:]/) as [string, string]; profile = { team: t, player: p }; }
   else if (team) profile = { team, player: null };
+  const match = q.get('match');
+  // Once the schedule has come (it is polled), up to 20 s.
+  if (match) { let tries = 0; const pick = () => {
+    const ms = schedule?.matches ?? [];
+    if (!ms.length && ++tries < 40) { setTimeout(pick, 500); return; }
+    pickedMatch = match === 'next' ? (ms.find((m) => m.state !== 'completed' && m.teams.every((t) => t.code && t.code !== 'TBD')) ?? ms[0])?.matchId ?? null : match;
+    sendPanels();
+  }; setTimeout(pick, 3000); }
   if (tab || team || player) setTimeout(() => void openData(tab ?? 'teams'), 2500);
 }
 void start();

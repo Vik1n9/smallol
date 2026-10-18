@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { adapt } from '../src/data/streamcv/adapter.ts';
 import { deriveMore, Memory } from '../src/events/derive2.ts';
 import { Dispatcher } from '../src/events/dispatch.ts';
-import { eventText } from '../src/events/text.ts';
+import { eventText, milestoneText } from '../src/events/text.ts';
 import type { MatchState, Team } from '../src/model/types.ts';
 import { DEFAULTS } from '../src/settings/schema.ts';
 import day2 from '../fixtures/streamcv/state_v05_kc_mvk_g2.json' with { type: 'json' };
@@ -92,10 +92,28 @@ describe('batch 2 dispatch', () => {
     const b = d.step([lv('R', 'Kratos', 'mid'), lv('R', 'Gury', 'jungle')], 5_000, cfg, code, 'zh-Hant');
     expect(a.notices[0]!.kind).toBe('strip');
     expect(b.notices.at(-1)!.id).toBe(a.notices[0]!.id);
-    expect(b.notices.at(-1)!.title).toBe('升 6 級 · KC 上、MVK 中 +1');
+    expect(b.notices.at(-1)!.title).toBe('升 6 級 · KC 上 · MVK 野中');
     // Both teams in it: neutral colour, not the colour of whoever came last.
     expect(a.notices[0]!.team).toBe('B');
     expect(b.notices.at(-1)!.team).toBeNull();
+  });
+
+  it('merged milestones are grouped by team with every position, in both languages (batch 2b review)', () => {
+    const who = [{ team: 'MVK', role: 'mid', player: 'Kratos' }, { team: 'FUR', role: 'support', player: 'JoJo' }, { team: 'MVK', role: 'jungle', player: 'Gury' }, { team: 'FUR', role: 'top', player: 'Guigo' }, { team: 'MVK', role: 'bot', player: 'Harky' }];
+    expect(milestoneText('firstLegendary', who, 'zh-Hant')).toBe('首件成裝 · MVK 野中下 · FUR 上輔');
+    expect(milestoneText('firstLegendary', who, 'en')).toBe('First item · MVK Jng Mid Bot · FUR Top Sup');
+  });
+
+  it('my team: a raised strip goes out only while fewer than 4 strips went out in the last minute; the rest stay in the log', () => {
+    const d = new Dispatcher();
+    const cfg = { ...DEFAULTS, mode: 'companion' as const, myTeam: 'KC' };
+    // KC's drakes (important: raised from the log to a strip in companion), 16 s apart: four go out, the fifth in the same minute stays in the log.
+    const drake = (n: number, at: number) => ({ kind: 'drake' as const, team: 'B' as Team, at, element: 'infernal' as const, n });
+    for (let i = 0; i < 4; i++) expect(d.step([drake(i + 1, 100 + i * 16)], i * 16_000, cfg, code, 'zh-Hant').notices).toHaveLength(1);
+    expect(d.step([drake(5, 155)], 55_000, cfg, code, 'zh-Hant').notices).toEqual([]);
+    expect(d.held).toBe(1);
+    // A minute on, there is room again.
+    expect(d.step([drake(6, 200)], 70_000, cfg, code, 'zh-Hant').notices[0]!.kind).toBe('strip');
   });
 
   it('my team: an important event in the log becomes a strip; normal events and cards stay', () => {
