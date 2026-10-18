@@ -99,7 +99,8 @@ new ResizeObserver(() => { lastHtml = ''; draw(); }).observe(root);
 root.addEventListener('click', (e) => {
   const t = (e.target as HTMLElement).closest<HTMLElement>('button, input[type=checkbox]');
   if (!t) return;
-  const data: Record<string, string> = { panel: name, ...t.dataset } as Record<string, string>;
+  // `from`: a click in a window, not the bar's panel menu (whose buttons carry only data-panel).
+  const data: Record<string, string> = { panel: name, from: name, ...t.dataset } as Record<string, string>;
   if (t instanceof HTMLInputElement && t.type === 'checkbox') data.checked = String(t.checked);
   void emit('panel-action', data);
 });

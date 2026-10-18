@@ -18,12 +18,17 @@ const byLeague = (a: string, b: string) => (LEAGUE_ORDER.indexOf(a) + 1 || 99) -
 
 const cell = (code: string) => `<button class="tcell" data-team="${esc(code)}">${esc(code)}</button>`;
 
-/** Teams with a match today, by the schedule (the user's local day). */
-function today(c: ViewCtx): string[] {
-  if (!c.schedule) return [];
-  const d = new Date(c.now).toDateString();
-  return [...new Set(c.schedule.matches.filter((m) => new Date(m.start).toDateString() === d).flatMap((m) => m.teams.map((t) => t.code)).filter((x) => x !== 'TBD'))];
+/**
+ * Teams playing "today": matches from 6 hours ago to 18 hours ahead. Not the calendar day: a match at
+ * 02:00 is tonight's at 22:00, and this morning's 02:00 match was last night's (2026-10-18 report:
+ * at 22:00 it listed the 02:00 match already played, not the one coming).
+ */
+export function todayTeams(schedule: ViewCtx['schedule'], now: number): string[] {
+  if (!schedule) return [];
+  const from = now - 6 * 3600_000, to = now + 18 * 3600_000;
+  return [...new Set(schedule.matches.filter((m) => m.start >= from && m.start <= to).flatMap((m) => m.teams.map((t) => t.code)).filter((x) => x !== 'TBD'))];
 }
+const today = (c: ViewCtx) => todayTeams(c.schedule, c.now);
 
 const matches = (q: string, ...fields: (string | null)[]) => fields.some((f) => f && f.toLowerCase().includes(q));
 

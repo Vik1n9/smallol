@@ -69,3 +69,17 @@ describe('team and player profiles', () => {
     expect(playerFile(ctx({ spoilerFree: false }), B, roster.KC!, canna)).toContain('勝</i>');
   });
 });
+
+describe('today\'s teams (2026-10-18 report)', () => {
+  it('at 22:00, tonight\'s 02:00 match counts; this morning\'s 02:00 match does not', async () => {
+    const { todayTeams } = await import('../src/ui/profile-views.ts');
+    const at = (s: string) => Date.parse(s);
+    const sched = { matches: [
+      { start: at('2026-10-17T18:00:00Z'), teams: [{ code: 'MVK' }, { code: 'FUR' }] },
+      { start: at('2026-10-18T18:00:00Z'), teams: [{ code: 'KC' }, { code: 'MVK' }] },
+      { start: at('2026-10-23T17:00:00Z'), teams: [{ code: 'TBD' }, { code: 'TBD' }] },
+    ] } as never;
+    // 22:00 in Taiwan = 14:00 UTC.
+    expect(todayTeams(sched, at('2026-10-18T14:00:00Z'))).toEqual(['KC', 'MVK']);
+  });
+});

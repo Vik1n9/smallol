@@ -47,7 +47,7 @@ export interface BarStrings {
   b3: {
     lowKey: string; lowKeyTip: string; hotkeys: string; hotkeyHide: string; hotkeyLow: string; hotkeyBusy(keys: string): string; hotkeyTaken: string;
     autoLow: string; autoLowNote: string; sound: string; volume: Record<'low' | 'mid' | 'high', string>; test: string;
-    watchUrl: string; watchNote: string; watchBad: Record<'scheme' | 'credentials' | 'long' | 'bad', string>; watch: string; hideRefused: string;
+    watchUrl: string; watchNote: string; watchBad: Record<'scheme' | 'credentials' | 'long' | 'bad', string>; watch: string; hideRefused: string; panelLater: string;
   };
 }
 
@@ -100,7 +100,7 @@ const zh: BarStrings = {
     sound: '卡片音效', volume: { low: '小', mid: '中', high: '大' }, test: '試聽',
     watchUrl: '轉播網址', watchNote: '有填時，卡片滑過會出現「▶ 看」，點了用預設瀏覽器開這個網址。',
     watchBad: { scheme: '只接受 http 或 https，沒有儲存', credentials: '網址不能帶帳號密碼，沒有儲存', long: '網址太長（上限 2048 字），沒有儲存', bad: '網址格式不對，沒有儲存' },
-    watch: '▶ 看', hideRefused: '沒有系統匣也沒有熱鍵，不隱藏',
+    watch: '▶ 看', hideRefused: '沒有系統匣也沒有熱鍵，不隱藏', panelLater: '比賽開始時自動打開',
   },
 };
 
@@ -153,7 +153,7 @@ const en: BarStrings = {
     sound: 'Card sound', volume: { low: 'Low', mid: 'Medium', high: 'High' }, test: 'Play',
     watchUrl: 'Stream address', watchNote: 'When set, cards show "▶ Watch" on hover; it opens this address in your browser.',
     watchBad: { scheme: 'Only http or https; not saved', credentials: 'No user name or password in the address; not saved', long: 'Too long (2048 at most); not saved', bad: 'Not an address; not saved' },
-    watch: '▶ Watch', hideRefused: 'No tray or hotkey to undo it: not hidden',
+    watch: '▶ Watch', hideRefused: 'No tray or hotkey to undo it: not hidden', panelLater: 'Opens when a match is on',
   },
 };
 

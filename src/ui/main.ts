@@ -321,13 +321,26 @@ const source = new StateSource(DEFAULTS.endpoint, {
     prevState = state.status === 'idle' && !haveSeen ? null : state;
     onEvents([...deriveEvents(prevState, s, announced), ...deriveMore(prevState, s, memory, { soonSec: cfg().soonLead })], s);
     haveSeen = true;
+    const statusWas = state.status;
     state = s;
     receivedAt = at;
+    if (s.status !== statusWas) void panels?.sync(shownPanels());
     sendPanels();
     render();
   },
   onConnection(c) { conn = c; render(); },
 });
+/**
+ * The game's windows open only when there is something in them (2026-10-18 request): no match, none;
+ * during the draft, this game's draft; in the game and after it, every one the user ticked. A tick means
+ * "show it during matches". The data window is the user's to open and close.
+ */
+function shownPanels(): Record<PanelName, boolean> {
+  const p = cfg().panels, st = state.status;
+  const game = st === 'in_game' || st === 'finished', draft = st === 'waiting';
+  return { minimap: p.minimap && game, players: p.players && game, draftGame: p.draftGame && (game || draft), data: p.data };
+}
+
 /** The first snapshot after start has no "before": no events, a baseline line instead. */
 let haveSeen = false;
 
@@ -604,7 +617,9 @@ function setMode(m: 'work' | 'companion' | 'custom'): void {
 function act(d: Record<string, string | undefined>): void {
   if (d.mode) { setMode(d.mode as 'work' | 'companion' | 'custom'); void closePop(); return; }
   if (d.ask) { settings.update((x) => { x.mode = d.ask as 'work' | 'companion'; x.asked = true; }); void closePop(); showNote(B.feedback.mode(modeLabel(cfg(), B))); return; }
-  if (d.panel && d.panel in cfg().panels && !d.action && !d.tab && !d.set && !d.toggle && !d.ev && !d.reset && !d.match && d.endpoint === undefined && d.watchUrl === undefined && !('toggleSpoiler' in d) && !d.checked) {
+  // The bar's panel menu (its buttons carry only data-panel). Clicks from inside a window carry `from`
+  // and the window's name as `panel`: a team button in the data window used to close it (2026-10-18).
+  if (d.panel && d.panel in cfg().panels && !d.from && Object.keys(d).length === 1) {
     const p = d.panel as PanelName;
     settings.update((x) => { x.panels[p] = !x.panels[p]; });
     return;
@@ -741,7 +756,12 @@ function onSettings(now: Settings, before: Settings): void {
   if (now.watchUrl !== before.watchUrl) watchError = null;
   syncLow();
   notifier.corner = now.notifyCorner;
-  if (PANELS.some((p) => now.panels[p] !== before.panels[p])) void panels?.sync(now.panels);
+  if (PANELS.some((p) => now.panels[p] !== before.panels[p])) {
+    void panels?.sync(shownPanels());
+    // Ticked while no match is on: nothing opens yet; say when it will.
+    const opened = PANELS.find((p) => p !== 'data' && now.panels[p] && !before.panels[p]);
+    if (opened && !shownPanels()[opened]) showNote(B.b3.panelLater);
+  }
   sendPanels();
   render();
 }
@@ -777,7 +797,7 @@ async function start(): Promise<void> {
   }
   await fitWindow();
   render();
-  void panels?.sync(cfg().panels);
+  void panels?.sync(shownPanels());
   // The one question, the first time (UI_SPEC §8).
   if (!cfg().asked && !checking) void openPop('ask');
   // Checking aids: open a popover or the data window without clicking.
