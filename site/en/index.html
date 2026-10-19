@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SmalLoL: League of Legends esports in a corner of your screen</title>
+<meta name="description" content="SmalLoL shrinks a live League of Legends esports game into a thin bar in a corner of your screen: score, clock, gold lead, drake and Baron timers, and the latest play. Works for Worlds 2026. Unofficial, free and open source; Windows first, coming soon.">
+<link rel="canonical" href="https://smallol.chroniclecore.com/en/">
+<link rel="alternate" hreflang="zh-Hant" href="https://smallol.chroniclecore.com/">
+<link rel="alternate" hreflang="en" href="https://smallol.chroniclecore.com/en/">
+<link rel="alternate" hreflang="x-default" href="https://smallol.chroniclecore.com/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SmalLoL">
+<meta property="og:title" content="SmalLoL: League of Legends esports, but small">
+<meta property="og:description" content="For the pro match you can't watch: the score, the gold lead, the Baron timer and the latest play, at a glance. Unofficial, free, open source.">
+<meta property="og:url" content="https://smallol.chroniclecore.com/en/">
+<meta property="og:image" content="https://smallol.chroniclecore.com/media/og-en.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="zh_TW">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#15171C">
+<link rel="icon" href="../favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="../media/icon.png">
+<link rel="apple-touch-icon" href="../media/apple-touch-icon.png">
+<link rel="stylesheet" href="../style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "SmalLoL",
+  "description": "An unofficial desktop companion for League of Legends esports: a thin bar in a corner of the screen with the live score, game clock, gold lead, objective timers and the latest play, and small notices for the big moments.",
+  "applicationCategory": "SportsApplication",
+  "operatingSystem": "Windows 10, Windows 11",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "license": "https://www.apache.org/licenses/LICENSE-2.0",
+  "url": "https://smallol.chroniclecore.com/en/",
+  "image": "https://smallol.chroniclecore.com/media/og-en.png",
+  "screenshot": ["https://smallol.chroniclecore.com/media/app-bar-en.png", "https://smallol.chroniclecore.com/media/app-notices-en.png", "https://smallol.chroniclecore.com/media/app-minimap-en.png"],
+  "featureList": ["Live score, game clock and gold lead", "Drake, Baron and Herald timers", "Corner notices for the big moments", "At work and Watching along presets", "Minimap, draft and players windows", "Schedule, team and player pages", "Low-key mode and hotkeys", "English and Traditional Chinese"],
+  "isAccessibleForFree": true,
+  "codeRepository": "https://github.com/Zaious/smallol",
+  "inLanguage": ["en", "zh-Hant"],
+  "author": { "@type": "Person", "name": "Zaious" },
+  "publisher": { "@type": "Organization", "name": "ChronicleCore Studio", "url": "https://studio.chroniclecore.com" }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "Is this made by Riot Games?", "acceptedAnswer": { "@type": "Answer", "text": "No. SmalLoL is an independent fan project. It isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. It has nothing to do with any team either." } },
+    { "@type": "Question", "name": "When can I download it?", "acceptedAnswer": { "@type": "Answer", "text": "The first version is still being prepared, for Windows first. Leave your email and you'll get one message when it is out. If you can't wait, you can build it from source with the instructions on GitHub." } },
+    { "@type": "Question", "name": "Does it cost anything? Are there ads?", "acceptedAnswer": { "@type": "Answer", "text": "It is free and open source (Apache License 2.0), with no ads and nothing to pay for." } },
+    { "@type": "Question", "name": "Is it ahead of the stream?", "acceptedAnswer": { "@type": "Answer", "text": "No. The data comes from the official live data and the broadcast picture, and both arrive a little after the stream. It is for knowing how the game is going without watching, not for learning results early." } },
+    { "@type": "Question", "name": "Will it spoil results?", "acceptedAnswer": { "@type": "Answer", "text": "During a game the bar shows the score; that is what it is for. If you'd rather not see the results of games that are already over, turn on Spoiler-free in the data window and the schedule hides scores and winners." } },
+    { "@type": "Question", "name": "Isn't it obvious at work?", "acceptedAnswer": { "@type": "Answer", "text": "Switch to low-key mode and it becomes a small grey strip of numbers that does not look like sports. It turns low-key by itself while you present, play full screen or have Do not disturb on, and Ctrl+Alt+Shift+H hides every window." } },
+    { "@type": "Question", "name": "Does it run on a Mac?", "acceptedAnswer": { "@type": "Answer", "text": "It has only been tested on Windows, and the first version is Windows only. A Mac version depends on how many people want one: pick Mac when you sign up and you'll hear when there is news." } },
+    { "@type": "Question", "name": "How does it update?", "acceptedAnswer": { "@type": "Answer", "text": "The installed version tells you in the app when there is a new version, and one click updates it. No need to come back here to download." } },
+    { "@type": "Question", "name": "Does it collect my data?", "acceptedAnswer": { "@type": "Answer", "text": "The app doesn't. No account, no analytics. It only reads match data from the data service and checks for new versions. Settings and the event history stay on your computer." } }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/en/"><img src="../media/icon.png" alt="" width="28" height="28"><span>SmalLoL</span></a>
+  <nav>
+    <a href="/" hreflang="zh-Hant" lang="zh-Hant">中文</a>
+    <a href="https://github.com/Zaious/smallol">GitHub</a>
+  </nav>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="hero-copy">
+      <h1>League of Legends esports, in a corner of your screen.</h1>
+      <p class="lead">For the pro match you can't watch: the score, the clock, the gold lead, how long until the next drake or Baron, and what just happened, at a glance. SmalLoL is an unofficial desktop companion for League of Legends esports. Free and open source.</p>
+      <div class="ctas">
+        <a class="btn primary" href="#waitlist">Tell me when it's out</a>
+        <a class="btn" href="https://github.com/Zaious/smallol">Source code</a>
+      </div>
+      <p class="status">Coming soon · Windows first · being tested during Worlds 2026</p>
+    </div>
+    <figure class="hero-shot">
+      <div class="desk">
+        <div class="desk-win" aria-hidden="true"><div class="desk-bar"><i></i><i></i><i></i></div><div class="desk-sheet"><span style="--w:38%"></span><span style="--w:72%"></span><span style="--w:55%"></span><span style="--w:64%"></span><span style="--w:48%"></span><span style="--w:30%"></span><span style="--w:81%"></span><span style="--w:44%"></span><span style="--w:58%"></span><span style="--w:70%"></span><span style="--w:52%"></span><span style="--w:66%"></span><span style="--w:35%"></span><span style="--w:59%"></span><span style="--w:47%"></span><span style="--w:74%"></span><span style="--w:41%"></span><span style="--w:63%"></span><span style="--w:56%"></span><span style="--w:33%"></span><span style="--w:38%"></span><span style="--w:72%"></span><span style="--w:55%"></span><span style="--w:64%"></span><span style="--w:48%"></span><span style="--w:30%"></span><span style="--w:81%"></span><span style="--w:44%"></span><span style="--w:58%"></span><span style="--w:70%"></span><span style="--w:52%"></span><span style="--w:66%"></span><span style="--w:35%"></span><span style="--w:59%"></span><span style="--w:47%"></span><span style="--w:74%"></span><span style="--w:41%"></span><span style="--w:63%"></span><span style="--w:56%"></span><span style="--w:33%"></span><span style="--w:38%"></span><span style="--w:72%"></span><span style="--w:55%"></span><span style="--w:64%"></span><span style="--w:48%"></span><span style="--w:30%"></span><span style="--w:81%"></span><span style="--w:44%"></span><span style="--w:58%"></span><span style="--w:70%"></span><span style="--w:52%"></span><span style="--w:66%"></span><span style="--w:35%"></span><span style="--w:59%"></span><span style="--w:47%"></span><span style="--w:74%"></span><span style="--w:41%"></span><span style="--w:63%"></span><span style="--w:56%"></span><span style="--w:33%"></span></div></div>
+        <div class="desk-corner">
+          <img class="notices" src="../media/app-notices-en.png" width="304" height="172" alt="Notices in the corner: KC take Chemtech, MVK SanSan solos Yike, KC topple MVK Mid inner, and at the bottom a card: KC secure Baron, buff 3:00, gold KC +6.8k.">
+          <img class="bar" src="../media/app-bar-en.png" width="340" height="48" alt="The SmalLoL bar: KC 21 to 11 MVK, game clock 33:11, Chemtech drake in 0:19, gold +7.1k; below it, 32:05 KC secure Baron.">
+        </div>
+      </div>
+      <figcaption>A work screen with SmalLoL in the corner, drawn from a recorded game (KC vs MVK, game 2).</figcaption>
+    </figure>
+  </section>
+
+  <section class="anatomy">
+    <figure class="anatomy-shot">
+      <img src="../media/app-bar-en.png" width="340" height="48" loading="lazy" alt="The SmalLoL bar, enlarged: score, clock, next drake timer, gold lead and the latest play.">
+      <figcaption>About 340 × 48 on screen; you set the width.</figcaption>
+    </figure>
+    <div class="anatomy-copy">
+      <h2>One bar, two lines. That's enough.</h2>
+      <p>The top line is where the game stands; the bottom line is what just happened. The buttons only appear when the mouse comes over, so it stays out of your way.</p>
+      <dl>
+        <dt>Score</dt><dd>Each team's kills, counted the way the broadcast counts them.</dd>
+        <dt>Clock</dt><dd>How long the game has been going.</dd>
+        <dt>Timers</dt><dd>The next two objectives: which drake, Baron or Herald, and how long until it spawns.</dd>
+        <dt>Gold</dt><dd>Which team is ahead, and by how much.</dd>
+        <dt>Latest play</dt><dd>"KC secure Baron", "MVK SanSan solos Yike": one line.</dd>
+      </dl>
+    </div>
+  </section>
+
+  <section class="notices-sec">
+    <div class="notices-copy">
+      <h2>Only the big moments pop up.</h2>
+      <p>Baron, a Soul, an inhibitor, a game won: a card in the corner of the screen. Towers, drakes and kills get a thin strip. A run of towers or a wave of level 6s becomes one strip that updates, not a pile.</p>
+      <div class="presets">
+        <div class="preset"><b>At work</b><span>You're not watching: tell me how it's going.</span></div>
+        <div class="preset"><b>Watching along</b><span>The stream is on: only add what the broadcast doesn't say.</span></div>
+      </div>
+      <p>Or set each kind of event yourself: off, log only, strip or card. Star a team and its big moments move up a step.</p>
+    </div>
+    <figure class="notices-shot">
+      <img src="../media/app-notices-en.png" width="304" height="172" loading="lazy" alt="Three strips and a Baron card, each with its game time.">
+    </figure>
+  </section>
+
+  <section class="windows">
+    <div class="windows-head">
+      <h2>Want a little more? Open it.</h2>
+      <p>Three optional windows, each placed where you want it. They open by themselves when a match is on and get out of the way when it is not.</p>
+    </div>
+    <div class="wins">
+      <figure>
+        <img src="../media/app-minimap-en.png" width="188" height="150" loading="lazy" alt="The minimap: both teams' towers and inhibitors, the drakes taken, the Baron buff and the next drake timer.">
+        <figcaption><b>Minimap</b>Which towers stand, which drakes are taken, how long the Baron buff lasts.</figcaption>
+      </figure>
+      <figure>
+        <img src="../media/app-players-en.png" width="320" height="150" loading="lazy" alt="The players window: the ten champions with their levels and K/D/A.">
+        <figcaption><b>Players</b>The ten champions' levels, items and K/D/A.</figcaption>
+      </figure>
+      <figure>
+        <img src="../media/app-draft-en.png" width="300" height="100" loading="lazy" alt="This game's draft: five bans and five picks per team.">
+        <figcaption><b>Draft</b>Bans and picks, each as it locks in.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="features">
+    <h2>Just enough game for a work day.</h2>
+    <ul>
+      <li><b>History.</b>Click the bar for every event of the last five games, by game time, filtered by importance or team.</li>
+      <li><b>Schedule, teams, players.</b>The data window has the schedule, team pages with the roster and this event's bans and picks, and player pages.</li>
+      <li><b>Spoiler-free.</b>Turn it on and the schedule hides scores and winners, so you can catch up later.</li>
+      <li><b>Low-key mode.</b>A small grey strip of numbers that does not look like sports. It turns on by itself while you present, play full screen or have Do not disturb on.</li>
+      <li><b>Hotkeys.</b>Ctrl+Alt+Shift+H hides every window; Ctrl+Alt+Shift+Q toggles low-key mode.</li>
+      <li><b>One click to the stream.</b>Save the stream you watch and cards get a "▶ Watch" button for when something big happens.</li>
+      <li><b>Sound if you want it.</b>Cards can play a short tone; off by default.</li>
+      <li><b>English and Traditional Chinese.</b>Champion and item names as the game shows them.</li>
+    </ul>
+  </section>
+
+  <section class="download split" id="download">
+    <div class="side">
+      <h2>Download</h2>
+      <p class="aside">The installed version updates itself; no need to come back here.</p>
+    </div>
+    <div class="body">
+      <div class="soon">
+        <p><b>Coming soon.</b> The first version is still being prepared, for Windows 10 and 11 first. When it is out, the download will be on <a href="https://github.com/Zaious/smallol/releases">GitHub Releases</a>, and everyone on the list gets an email.</p>
+        <div class="ctas">
+          <a class="btn primary" href="#waitlist">Tell me when it's out</a>
+          <a class="btn" href="https://github.com/Zaious/smallol#build-from-source">Build from source</a>
+        </div>
+      </div>
+      <div class="files-wrap" hidden>
+        <p>Windows 10 and 11. The installer does not need administrator rights.</p>
+        <div class="files">
+          <a class="btn primary" data-file="_x64-setup.exe" href="https://github.com/Zaious/smallol/releases/latest">Download for Windows<span class="size"></span></a>
+        </div>
+        <p class="note ver">Latest version <b></b>. Every version and its changes are on <a href="https://github.com/Zaious/smallol/releases">GitHub</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="waitlist split" id="waitlist">
+    <div class="side">
+      <h2>Tell me when it's out</h2>
+      <p>Leave your email and you'll get one message when the first version is out. If you pick Mac, you'll get one more when there is news about a Mac version, whether it happens or not.</p>
+    </div>
+    <div class="body">
+      <form id="waitlist-form" method="post" action="/api/waitlist">
+        <input type="hidden" name="lang" value="en">
+        <label class="hp" aria-hidden="true">Website<input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+        <label class="email"><span>Email</span><input type="email" name="email" required maxlength="254" autocomplete="email" placeholder="you@example.com"></label>
+        <fieldset class="oses">
+          <legend>Your computer</legend>
+          <label><input type="radio" name="os" value="windows" checked> Windows</label>
+          <label><input type="radio" name="os" value="mac"> Mac</label>
+          <label><input type="radio" name="os" value="both"> Both</label>
+        </fieldset>
+        <div class="actions">
+          <button class="btn primary" type="submit" name="action" value="join">Sign up</button>
+          <button class="linklike" type="submit" name="action" value="leave">Remove my email</button>
+        </div>
+      </form>
+      <p class="msg" role="status" aria-live="polite"></p>
+      <p class="fine">Only your email, the computer you picked, the language and the day you signed up are kept, on Cloudflare. They are used only for the emails described above; then the whole list is deleted. Never shared, nothing else sent. You can type your email above and press "Remove my email" at any time.</p>
+    </div>
+  </section>
+
+  <section class="data split" id="data">
+    <div class="side">
+      <h2>Where the data comes from</h2>
+    </div>
+    <div class="body">
+      <p>The app reads a match data service every five seconds. The service (<a href="https://github.com/Zaious/smallol-cv">smallol-cv</a>, also open source) combines the official LoL Esports live data (score, gold, kills, objectives, items) with what it reads from the broadcast picture (which tower fell, the draft, the Herald).</p>
+      <p>By default the app uses the public instance; you can run your own and point the app at it in Settings. Champion and item names come from Riot Games' Data Dragon.</p>
+    </div>
+  </section>
+
+  <section class="faq split" id="faq">
+    <div class="side">
+      <h2>Questions</h2>
+      <p class="aside">Not here? Ask on <a href="https://github.com/Zaious/smallol/issues">GitHub</a>.</p>
+    </div>
+    <div class="body">
+      <details><summary>Is this made by Riot Games?</summary><p>No. SmalLoL is an independent fan project. It isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. It has nothing to do with any team either.</p></details>
+      <details><summary>When can I download it?</summary><p>The first version is still being prepared, for Windows first. <a href="#waitlist">Leave your email</a> and you'll get one message when it is out. If you can't wait, you can build it from source with the instructions on GitHub.</p></details>
+      <details><summary>Does it cost anything? Are there ads?</summary><p>It is free and open source (Apache License 2.0), with no ads and nothing to pay for.</p></details>
+      <details><summary>Is it ahead of the stream?</summary><p>No. The data comes from the official live data and the broadcast picture, and both arrive a little after the stream. It is for knowing how the game is going without watching, not for learning results early.</p></details>
+      <details><summary>Will it spoil results?</summary><p>During a game the bar shows the score; that is what it is for. If you'd rather not see the results of games that are already over, turn on Spoiler-free in the data window and the schedule hides scores and winners.</p></details>
+      <details><summary>Isn't it obvious at work?</summary><p>Switch to low-key mode and it becomes a small grey strip of numbers that does not look like sports. It turns low-key by itself while you present, play full screen or have Do not disturb on, and Ctrl+Alt+Shift+H hides every window.</p></details>
+      <details><summary>Does it run on a Mac?</summary><p>It has only been tested on Windows, and the first version is Windows only. A Mac version depends on how many people want one: pick Mac when you sign up and you'll hear when there is news.</p></details>
+      <details><summary>How does it update?</summary><p>The installed version tells you in the app when there is a new version, and one click updates it. No need to come back here to download.</p></details>
+      <details><summary>Does it collect my data?</summary><p>The app doesn't. No account, no analytics. It only reads match data from the data service and checks for new versions. Settings and the event history stay on your computer.</p></details>
+    </div>
+  </section>
+
+  <section class="privacy split">
+    <div class="side">
+      <h2>No account. No analytics.</h2>
+    </div>
+    <div class="body">
+      <p>The app talks to two places: the match data service (the public one by default, or your own) and the check for new versions. Only when you click "▶ Watch" does it open the stream address you saved, in your browser. Settings and the event history stay on your computer.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="credits">
+    <p>Made by Zaious at <a href="https://studio.chroniclecore.com">ChronicleCore Studio</a>. Apache License 2.0.</p>
+    <p>SmalLoL is the League of Legends sibling of <a href="https://basesmall.chroniclecore.com/">Basesmall</a> (MLB).</p>
+  </div>
+  <div class="legal">
+    <p class="fine">SmalLoL isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties are trademarks or registered trademarks of Riot Games, Inc.</p>
+  </div>
+</footer>
+<script src="../site.js" defer></script>
+</body>
+</html>
