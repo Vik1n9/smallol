@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>SmalLoL og image</title>
+<!-- The link preview (1200 × 630), drawn from the site's own pictures: shoot.mjs renders it to media/og.png and og-en.png. -->
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; }
+  body { background: #15171C; color: #E8EAEE; font-family: 'Segoe UI Variable', 'Segoe UI', 'Microsoft JhengHei UI', system-ui, sans-serif;
+    display: grid; grid-template-columns: 1fr 520px; gap: 48px; align-items: center; padding: 0 72px; }
+  .copy { display: grid; gap: 22px; }
+  .brand { display: flex; align-items: center; gap: 16px; font-size: 34px; font-weight: 650; }
+  .brand img { width: 56px; height: 56px; border-radius: 12px; }
+  h1 { margin: 0; font-size: 58px; line-height: 1.12; font-weight: 700; letter-spacing: -0.01em; }
+  h1 span { display: inline-block; }
+  p { margin: 0; font-size: 26px; color: #A0A6B1; }
+  .shots { display: grid; justify-items: end; gap: 14px; }
+  .shots img { display: block; filter: drop-shadow(0 14px 30px rgb(0 0 0 / .55)); }
+  .shots .n { width: 466px; }
+  .shots .b { width: 520px; }
+  body.en { grid-template-columns: 1fr 470px; }
+  body.en h1 { font-size: 54px; }
+  body.en .shots .n { width: 421px; }
+  body.en .shots .b { width: 470px; }
+  .accent { position: absolute; left: 0; top: 0; bottom: 0; width: 10px; background: #E8B04A; }
+</style>
+</head>
+<body>
+<i class="accent"></i>
+<div class="copy">
+  <div class="brand"><img src="/site/media/icon.png" alt=""><span>SmalLoL</span></div>
+  <h1 id="h"></h1>
+  <p id="p"></p>
+</div>
+<div class="shots">
+  <img class="n" id="n" alt="">
+  <img class="b" id="b" alt="">
+</div>
+<script>
+  const en = new URLSearchParams(location.search).get('lang') === 'en';
+  document.body.classList.toggle('en', en);
+  document.getElementById('h').innerHTML = en
+    ? '<span>League of Legends</span> <span>esports,</span> <span>but small.</span>'
+    : '<span>英雄聯盟世界賽，</span><span>縮成螢幕角落</span><span>的一條。</span>';
+  document.getElementById('p').textContent = en ? 'Unofficial · free · open source · Windows first' : '非官方 · 免費 · 開源 · Windows 優先';
+  const l = en ? 'en' : 'zh';
+  document.getElementById('n').src = `/site/media/app-notices-${l}.png`;
+  document.getElementById('b').src = `/site/media/app-bar-${l}.png`;
+</script>
+</body>
+</html>
