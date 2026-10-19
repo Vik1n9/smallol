@@ -50,7 +50,7 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: SmalLoL ${{ github.ref_name }}
-          releaseBody: Windows build, not code-signed yet (Windows may warn "Windows protected your PC": More info, Run anyway). The installer updates itself; the portable zip does not.
+          releaseBody: 'Windows build, not code-signed yet (Windows may warn "Windows protected your PC": More info, Run anyway). The installer updates itself; the portable zip does not.'
           releaseDraft: true
           prerelease: false
           args: --bundles nsis --config src-tauri/tauri.release.conf.json ${{ env.UPDATER_CONFIG }}
