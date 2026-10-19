@@ -18,6 +18,8 @@ tauri-plugin-window-state = "2"
 serde_json = "1"
 tauri-plugin-global-shortcut = "2.4.1"
 tauri-plugin-opener = "2.7.2"
+tauri-plugin-updater = "2"
+tauri-plugin-process = "2"
 
 [target.'cfg(windows)'.dependencies]
 # One SetWindowPos for position and size together: two calls (set_size, then set_position) showed a frame in between.

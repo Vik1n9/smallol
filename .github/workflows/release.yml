@@ -1,0 +1,71 @@
+# A version tag (v0.1.0) builds Windows into a DRAFT release: nothing is public until the maintainer
+# reads it and presses Publish. An installer (per user, no admin) with its signed update file and
+# latest.json, and a portable zip. From Basesmall's workflow, Windows only for now.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: npm ci
+      - run: npm test
+      - name: Third-party licences
+        run: node scripts/third-party-licenses.mjs
+      # In-app updates: with the maintainer's update key the installer also gets a signed update file and
+      # the release a latest.json, which installed copies read from the latest release. A fork without
+      # the key builds as before (its copies only see a link to the download page).
+      - name: Update signing key
+        shell: bash
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          if [ -n "$TAURI_SIGNING_PRIVATE_KEY" ]; then
+            echo "TAURI_SIGNING_PRIVATE_KEY=$TAURI_SIGNING_PRIVATE_KEY" >> "$GITHUB_ENV"
+            echo "TAURI_SIGNING_PRIVATE_KEY_PASSWORD=$TAURI_SIGNING_PRIVATE_KEY_PASSWORD" >> "$GITHUB_ENV"
+            echo "UPDATER_CONFIG=--config src-tauri/tauri.updater.conf.json" >> "$GITHUB_ENV"
+            echo "update key: set"
+          else
+            echo "update key: not set"
+          fi
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: SmalLoL ${{ github.ref_name }}
+          releaseBody: Windows build, not code-signed yet (Windows may warn "Windows protected your PC": More info, Run anyway). The installer updates itself; the portable zip does not.
+          releaseDraft: true
+          prerelease: false
+          args: --bundles nsis --config src-tauri/tauri.release.conf.json ${{ env.UPDATER_CONFIG }}
+      - name: Windows portable zip (no install, no admin)
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $v = '${{ github.ref_name }}'.TrimStart('v')
+          $dir = "SmalLoL_${v}_portable"
+          New-Item -ItemType Directory $dir | Out-Null
+          Copy-Item src-tauri/target/release/smallol.exe "$dir/SmalLoL.exe"
+          Copy-Item LICENSE "$dir/LICENSE.txt"
+          Copy-Item NOTICE "$dir/NOTICE.txt"
+          Copy-Item THIRD_PARTY_LICENSES.txt "$dir/THIRD_PARTY_LICENSES.txt"
+          Copy-Item docs/PORTABLE.txt "$dir/README.txt"
+          Compress-Archive -Path $dir -DestinationPath "SmalLoL_${v}_x64_portable.zip"
+          gh release upload '${{ github.ref_name }}' "SmalLoL_${v}_x64_portable.zip" --clobber

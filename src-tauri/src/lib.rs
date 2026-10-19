@@ -238,6 +238,33 @@ fn append_anim_log(app: tauri::AppHandle, text: String, file: Option<String>) ->
     f.write_all(text.as_bytes()).map_err(|e| e.to_string())
 }
 
+/// A release's page on GitHub, from its tag alone ("v1.2.3"): the address is built here, so the web
+/// view cannot open anything else through this.
+#[tauri::command]
+fn open_release_page(app: tauri::AppHandle, tag: String) -> Result<(), String> {
+    let ok = tag.len() <= 32 && tag.starts_with('v') && tag[1..].split('.').count() == 3 && tag[1..].split('.').all(|p| !p.is_empty() && p.chars().all(|c| c.is_ascii_digit()));
+    if !ok {
+        return Err("not a release tag".into());
+    }
+    app.opener().open_url(format!("https://github.com/Zaious/smallol/releases/tag/{tag}"), None::<&str>).map_err(|e| e.to_string())
+}
+
+/// How this copy was installed. "installed" (the Windows installer) can update itself; "portable" (the
+/// Windows zip) and "other" (a dev build) only get a link to the download page. From Basesmall.
+#[tauri::command]
+fn install_kind() -> &'static str {
+    if cfg!(debug_assertions) {
+        return "other";
+    }
+    let Ok(exe) = std::env::current_exe() else { return "other" };
+    if cfg!(target_os = "windows") {
+        // The installer writes uninstall.exe next to the app (Tauri's NSIS script); the zip has none.
+        let installed = exe.parent().is_some_and(|d| d.join("uninstall.exe").is_file());
+        return if installed { "installed" } else { "portable" };
+    }
+    "other"
+}
+
 /// Checking aid (`--devlog`): one line into the dev log (debug builds only), e.g. what a step sent.
 #[tauri::command]
 fn dev_log(text: String) {
@@ -294,6 +321,9 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(window_state.build())
         .plugin(tauri_plugin_opener::init())
+        // In-app updates (signed; the public key is in tauri.conf.json) and the restart after one.
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
         // A hotkey goes to the bar's page, which owns every window (hide all, low-key).
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
@@ -313,7 +343,7 @@ pub fn run() {
                 window.app_handle().exit(0);
             }
         })
-        .invoke_handler(tauri::generate_handler![launch_args, config_info, read_settings, write_settings, set_bounds, read_history, write_history, append_anim_log, set_hotkeys, notify_state, alt_down, open_watch_url, dev_log, left_button_down])
+        .invoke_handler(tauri::generate_handler![launch_args, config_info, read_settings, write_settings, set_bounds, read_history, write_history, append_anim_log, set_hotkeys, notify_state, alt_down, open_watch_url, dev_log, left_button_down, install_kind, open_release_page])
         .setup(move |app| {
             let toggle = MenuItem::with_id(app, "toggle", "Show / hide", true, None::<&str>)?;
             let lowkey = MenuItem::with_id(app, "lowkey", "Low-key", true, None::<&str>)?;

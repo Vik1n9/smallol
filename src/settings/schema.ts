@@ -91,6 +91,8 @@ export interface Settings {
   soundVolume: 'low' | 'mid' | 'high';
   /** The user's own stream address, opened from a card's "▶ Watch" (empty: no button). */
   watchUrl: string;
+  /** Ask GitHub once after start-up whether a newer version is out. */
+  updateCheck: boolean;
 }
 
 export const DEFAULTS: Settings = {
@@ -122,6 +124,7 @@ export const DEFAULTS: Settings = {
   cardSound: false,
   soundVolume: 'mid',
   watchUrl: '',
+  updateCheck: true,
 };
 
 const oneOf = <T extends string>(v: unknown, options: readonly T[], fallback: T): T =>
@@ -198,5 +201,6 @@ export function normalize(raw: unknown): Settings {
     cardSound: bool(o.cardSound, d.cardSound),
     soundVolume: oneOf(o.soundVolume, ['low', 'mid', 'high'], d.soundVolume),
     watchUrl: typeof o.watchUrl === 'string' && watchUrlProblem(o.watchUrl) === null ? o.watchUrl : d.watchUrl,
+    updateCheck: bool(o.updateCheck, d.updateCheck),
   };
 }

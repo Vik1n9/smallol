@@ -21,7 +21,21 @@ export function modeLabel(cfg: Settings, B: BarStrings): string {
 
 /** What the settings tab needs besides the settings: low-key now (by hand or detection), hotkeys another
  * program holds, why a typed stream address was refused. */
-export interface SettingsExtra { lowNow: boolean; hotkeyBusy: string[]; watchError: keyof BarStrings['b3']['watchBad'] | null }
+export interface SettingsExtra {
+  lowNow: boolean; hotkeyBusy: string[]; watchError: keyof BarStrings['b3']['watchBad'] | null;
+  /** This version, a newer one if found (installable by this copy or not), the check's state, the download's note. */
+  update?: { version: string; newer: string | null; installable: boolean; asking: 'idle' | 'asking' | 'none'; note: string | null };
+}
+
+function updateRows(B: BarStrings, cfg: Settings, u: NonNullable<SettingsExtra['update']>): string {
+  const U = B.upd;
+  const action = u.newer
+    ? `<button data-action="update"${u.note ? ' disabled' : ''}>${esc(u.installable ? U.updateTo(u.newer) : U.download(u.newer))}</button>`
+    : `<button data-action="check-update"${u.asking === 'asking' ? ' disabled' : ''}>${esc(u.asking === 'asking' ? U.checking : U.check)}</button>`;
+  const status = u.note ?? (u.asking === 'none' && !u.newer ? U.latest : '');
+  return `<div class="srow"><span class="k">${esc(U.version(u.version))}</span><span class="seg">${action}</span>${status ? `<span class="note">${esc(status)}</span>` : ''}</div>
+    <div class="srow">${check('updateCheck', cfg.updateCheck, U.startCheck)}</div>`;
+}
 
 export function settingsView(cfg: Settings, S: Strings, B: BarStrings, endpointError: boolean, x: SettingsExtra = { lowNow: false, hotkeyBusy: [], watchError: null }): string {
   const t = S.set;
@@ -66,6 +80,7 @@ export function settingsView(cfg: Settings, S: Strings, B: BarStrings, endpointE
     <div class="srow"><input class="key" data-input="endpoint" value="${esc(cfg.endpoint)}" spellcheck="false"/></div>
     <p class="note">${esc(endpointError ? t.endpointBad : t.endpointNote)}</p>
     <h3>${esc(t.about)}</h3>
+    ${x.update ? updateRows(B, cfg, x.update) : ''}
     <p class="about">${esc(t.aboutText)}</p>
   </div>`;
 }

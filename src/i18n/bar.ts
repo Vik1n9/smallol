@@ -45,6 +45,11 @@ export interface BarStrings {
   atStart: string;
   /** The official live feed is down while a game is on. */
   feedDown: string;
+  /** New versions. */
+  upd: {
+    available(tag: string): string; updateTo(tag: string): string; download(tag: string): string; check: string; checking: string;
+    latest: string; downloading(pct: number | null): string; failed: string; version(v: string): string; startCheck: string;
+  };
   /** Batch 3: low-key, hotkeys, presentation detection, card sound, stream address. */
   b3: {
     lowKey: string; lowKeyTip: string; hotkeys: string; hotkeyHide: string; hotkeyLow: string; hotkeyBusy(keys: string): string; hotkeyTaken: string;
@@ -96,6 +101,11 @@ const zh: BarStrings = {
   minutes: (n) => `${n} 分`,
   atStart: '開打時',
   feedDown: '比賽進行中 · 官方即時數據暫停，比分暫時無法更新',
+  upd: {
+    available: (t) => `有新版本 ${t}`, updateTo: (t) => `更新到 ${t}`, download: (t) => `下載 ${t}`, check: '檢查更新', checking: '檢查中…',
+    latest: '已是最新版', downloading: (p) => (p === null ? '下載新版本中…' : `下載新版本 ${p}%`), failed: '更新失敗，請到下載頁手動更新',
+    version: (v) => `版本 ${v}`, startCheck: '啟動時檢查新版本',
+  },
   b3: {
     lowKey: '低調模式', lowKeyTip: '雙擊恢復', hotkeys: '全域熱鍵',
     hotkeyHide: '隱藏全部視窗 Ctrl+Alt+Shift+H', hotkeyLow: '低調模式 Ctrl+Alt+Shift+Q', hotkeyBusy: (k) => `熱鍵被其他程式占用：${k}`, hotkeyTaken: '被其他程式占用',
@@ -150,6 +160,11 @@ const en: BarStrings = {
   minutes: (n) => `${n} min`,
   atStart: 'At start',
   feedDown: 'Game on · the official live data is paused; no score for now',
+  upd: {
+    available: (t) => `New version ${t}`, updateTo: (t) => `Update to ${t}`, download: (t) => `Download ${t}`, check: 'Check for updates', checking: 'Checking…',
+    latest: 'Up to date', downloading: (p) => (p === null ? 'Downloading the new version…' : `Downloading the new version ${p}%`), failed: 'Update failed; please update from the download page',
+    version: (v) => `Version ${v}`, startCheck: 'Check for a new version at start-up',
+  },
   b3: {
     lowKey: 'Low-key', lowKeyTip: 'Double-click to restore', hotkeys: 'Global hotkeys',
     hotkeyHide: 'Hide every window Ctrl+Alt+Shift+H', hotkeyLow: 'Low-key Ctrl+Alt+Shift+Q', hotkeyBusy: (k) => `Hotkey taken by another program: ${k}`, hotkeyTaken: 'taken by another program',

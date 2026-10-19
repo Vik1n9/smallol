@@ -54,6 +54,8 @@ import { fmtStart } from './schedule-views.ts';
 import { modeLabel } from './settings-view.ts';
 import { AutoLow, detectionMode, OS_STATES, type OsState } from './autolow.ts';
 import { playTone } from './sound.ts';
+import { findNewer, installNewer, openReleasePage, type Newer } from './updates.ts';
+import { getVersion } from '@tauri-apps/api/app';
 import { LET_GO_MS, letGo, RECHECK_MS, snap, type Target } from './snap.ts';
 import { esc, fmtGold } from './views.ts';
 
@@ -374,6 +376,24 @@ let profile: { team: string | null; player: string | null } = { team: null, play
 let pickedMatch: string | null = null;
 let endpointError = false;
 let watchError: ReturnType<typeof watchUrlProblem> = null;
+// ---- new versions (Basesmall's way): asked once after start-up, or from the settings
+let appVersion = '0.0.0';
+let newer: Newer | null = null;
+let updateAsk: 'idle' | 'asking' | 'none' = 'idle';
+/** The download's progress, or why it failed; shown in row B and the settings. */
+let updateNote: string | null = null;
+function askNewer(): void {
+  if (!inTauri || updateAsk === 'asking') return;
+  updateAsk = 'asking'; sendPanels();
+  void findNewer(appVersion).then((r) => { newer = r; updateAsk = r ? 'idle' : 'none'; render(); sendPanels(); });
+}
+function startUpdate(): void {
+  if (!newer || updateNote) return;
+  if (!newer.update) { void openReleasePage(newer.tag); return; }
+  updateNote = B.upd.downloading(null); render(); sendPanels();
+  void installNewer(newer, (pct) => { updateNote = B.upd.downloading(pct); render(); sendPanels(); })
+    .catch(() => { updateNote = B.upd.failed; render(); sendPanels(); });
+}
 /** --scroll: a settings section for the data window to scroll to (screenshots without scrolling by hand). */
 let scrollTo: string | null = null;
 /** Hotkeys by name and whether they are registered (src-tauri set_hotkeys). */
@@ -384,7 +404,8 @@ function sendPanels(): void {
   if (!panels) return;
   const f: PanelFrame = { state, receivedAt, settings: cfg(), lang, conn, sample, schedule, history, roster, pickedMatch, dataTab, profile, endpointError,
     scrollTo,
-    settingsExtra: { lowNow: lowKeyOn(), hotkeyBusy: cfg().hotkeys ? Object.entries(hotkeyState).filter(([, on]) => !on).map(([k]) => HOTKEY_LABEL[k] ?? k) : [], watchError } };
+    settingsExtra: { lowNow: lowKeyOn(), hotkeyBusy: cfg().hotkeys ? Object.entries(hotkeyState).filter(([, on]) => !on).map(([k]) => HOTKEY_LABEL[k] ?? k) : [], watchError,
+      update: { version: appVersion, newer: newer?.tag ?? null, installable: !!newer?.update, asking: updateAsk, note: updateNote } } };
   panels.send(f);
 }
 async function openData(tab: DataTab): Promise<void> {
@@ -406,6 +427,7 @@ const ICON = {
   tier: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.5 2.5h4v4M6.5 13.5h-4v-4M13.5 2.5l-4.5 4.5M2.5 13.5l4.5-4.5"/></svg>',
   settings: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.8v2M8 12.2v2M1.8 8h2M12.2 8h2M3.6 3.6l1.4 1.4M11 11l1.4 1.4M3.6 12.4 5 11M11 5l1.4-1.4"/></svg>',
   watch: '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M5 3.2v9.6L12.6 8z"/></svg>',
+  update: '<svg viewBox="0 0 16 16" fill="none" stroke="var(--accent)" stroke-width="1.6"><path d="M8 13V3.5M4 7l4-4 4 4"/></svg>',
 };
 
 function scoreHtml(s: MatchState, compact: boolean): string {
@@ -511,7 +533,8 @@ function iconsRow(): string {
     + (paused() ? b('pause', B.icon.resume, ICON.resume, true) : b('pause', B.icon.pause, ICON.pause))
     + b('tier', B.icon.tier, ICON.tier)
     + b('settings', B.icon.settings, ICON.settings)
-    + (cfg().watchUrl ? b('watch', B.icon.watch, ICON.watch) : '');
+    + (cfg().watchUrl ? b('watch', B.icon.watch, ICON.watch) : '')
+    + (newer ? b('update', B.upd.available(newer.tag), ICON.update) : '');
 }
 
 function popHtml(): string {
@@ -581,6 +604,8 @@ function render(): void {
   // Row B: a 3-second note, else the log line of this game (or the last game's, between games), else a resting line.
   const now = Date.now();
   if (note && now < note.until) swapLine(lineHtml({ text: note.text, at: null, team: null }), null, true);
+  // A new version downloading (or why it failed).
+  else if (updateNote) swapLine(lineHtml({ text: updateNote, at: null, team: null }), null, true);
   // The official feed is down mid-game (2026-10-19, Day 4 game 1): say so instead of "picks so far: 0".
   else if (state.feedMissing) swapLine(lineHtml({ text: B.feedDown, at: null, team: null }), null, true);
   else {
@@ -685,6 +710,8 @@ function act(d: Record<string, string | undefined>): void {
     case 'settings': void openData('settings'); break;
     case 'sound-test': playTone('major', cfg().soundVolume); break;
     case 'watch': void invoke('open_watch_url').catch(() => undefined); break;
+    case 'update': startUpdate(); break;
+    case 'check-update': askNewer(); break;
   }
 }
 
@@ -811,6 +838,9 @@ async function start(): Promise<void> {
   if (player) { const [t, p] = player.split(/[|:]/) as [string, string]; profile = { team: t, player: p }; }
   else if (team) profile = { team, player: null };
   if (q.has('anim-log') && inTauri) startAnimLog(q.get('anim-log')!);
+  if (inTauri) appVersion = await getVersion().catch(() => appVersion);
+  // One question to GitHub per launch, after the game has had time to load (setting updateCheck).
+  if (inTauri && cfg().updateCheck && !checking) setTimeout(() => { if (updateAsk === 'idle' && !newer) askNewer(); }, 20_000);
   noTray = q.has('no-tray');
   osPlan = (q.get('notify-state') ?? '').split(',').filter(Boolean).map((x) => { const [st, sec] = x.split(':'); return { st: st as OsState, sec: Number(sec ?? Infinity) }; }).filter((x) => OS_STATES.includes(x.st));
   osPlanStart = Date.now();
