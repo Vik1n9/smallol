@@ -111,6 +111,7 @@ export function adapt(input: unknown): MatchState {
     const named = Object.values(s.teams[t].towers).filter((x) => x.down).length;
     const destroyed = s.teams[other(t)].towersDestroyed;
     s.teams[t].unnamedLost = s.towersKnown && destroyed !== null ? Math.max(0, destroyed - named) : 0;
+    fillByRules(s.teams[t]);
   }
 
   const timers = obj(raw.timers);
@@ -238,6 +239,26 @@ function readPlayers(raw: Record<string, unknown>, s: MatchState): void {
   for (const t of TEAMS) {
     const ks = out[t].map((p) => p.kills);
     if (out[t].length === 5 && ks.every((k) => k !== null)) s.teams[t].kills = ks.reduce((a, b) => a! + b!, 0);
+  }
+}
+
+/**
+ * What the reading missed, by the game's rules (2026-10-19, Day 4 game 1: the nexus turrets fell with
+ * every inhibitor turret drawn standing). A nexus turret down means an inhibitor turret is down: when
+ * only one lane has its inner turret down, it is that lane's. Losses the feed counts that still have no
+ * name mark the next tower of each lane with a "?" instead of drawing it standing.
+ */
+function fillByRules(team: TeamState): void {
+  const tw = team.towers;
+  const nexusDown = tw.nexus_t1.down || tw.nexus_t2.down;
+  if (nexusDown && team.unnamedLost > 0 && !LANES.some((l) => tw[`${l}_inhib_tower`].down)) {
+    const open = LANES.filter((l) => tw[`${l}_inner`].down);
+    if (open.length === 1) { tw[`${open[0]!}_inhib_tower`].down = true; team.unnamedLost -= 1; }
+  }
+  if (team.unnamedLost <= 0) return;
+  for (const l of LANES) {
+    const next = ([`${l}_outer`, `${l}_inner`, `${l}_inhib_tower`] as const).map((x) => tw[x]).find((x) => !x.down);
+    if (next) next.maybe = true;
   }
 }
 

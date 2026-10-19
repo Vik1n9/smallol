@@ -31,6 +31,9 @@ export interface Tower {
   lostAt: number | null;
   /** Nexus turrets come back; the time it is due, by the rule table. */
   respawnAt: number | null;
+  /** Standing as far as anyone named, but the feed counts more losses than were named and this is one of
+   *  the towers that could be among them (the next in its lane). Drawn with a "?". */
+  maybe?: boolean;
 }
 
 export interface InhibitorDown {

@@ -193,3 +193,26 @@ describe('dispatch', () => {
     expect(replacesLine(cur, 'major', 1_000)).toBe(true);
   });
 });
+
+describe('towers the reading missed, by the rules (2026-10-19, Day 4 game 1)', () => {
+  const lostR = ['top_outer', 'top_inner', 'bot_inner', 'bot_outer', 'nexus_t1', 'nexus_t2'].map((site) => ({ site, sec: 1500 }));
+  it('a fallen nexus with two lanes open: no lane guessed, the next tower of every lane gets a "?"', () => {
+    const s = adapt({ status: 'finished', towersLost: { B: [], R: lostR }, towersDestroyedBy: { B: 9, R: 0 } });
+    const tw = s.teams.R.towers;
+    expect([tw.top_inhib_tower.down, tw.bot_inhib_tower.down]).toEqual([false, false]);
+    expect([tw.top_inhib_tower.maybe, tw.bot_inhib_tower.maybe, tw.mid_outer.maybe]).toEqual([true, true, true]);
+    expect(tw.mid_inner.maybe).toBeUndefined();
+    expect(s.teams.R.unnamedLost).toBe(3);
+  });
+  it('a fallen nexus with one lane open: that lane\'s inhibitor turret is down', () => {
+    const lost = ['top_outer', 'top_inner', 'nexus_t1'].map((site) => ({ site, sec: 1500 }));
+    const s = adapt({ status: 'finished', towersLost: { B: [], R: lost }, towersDestroyedBy: { B: 4, R: 0 } });
+    expect(s.teams.R.towers.top_inhib_tower.down).toBe(true);
+    expect(s.teams.R.unnamedLost).toBe(0);
+    expect(Object.values(s.teams.R.towers).some((x) => x.maybe)).toBe(false);
+  });
+  it('every loss named: nothing marked', () => {
+    const s = adapt({ status: 'in_game', towersLost: { B: [], R: [{ site: 'mid_outer', sec: 600 }] }, towersDestroyedBy: { B: 1, R: 0 } });
+    expect(Object.values(s.teams.R.towers).some((x) => x.maybe)).toBe(false);
+  });
+});

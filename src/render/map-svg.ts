@@ -75,7 +75,7 @@ const gloss = (x: number, y: number, r: number) =>
 const RIM = 'stroke="rgba(10,12,16,.65)" stroke-width="0.35"';
 const STUMP_RIM = 'stroke="#6B7280" stroke-opacity=".7" stroke-width="0.4" stroke-dasharray="0.9 0.7"';
 
-function tower(at: Pt, team: Team, kind: 'tower' | 'nexusTurret', state: 'up' | 'down' | 'unknown'): Piece {
+function tower(at: Pt, team: Team, kind: 'tower' | 'nexusTurret', state: 'up' | 'down' | 'unknown' | 'maybe'): Piece {
   const [x, y] = P(at);
   const r = kind === 'tower' ? 2.5 : 1.9;
   if (state === 'down') {
@@ -83,8 +83,10 @@ function tower(at: Pt, team: Team, kind: 'tower' | 'nexusTurret', state: 'up' | 
   }
   const h = kind === 'tower' ? 5.2 : 3.8;
   const col = state === 'unknown' ? '#7A808C' : TEAM_HEX[team];
-  const fade = state === 'unknown' ? ' opacity=".45"' : '';
-  return { y, svg: `<g class="tower${state === 'unknown' ? ' unknown' : ''}"${fade}>${shadow(x, y, r)}${cylinder(x, y, r, h, col, shade(col, 0.55), RIM)}${gloss(x, y - h, r)}</g>` };
+  const fade = state === 'unknown' ? ' opacity=".45"' : state === 'maybe' ? ' opacity=".5"' : '';
+  // Maybe down: the feed counts a loss nobody named, and this tower could be it.
+  const mark = state === 'maybe' ? `<text class="maybe" x="${n(x)}" y="${n(y - h - 1.4)}" text-anchor="middle" font-size="4.2" font-weight="700" fill="var(--text)">?</text>` : '';
+  return { y, svg: `<g class="tower${state === 'unknown' ? ' unknown' : state === 'maybe' ? ' maybe' : ''}"${fade}>${shadow(x, y, r)}${cylinder(x, y, r, h, col, shade(col, 0.55), RIM)}${gloss(x, y - h, r)}${mark}</g>` };
 }
 
 function crystal(at: Pt, team: Team, down: boolean): Piece {
@@ -289,7 +291,7 @@ export function mapSvg(s: MatchState, clock: number | null, o: MapOptions): stri
     for (const site of TOWER_SITES) {
       const tw = team.towers[site];
       const down = known && towerDown(tw, s, clock);
-      pieces.push(tower(towerAt(t, site), t, isNexusTurret(site) ? 'nexusTurret' : 'tower', !known ? 'unknown' : down ? 'down' : 'up'));
+      pieces.push(tower(towerAt(t, site), t, isNexusTurret(site) ? 'nexusTurret' : 'tower', !known ? 'unknown' : down ? 'down' : tw.maybe ? 'maybe' : 'up'));
       if (down && isNexusTurret(site) && tw.respawnAt !== null) nexusBack.push(tw.respawnAt);
     }
     // Both nexus turrets usually fall together: one tag on the nexus, for the first to come back.
