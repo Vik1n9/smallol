@@ -44,6 +44,10 @@ Checking aids for development (screenshots without clicking, replaying recorded 
 
 No account, no analytics. The app talks to the data service you set (the public one by default), asks GitHub once after start-up whether a newer version is out (you can switch that off), and, only when you click **▶ Watch**, opens the stream address you saved in your browser. Settings and the event history stay in the app's config folder.
 
+## Support
+
+SmalLoL is free and stays free: no ads, no paid features, and no donation links inside the app. If it keeps you company at work, you can [buy me a coffee](https://buymeacoffee.com/zaious).
+
 ## Licence
 
 Made by Zaious at [ChronicleCore Studio](https://studio.chroniclecore.com). Apache License 2.0, see [LICENSE](LICENSE) and [NOTICE](NOTICE). The name "SmalLoL" is not licensed for other works.
