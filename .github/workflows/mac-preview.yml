@@ -1,0 +1,49 @@
+# By hand (Actions > Mac preview > Run workflow): a macOS build to try on a real Mac before a release.
+# Same steps as the release's macOS job, but no release: the disk image is kept as a run artifact for
+# a week. Signed and notarized when the maintainer's secrets are set, ad-hoc signed otherwise.
+name: Mac preview
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: npm ci
+      - run: node scripts/third-party-licenses.mjs aarch64-apple-darwin
+      - name: macOS signing and notarization secrets
+        shell: bash
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          for v in APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_SIGNING_IDENTITY APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID; do
+            if [ -n "${!v}" ]; then echo "$v=${!v}" >> "$GITHUB_ENV"; echo "$v: set"; else echo "$v: not set"; fi
+          done
+      - uses: tauri-apps/tauri-action@v0
+        with:
+          args: --target universal-apple-darwin --bundles app,dmg --config src-tauri/tauri.release.conf.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: smallol-macos-preview
+          path: src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+          retention-days: 7

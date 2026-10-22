@@ -12,6 +12,11 @@
         const f = (rel.assets ?? []).find((x) => x.name.endsWith(a.dataset.file));
         if (!f) continue;
         a.href = f.browser_download_url;
+        // A file only some releases have (the Mac disk image) shows its button, and its note, once it exists.
+        if (a.hasAttribute('data-optional')) {
+          a.hidden = false;
+          for (const n of document.querySelectorAll(`[data-for="${a.dataset.file}"]`)) n.hidden = false;
+        }
         const size = a.querySelector('.size');
         if (size) size.textContent = mb(f.size);
       }

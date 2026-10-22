@@ -249,8 +249,9 @@ fn open_release_page(app: tauri::AppHandle, tag: String) -> Result<(), String> {
     app.opener().open_url(format!("https://github.com/Zaious/smallol/releases/tag/{tag}"), None::<&str>).map_err(|e| e.to_string())
 }
 
-/// How this copy was installed. "installed" (the Windows installer) can update itself; "portable" (the
-/// Windows zip) and "other" (a dev build) only get a link to the download page. From Basesmall.
+/// How this copy was installed. "installed" (the Windows installer, a macOS app) can update itself;
+/// "portable" (the Windows zip) and "other" (a dev build, an app run from its disk image) only get a
+/// link to the download page. From Basesmall.
 #[tauri::command]
 fn install_kind() -> &'static str {
     if cfg!(debug_assertions) {
@@ -261,6 +262,12 @@ fn install_kind() -> &'static str {
         // The installer writes uninstall.exe next to the app (Tauri's NSIS script); the zip has none.
         let installed = exe.parent().is_some_and(|d| d.join("uninstall.exe").is_file());
         return if installed { "installed" } else { "portable" };
+    }
+    if cfg!(target_os = "macos") {
+        // Not from the read-only disk image, nor from where macOS runs a downloaded app it moved aside.
+        let path = exe.to_string_lossy();
+        let movable = path.contains(".app/Contents/MacOS/") && !path.starts_with("/Volumes/") && !path.contains("/AppTranslocation/");
+        return if movable { "installed" } else { "other" };
     }
     "other"
 }
