@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SmalLoL：上班也能跟英雄聯盟世界賽的桌面小工具</title>
-<meta name="description" content="SmalLoL 把英雄聯盟電競比賽縮成螢幕角落的一條：即時比分、經濟差、小龍與巴龍倒數、最新一波發生什麼。2026 世界賽可用。非官方、免費、開源，Windows 優先，即將推出。">
+<meta name="description" content="SmalLoL 把英雄聯盟電競比賽縮成螢幕角落的一條：即時比分、經濟差、小龍與巴龍倒數、最新一波發生什麼。2026 世界賽可用。非官方、免費、開源，Windows 版可下載。">
 <link rel="canonical" href="https://smallol.chroniclecore.com/">
 <link rel="alternate" hreflang="zh-Hant" href="https://smallol.chroniclecore.com/">
 <link rel="alternate" hreflang="en" href="https://smallol.chroniclecore.com/en/">
@@ -40,6 +40,8 @@
   "screenshot": ["https://smallol.chroniclecore.com/media/app-bar-zh.png", "https://smallol.chroniclecore.com/media/app-notices-zh.png", "https://smallol.chroniclecore.com/media/app-minimap-zh.png"],
   "featureList": ["即時比分、比賽時間與經濟差", "小龍、巴龍、預示者倒數", "大事件的角落通知", "上班與陪看兩種預設", "小地圖、本局 BP、選手視窗", "賽程、隊伍與選手頁", "低調模式與快速鍵", "繁體中文與英文"],
   "isAccessibleForFree": true,
+  "downloadUrl": "https://github.com/Zaious/smallol/releases/latest",
+  "datePublished": "2026-10-22",
   "codeRepository": "https://github.com/Zaious/smallol",
   "inLanguage": ["zh-Hant", "en"],
   "author": { "@type": "Person", "name": "Zaious" },
@@ -52,7 +54,7 @@
   "@type": "FAQPage",
   "mainEntity": [
     { "@type": "Question", "name": "這是 Riot Games 官方的嗎？", "acceptedAnswer": { "@type": "Answer", "text": "不是。SmalLoL 是獨立的粉絲專案，沒有得到 Riot Games 的認可，也不代表 Riot Games 或任何參與製作、管理 Riot Games 作品的人的觀點。跟任何戰隊也都沒有關係。" } },
-    { "@type": "Question", "name": "什麼時候可以下載？", "acceptedAnswer": { "@type": "Answer", "text": "第一個版本還在準備，會先出 Windows 版。留下 Email，推出時會寄一封信告訴你。等不及的話，可以照 GitHub 上的說明從原始碼自己建置。" } },
+    { "@type": "Question", "name": "去哪裡下載？", "acceptedAnswer": { "@type": "Answer", "text": "這一頁的「下載」，或 GitHub Releases。Windows 10 / 11 有安裝版（會自己更新）和免安裝版（解壓縮就能用）。Mac 版還沒有。" } },
     { "@type": "Question", "name": "要錢嗎？有廣告嗎？", "acceptedAnswer": { "@type": "Answer", "text": "完全免費、開源（Apache License 2.0），沒有廣告，也沒有付費功能。" } },
     { "@type": "Question", "name": "會比轉播快嗎？", "acceptedAnswer": { "@type": "Answer", "text": "不會。資料來自官方的直播資料和轉播畫面，都比轉播晚一些。它是讓你不用盯著直播也知道戰況，不是用來搶先知道結果的。" } },
     { "@type": "Question", "name": "會不會爆雷？", "acceptedAnswer": { "@type": "Answer", "text": "比賽進行中，橫條本來就會顯示比分。不想先知道已經打完的結果，可以在資料視窗打開「不爆雷」，賽程就不顯示比分與勝負。" } },
@@ -79,10 +81,10 @@
       <h1><span class="phrase">英雄聯盟世界賽，</span><span class="phrase">縮成螢幕角落</span><span class="phrase">的一條。</span></h1>
       <p class="lead">看不了直播的時候，瞄一眼就知道戰況：比分、比賽時間、經濟差、小龍和巴龍還剩多久，還有剛剛發生了什麼。SmalLoL 是非官方的英雄聯盟電競桌面小工具，免費、開源。</p>
       <div class="ctas">
-        <a class="btn primary" href="#waitlist">推出時通知我</a>
+        <a class="btn primary" href="#download">下載 Windows 版</a>
         <a class="btn" href="https://github.com/Zaious/smallol">原始碼</a>
       </div>
-      <p class="status">即將推出 · 先出 Windows 版 · 2026 世界賽期間測試中</p>
+      <p class="status">Windows 版已推出 · 2026 世界賽期間持續更新</p>
     </div>
     <figure class="hero-shot">
       <div class="desk">
@@ -170,18 +172,13 @@
       <p class="aside">安裝版會自己更新，不用再回來下載。</p>
     </div>
     <div class="body">
-      <div class="soon">
-        <p><b>即將推出。</b>第一個版本還在準備，先出 Windows 10 / 11。推出時，下載會放在 <a href="https://github.com/Zaious/smallol/releases">GitHub Releases</a>，也會寄信給登記的人。</p>
-        <div class="ctas">
-          <a class="btn primary" href="#waitlist">推出時通知我</a>
-          <a class="btn" href="https://github.com/Zaious/smallol#build-from-source">從原始碼建置</a>
-        </div>
-      </div>
-      <div class="files-wrap" hidden>
-        <p>Windows 10 / 11。安裝版不需要系統管理員權限。</p>
+      <div class="files-wrap">
+        <p>Windows 10 / 11。安裝版不需要系統管理員權限，之後會自己更新；免安裝版解壓縮就能用，不會自己更新。</p>
         <div class="files">
           <a class="btn primary" data-file="_x64-setup.exe" href="https://github.com/Zaious/smallol/releases/latest">下載 Windows 安裝版<span class="size"></span></a>
+          <a class="btn" data-file="_x64_portable.zip" href="https://github.com/Zaious/smallol/releases/latest">免安裝版 zip<span class="size"></span></a>
         </div>
+        <p class="note">程式還沒有程式碼簽章，Windows 可能會跳出「Windows 已保護您的電腦」：按「其他資訊」，再按「仍要執行」。</p>
         <p class="note ver">最新版 <b></b>。所有版本與更新紀錄在 <a href="https://github.com/Zaious/smallol/releases">GitHub</a>。</p>
       </div>
     </div>
@@ -189,8 +186,8 @@
 
   <section class="waitlist split" id="waitlist">
     <div class="side">
-      <h2>推出時通知我</h2>
-      <p>留下 Email，第一個版本推出時寄一封信給你。選了 Mac 的話，Mac 版有消息（做或不做）時再寄一封。</p>
+      <h2>Mac 版消息</h2>
+      <p>Windows 版已經可以下載。想要 Mac 版的話，留下 Email，Mac 版有消息（做或不做）時寄一封信給你。</p>
     </div>
     <div class="body">
       <form id="waitlist-form" method="post" action="/api/waitlist">
@@ -199,8 +196,8 @@
         <label class="email"><span>Email</span><input type="email" name="email" required maxlength="254" autocomplete="email" placeholder="you@example.com"></label>
         <fieldset class="oses">
           <legend>你的電腦</legend>
-          <label><input type="radio" name="os" value="windows" checked> Windows</label>
-          <label><input type="radio" name="os" value="mac"> Mac</label>
+          <label><input type="radio" name="os" value="windows"> Windows</label>
+          <label><input type="radio" name="os" value="mac" checked> Mac</label>
           <label><input type="radio" name="os" value="both"> 兩種都有</label>
         </fieldset>
         <div class="actions">

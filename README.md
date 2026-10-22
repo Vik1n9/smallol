@@ -6,7 +6,7 @@ A quiet desktop bar for the pro match you can't watch.
 
 SmalLoL is an unofficial desktop companion for following live League of Legends esports. A thin bar sits in a corner of your screen with the score, the clock, the gold lead and what is coming next (drake, herald, baron). When something happens, one line tells you, and the bigger moments show up as a small notice in the corner. Enough to know how the game is going at a glance, without the stream.
 
-> **Status: early, not released yet.** Built and tested on Windows during the 2026 World Championship Play-Ins. There are no downloads yet; build it from source (below).
+> **Download:** [smallol.chroniclecore.com](https://smallol.chroniclecore.com/) or [GitHub Releases](https://github.com/Zaious/smallol/releases/latest), for Windows 10 and 11: an installer that updates itself, or a portable zip. Early: built and tested during the 2026 World Championship. Not code-signed yet, so Windows may say "Windows protected your PC" (More info, Run anyway).
 
 SmalLoL is the League of Legends sibling of [Basesmall](https://github.com/Zaious/basesmall).
 
@@ -42,10 +42,10 @@ Checking aids for development (screenshots without clicking, replaying recorded 
 
 ## Privacy
 
-No account, no analytics. The app talks to the data service you set (the public one by default) and, only when you click **▶ Watch**, opens the stream address you saved in your browser. Settings and the event history stay in the app's config folder.
+No account, no analytics. The app talks to the data service you set (the public one by default), asks GitHub once after start-up whether a newer version is out (you can switch that off), and, only when you click **▶ Watch**, opens the stream address you saved in your browser. Settings and the event history stay in the app's config folder.
 
 ## Licence
 
-Apache License 2.0, see [LICENSE](LICENSE) and [NOTICE](NOTICE). The name "SmalLoL" is not licensed for other works.
+Made by Zaious at [ChronicleCore Studio](https://studio.chroniclecore.com). Apache License 2.0, see [LICENSE](LICENSE) and [NOTICE](NOTICE). The name "SmalLoL" is not licensed for other works.
 
 SmalLoL isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties are trademarks or registered trademarks of Riot Games, Inc.

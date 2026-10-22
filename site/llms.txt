@@ -1,6 +1,6 @@
 # SmalLoL
 
-> SmalLoL is a free, open-source, unofficial desktop companion for following live League of Legends esports (for example the 2026 World Championship). A thin bar in a corner of the screen shows the score, the game clock, the gold lead, the next objective timers (drakes, Baron, Herald) and the latest play; the big moments appear as small notices in the corner. It is a fan project, not endorsed by Riot Games. Windows first; not released yet (coming soon).
+> SmalLoL is a free, open-source, unofficial desktop companion for following live League of Legends esports (for example the 2026 World Championship). A thin bar in a corner of the screen shows the score, the game clock, the gold lead, the next objective timers (drakes, Baron, Herald) and the latest play; the big moments appear as small notices in the corner. It is a fan project, not endorsed by Riot Games. Windows 10 and 11; version 0.1.0 came out on 2026-10-22 (installer that updates itself, and a portable zip).
 
 - Free, no ads, nothing to pay for. Apache License 2.0. Made by Zaious at ChronicleCore Studio.
 - No account, no analytics. The app reads one JSON document every five seconds from a match data service (smallol-cv, open source), which combines the official LoL Esports live data with what it reads from the broadcast picture. Users can run their own instance.
@@ -13,11 +13,11 @@
 
 ## Pages
 
-- [SmalLoL 繁體中文](https://smallol.chroniclecore.com/): 介紹、即將推出、登記通知、常見問題
-- [SmalLoL English](https://smallol.chroniclecore.com/en/): what it does, coming soon, waitlist, questions
+- [SmalLoL 繁體中文](https://smallol.chroniclecore.com/): 介紹、下載、Mac 版消息登記、常見問題
+- [SmalLoL English](https://smallol.chroniclecore.com/en/): what it does, download, Mac version waitlist, questions
 
 ## Source
 
 - [App source code](https://github.com/Zaious/smallol)
 - [Data service source code](https://github.com/Zaious/smallol-cv)
-- [Releases](https://github.com/Zaious/smallol/releases) (none yet)
+- [Releases](https://github.com/Zaious/smallol/releases): the Windows installer and portable zip

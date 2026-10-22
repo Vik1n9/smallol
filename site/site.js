@@ -1,29 +1,24 @@
-// The two things on the site that need a script. Without it the page still works: "coming soon" stays,
-// and the waitlist form posts as a plain form.
+// The two things on the site that need a script. Without it the page still works: the download buttons
+// open the latest release on GitHub, and the waitlist form posts as a plain form.
 (() => {
   const zh = document.documentElement.lang === 'zh-Hant';
 
-  // ---------- download: once a release exists, its installer replaces "coming soon" ----------
+  // ---------- download: the buttons go straight to the latest release's files, with their sizes ----------
   const mb = (n) => `${(n / 1048576).toFixed(1)} MB`;
   fetch('https://api.github.com/repos/Zaious/smallol/releases/latest', { headers: { accept: 'application/vnd.github+json' } })
     .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
     .then((rel) => {
-      let found = false;
       for (const a of document.querySelectorAll('a[data-file]')) {
         const f = (rel.assets ?? []).find((x) => x.name.endsWith(a.dataset.file));
         if (!f) continue;
-        found = true;
         a.href = f.browser_download_url;
         const size = a.querySelector('.size');
         if (size) size.textContent = mb(f.size);
       }
-      if (!found) return;
-      document.querySelector('#download .soon')?.setAttribute('hidden', '');
-      document.querySelector('#download .files-wrap')?.removeAttribute('hidden');
       const ver = document.querySelector('.ver b');
       if (ver && rel.tag_name) ver.textContent = rel.tag_name;
     })
-    .catch(() => { /* no release yet (404) or GitHub unreachable: "coming soon" stays */ });
+    .catch(() => { /* GitHub unreachable: the buttons still open the release page */ });
 
   // ---------- the waitlist ----------
   const form = document.getElementById('waitlist-form');

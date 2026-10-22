@@ -106,8 +106,7 @@ dd { margin: 0; color: var(--muted); }
 
 /* Download: not out yet; the script swaps in the files once a release exists. */
 .download { padding: 64px 0; border-top: 1px solid var(--line); }
-.download .soon { display: grid; gap: 14px; }
-.download .soon p, .download .files-wrap p { color: var(--muted); }
+.download .files-wrap p { color: var(--muted); }
 .files { display: flex; flex-wrap: wrap; gap: 10px; }
 .btn .size { margin-left: 8px; font-weight: 400; font-size: 14px; opacity: .7; }
 .btn .size:empty { display: none; }

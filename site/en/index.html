@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SmalLoL: League of Legends esports in a corner of your screen</title>
-<meta name="description" content="SmalLoL shrinks a live League of Legends esports game into a thin bar in a corner of your screen: score, clock, gold lead, drake and Baron timers, and the latest play. Works for Worlds 2026. Unofficial, free and open source; Windows first, coming soon.">
+<meta name="description" content="SmalLoL shrinks a live League of Legends esports game into a thin bar in a corner of your screen: score, clock, gold lead, drake and Baron timers, and the latest play. Works for Worlds 2026. Unofficial, free and open source; download it for Windows.">
 <link rel="canonical" href="https://smallol.chroniclecore.com/en/">
 <link rel="alternate" hreflang="zh-Hant" href="https://smallol.chroniclecore.com/">
 <link rel="alternate" hreflang="en" href="https://smallol.chroniclecore.com/en/">
@@ -40,6 +40,8 @@
   "screenshot": ["https://smallol.chroniclecore.com/media/app-bar-en.png", "https://smallol.chroniclecore.com/media/app-notices-en.png", "https://smallol.chroniclecore.com/media/app-minimap-en.png"],
   "featureList": ["Live score, game clock and gold lead", "Drake, Baron and Herald timers", "Corner notices for the big moments", "At work and Watching along presets", "Minimap, draft and players windows", "Schedule, team and player pages", "Low-key mode and hotkeys", "English and Traditional Chinese"],
   "isAccessibleForFree": true,
+  "downloadUrl": "https://github.com/Zaious/smallol/releases/latest",
+  "datePublished": "2026-10-22",
   "codeRepository": "https://github.com/Zaious/smallol",
   "inLanguage": ["en", "zh-Hant"],
   "author": { "@type": "Person", "name": "Zaious" },
@@ -52,7 +54,7 @@
   "@type": "FAQPage",
   "mainEntity": [
     { "@type": "Question", "name": "Is this made by Riot Games?", "acceptedAnswer": { "@type": "Answer", "text": "No. SmalLoL is an independent fan project. It isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. It has nothing to do with any team either." } },
-    { "@type": "Question", "name": "When can I download it?", "acceptedAnswer": { "@type": "Answer", "text": "The first version is still being prepared, for Windows first. Leave your email and you'll get one message when it is out. If you can't wait, you can build it from source with the instructions on GitHub." } },
+    { "@type": "Question", "name": "Where do I download it?", "acceptedAnswer": { "@type": "Answer", "text": "From Download on this page, or GitHub Releases. For Windows 10 and 11 there is an installer (it updates itself) and a portable zip (unzip and run). There is no Mac version yet." } },
     { "@type": "Question", "name": "Does it cost anything? Are there ads?", "acceptedAnswer": { "@type": "Answer", "text": "It is free and open source (Apache License 2.0), with no ads and nothing to pay for." } },
     { "@type": "Question", "name": "Is it ahead of the stream?", "acceptedAnswer": { "@type": "Answer", "text": "No. The data comes from the official live data and the broadcast picture, and both arrive a little after the stream. It is for knowing how the game is going without watching, not for learning results early." } },
     { "@type": "Question", "name": "Will it spoil results?", "acceptedAnswer": { "@type": "Answer", "text": "During a game the bar shows the score; that is what it is for. If you'd rather not see the results of games that are already over, turn on Spoiler-free in the data window and the schedule hides scores and winners." } },
@@ -79,10 +81,10 @@
       <h1>League of Legends esports, in a corner of your screen.</h1>
       <p class="lead">For the pro match you can't watch: the score, the clock, the gold lead, how long until the next drake or Baron, and what just happened, at a glance. SmalLoL is an unofficial desktop companion for League of Legends esports. Free and open source.</p>
       <div class="ctas">
-        <a class="btn primary" href="#waitlist">Tell me when it's out</a>
+        <a class="btn primary" href="#download">Download for Windows</a>
         <a class="btn" href="https://github.com/Zaious/smallol">Source code</a>
       </div>
-      <p class="status">Coming soon · Windows first · being tested during Worlds 2026</p>
+      <p class="status">Out now for Windows · updated during Worlds 2026</p>
     </div>
     <figure class="hero-shot">
       <div class="desk">
@@ -170,18 +172,13 @@
       <p class="aside">The installed version updates itself; no need to come back here.</p>
     </div>
     <div class="body">
-      <div class="soon">
-        <p><b>Coming soon.</b> The first version is still being prepared, for Windows 10 and 11 first. When it is out, the download will be on <a href="https://github.com/Zaious/smallol/releases">GitHub Releases</a>, and everyone on the list gets an email.</p>
-        <div class="ctas">
-          <a class="btn primary" href="#waitlist">Tell me when it's out</a>
-          <a class="btn" href="https://github.com/Zaious/smallol#build-from-source">Build from source</a>
-        </div>
-      </div>
-      <div class="files-wrap" hidden>
-        <p>Windows 10 and 11. The installer does not need administrator rights.</p>
+      <div class="files-wrap">
+        <p>Windows 10 and 11. The installer does not need administrator rights and updates itself; the portable zip runs from wherever you unzip it and does not update itself.</p>
         <div class="files">
           <a class="btn primary" data-file="_x64-setup.exe" href="https://github.com/Zaious/smallol/releases/latest">Download for Windows<span class="size"></span></a>
+          <a class="btn" data-file="_x64_portable.zip" href="https://github.com/Zaious/smallol/releases/latest">Portable zip<span class="size"></span></a>
         </div>
+        <p class="note">The app is not code-signed yet, so Windows may say "Windows protected your PC": press More info, then Run anyway.</p>
         <p class="note ver">Latest version <b></b>. Every version and its changes are on <a href="https://github.com/Zaious/smallol/releases">GitHub</a>.</p>
       </div>
     </div>
@@ -189,8 +186,8 @@
 
   <section class="waitlist split" id="waitlist">
     <div class="side">
-      <h2>Tell me when it's out</h2>
-      <p>Leave your email and you'll get one message when the first version is out. If you pick Mac, you'll get one more when there is news about a Mac version, whether it happens or not.</p>
+      <h2>Mac version news</h2>
+      <p>The Windows version is out. If you want a Mac version, leave your email and you'll get one message when there is news about it, whether it happens or not.</p>
     </div>
     <div class="body">
       <form id="waitlist-form" method="post" action="/api/waitlist">
@@ -199,8 +196,8 @@
         <label class="email"><span>Email</span><input type="email" name="email" required maxlength="254" autocomplete="email" placeholder="you@example.com"></label>
         <fieldset class="oses">
           <legend>Your computer</legend>
-          <label><input type="radio" name="os" value="windows" checked> Windows</label>
-          <label><input type="radio" name="os" value="mac"> Mac</label>
+          <label><input type="radio" name="os" value="windows"> Windows</label>
+          <label><input type="radio" name="os" value="mac" checked> Mac</label>
           <label><input type="radio" name="os" value="both"> Both</label>
         </fieldset>
         <div class="actions">
