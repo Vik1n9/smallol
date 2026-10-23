@@ -87,8 +87,20 @@ let last = '';
  * so no see-through margin beside the strips catches clicks meant for the desktop (batch 1 review,
  * check 2: a 316-wide window with 260-wide strips took the clicks on its empty left part).
  */
+/**
+ * The next frame, or 50 ms if no frame comes: macOS's web view runs no animation frames in a window
+ * that has never been shown, and this window is only shown once its size is known (Mac preview,
+ * 2026-10-23: the cards never appeared).
+ */
+function nextFrame(fn: () => void): void {
+  let done = false;
+  const go = () => { if (!done) { done = true; fn(); } };
+  requestAnimationFrame(go);
+  setTimeout(go, 50);
+}
+
 function report(): void {
-  requestAnimationFrame(() => {
+  nextFrame(() => {
     const kids = [...stack.children] as HTMLElement[];
     const h = kids.length ? Math.ceil(stack.getBoundingClientRect().height) : 0;
     const w = kids.length ? Math.max(...kids.map((k) => Math.ceil(k.getBoundingClientRect().width))) : 0;
@@ -154,7 +166,7 @@ void (async () => {
     const card = cards[cards.length - 1];
     (e.payload === 'watch' ? card?.querySelector<HTMLElement>('.watch') : card?.querySelector<HTMLElement>('.title'))?.click();
   });
-  await self.listen('notify-placed', () => requestAnimationFrame(release));
+  await self.listen('notify-placed', () => nextFrame(release));
   await self.listen('notices-clear', () => {
     for (const it of items.values()) retire(it);
     overflow = 0; drawMore(); report();
